@@ -178,7 +178,26 @@ class Smartgrid :
         """
         self.Reduct[period] = self.valNoSG[period] - self.ValSG[period]
         
-    
+    def computePrice(self, period):
+        """
+        compute the price by which each actor have to pay or sell an electricity 
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        np.array(N,1) : float
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].price[period] \
+                = self.prosumers[i].valNoSG[period] \
+                    - self.prosumers[i].Repart[period]
+            
+        
     ###########################################################################
     #                   compute smartgrid variables :: end
     ###########################################################################    
@@ -196,12 +215,12 @@ class Smartgrid :
         period : int
             an instance of time t
             
-        mu: float
+        mu: float (mu in [0,1])
             a input parameter of the game
 
         Returns
         -------
-        np.array(N,1)
+        np.array(N,1) : float
         
         """
         N = self.prosumers.size
