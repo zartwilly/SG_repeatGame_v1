@@ -183,5 +183,48 @@ class Smartgrid :
     #                   compute smartgrid variables :: end
     ###########################################################################    
         
+    ###########################################################################
+    #                   compute actors' repartition gains :: start
+    #                       repart, shapley, UCB
+    ########################################################################### 
+    def computeRepart(self, period, mu):
+        """
+        compute the part of the gain of each actor
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+            
+        mu: float
+            a input parameter of the game
+
+        Returns
+        -------
+        np.array(N,1)
+        
+        """
+        N = self.prosumers.size
+        
+        part1 = mu * (self.Reduct[period] / N )
+        
+        
+        for i in range(N):
+            frac = (self.Reduct[period] * self.prosumers[i].prodit[period]) / self.insg[period]
+             
+            self.prosumers[i].Repart[period] = part1 + (1-mu) * frac
+        
+
+    ###########################################################################
+    #                   compute actors' repartition gains :: end
+    ########################################################################### 
     
+    
+    ###########################################################################
+    #                       update prosumers variables:: start
+    ###########################################################################
+    
+    ###########################################################################
+    #                       update prosumers variables:: end
+    ###########################################################################
     
