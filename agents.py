@@ -140,5 +140,21 @@ class Prosumer:
         
         self.valOne[period] = phiminus - phiplus
         
-    
+    def computeValNoSG(self, period):
+        """
+        compute the value of one actor a_i at one period
+
+        Parameters
+        ----------
+        period : TYPE
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        self.valNoSG[period] = fct_aux.phiminus(self.consit[period]) \
+                                - fct_aux.phiplus(self.prodit[period])
+        
         
