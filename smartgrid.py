@@ -144,7 +144,23 @@ class Smartgrid :
             
         self.ValNoSG[period] = sumValNoSG
         
-    
+    def computeValSG(self, period):
+        """
+        compute the gain of the grid ie what a grid have to pay to EPO minus what a grid receive from EPO
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        outinsg = aux.phiepominus(self.outsg[period] - self.insg[period])
+        inoutsg = aux.phiepoplus(self.insg[period] - self.outsg[period])
+        self.ValSG[period] = outinsg - inoutsg
     
     ###########################################################################
     #                   compute smartgrid variables :: start
