@@ -302,6 +302,25 @@ class Smartgrid :
                     self.prosumers[i].prodit[period] = self.prosumers[i].production[period] - self.prosumers[i].consumption[period]
     
     
+    def updateModeSyA(self, period): 
+        """
+        Update mode using rules from SyA algortihm
+        
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):
+            if self.prosumers[i].state[period] == ag.State.DEFICIT :
+                self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                
+            elif self.prosumers[i].state[period] == ag.State.SELF :
+                self.prosumers[i].mode[period] = ag.Mode.DIS
+                
+            else :
+                self.prosumers[i].mode[period] = ag.Mode.DIS
+                
+    
+    
     ###########################################################################
     #                       update prosumers variables:: end
     ###########################################################################
