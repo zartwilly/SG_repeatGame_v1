@@ -233,6 +233,30 @@ class Smartgrid :
             
         self.DispSG[period] = sumDisp_th
             
+    # TODO High, Low
+    
+    def computeRS_highPlus(self, period):
+        """
+        compute rs_{i, High}^{t} for all actors
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == self.maxperiod-1 else period+1
+        
+        for i in range(self.prosumers.size):
+            self.prosumers[i].rs_high_plus[period] = \
+                min(aux.apv(self.prosumers[i].storage[nextperiod] - self.prosumers[i].storage[period]), 
+                    aux.apv( self.prosumers[i].High[period] - self.prosumers[i].storage[period])
+                    )
+        
     ###########################################################################
     #                   compute smartgrid variables :: end
     ###########################################################################    
