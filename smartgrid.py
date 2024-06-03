@@ -237,7 +237,7 @@ class Smartgrid :
     
     def computeRS_highPlus(self, period):
         """
-        compute rs_{i, High}^{t} for all actors
+        compute rs_{i, High}^{plus} for all actors
 
         Parameters
         ----------
@@ -255,6 +255,28 @@ class Smartgrid :
             self.prosumers[i].rs_high_plus[period] = \
                 min(aux.apv(self.prosumers[i].storage[nextperiod] - self.prosumers[i].storage[period]), 
                     aux.apv( self.prosumers[i].High[period] - self.prosumers[i].storage[period])
+                    )
+        
+    def compute_RS_highMinus(self, period):
+        """
+        compute rs_{i, High}^{minus} for all actors
+
+        Parameters
+        ----------
+        Period : int
+            an instance of time t.
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == self.maxperiod-1 else period+1
+        
+        for i in range(self.prosumers.size):
+            self.prosumers[i].rs_high_minus[period] = \
+                min(aux.apv(self.prosumers[i].storage[period] - self.prosumers[i].storage[nextperiod]),
+                    aux.apv(self.prosumers[i].High[period] - self.prosumers[i].storage[nextperiod])
                     )
         
     ###########################################################################
