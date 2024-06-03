@@ -198,6 +198,41 @@ class Smartgrid :
                     - self.prosumers[i].Repart[period]
             
         
+    def computeDispSG(self, period, h):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+        h : int
+            the next h periods to predict the stock at the period "period" .
+            1 <= h <= rho
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == self.maxperiod-1 else period+1
+        sumDisp_th = 0
+        for i in range(self.prosumers.size):
+            Stplus1 = self.prosumers[i].storage[nextperiod]
+            sumPC_th = 0
+            for j in range(1, h):
+                Citj, Pitj = None, None
+                if period+j <= self.maxperiod:
+                    Citj = self.prosumers[i].consumption[period+j]
+                    Pitj = self.prosumers[i].production[period+j]
+                else:
+                    Citj = self.prosumers[i].consumption[self.maxperiod]
+                    Pitj = self.prosumers[i].production[self.maxperiod]
+                sumPC_th += Pitj - Citj
+            sumDisp_th += Stplus1 + sumPC_th
+            
+        self.DispSG[period] = sumDisp_th
+            
     ###########################################################################
     #                   compute smartgrid variables :: end
     ###########################################################################    
