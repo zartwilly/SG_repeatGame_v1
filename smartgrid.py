@@ -162,7 +162,26 @@ class Smartgrid :
         inoutsg = aux.phiepoplus(self.insg[period] - self.outsg[period])
         self.ValSG[period] = outinsg - inoutsg
     
+    def computeReduct(self, period):
+        """
+        Compute Reduct ie ValNoSG_t - ValSG_t
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        self.Reduct[period] = self.valNoSG[period] - self.ValSG[period]
+        
+    
     ###########################################################################
-    #                   compute smartgrid variables :: start
+    #                   compute smartgrid variables :: end
     ###########################################################################    
         
+    
+    
