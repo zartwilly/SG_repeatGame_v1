@@ -325,6 +325,34 @@ class Smartgrid :
                     self.prosumers[i].Low[period]
                     )
         
+    def computeValStock(self, period, rho):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+
+        Returns
+        -------
+        None.
+
+        """
+        # TODO how to get/compute ai
+        for i in range(self.prosumers.size):
+            ai = 0
+            part3 = (rho+1-ai)/rho
+            part2 = self.ValEgoc[period]/self.ValNoSG[period]
+            part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
+                    + aux.phiepoplus(self.prosumers[i].rs_low_plus[period]) \
+                    - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
+                       + aux.phiepoplus(self.prosumers[i].rs_low_minus))
+                        
+            self.prosumers[i].valStock[period] = part1 * part2 * part3
+            
+            
+        
     ###########################################################################
     #                   compute smartgrid variables :: end
     ###########################################################################    
