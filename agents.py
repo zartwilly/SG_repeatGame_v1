@@ -154,12 +154,7 @@ class Prosumer:
         float.
 
         """
-<<<<<<< HEAD
         self.valNoSG[period] = aux.phiepominus(self.consit[period]) \
                                 - aux.phiepoplus(self.prodit[period])
-=======
-        self.valNoSG[period] = fct_aux.phiminus(self.consit[period]) \
-                                - fct_aux.phiplus(self.prodit[period])
->>>>>>> da33d0b94e1a2e8c1ac5933e7a2ecd79957c1dd8
         
         
