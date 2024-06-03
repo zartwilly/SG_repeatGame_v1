@@ -319,7 +319,27 @@ class Smartgrid :
             else :
                 self.prosumers[i].mode[period] = ag.Mode.DIS
                 
-    
+    def updateModeSSA(self, period, maxperiod, rho):
+        """
+        Update Mode using the self stock algorithm (SSA)
+        
+        before executing this function, running computeXi from agents.py
+        
+        """
+        for i in range(self.prosumers.size):
+            
+            self.prosumers[i].computeX(period, maxperiod, rho)
+            Xi = self.prosumers[i].Xi[period]
+            if self.prosumers[i].state[period] == ag.State.DEFICIT :
+                self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                
+            elif self.prosumers[i].state[period] == ag.State.SELF :
+                self.prosumers[i].mode[period] = ag.Mode.DIS
+                
+            elif self.prosumers[i].storage[period] >= Xi:
+                self.prosumers[i].mode[period] = ag.Mode.PROD
+            else:
+                self.prosumers[i].mode[period] = ag.Mode.DIS
     
     ###########################################################################
     #                       update prosumers variables:: end
