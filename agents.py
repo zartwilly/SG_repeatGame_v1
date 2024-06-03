@@ -50,6 +50,7 @@ class Prosumer:
     rho_cons = None # a prediction capacity of an actor for consumption
     rho_prod = None # a prediction capacity of an actor for production
     tau = None # the stock demand of each actor for h next periods
+    Xi = None #
     High = None # a MAX needed stock for each actor at step t
     Low = None  # a MIN needed stock for each actor at step t
     rs_high_plus = None  # a required stock value for max needed stock
@@ -94,6 +95,7 @@ class Prosumer:
         self.rho_cons = 0
         self.rho_prod = 0
         self.tau = np.zeros(maxperiod)
+        self.Xi = np.zeros(maxperiod)
         self.High = np.zeros(maxperiod)
         self.Low = np.zeros(maxperiod)
         self.rs_high_plus = np.zeros(maxperiod)
@@ -157,4 +159,70 @@ class Prosumer:
         self.valNoSG[period] = aux.phiepominus(self.consit[period]) \
                                 - aux.phiepoplus(self.prodit[period])
         
+        
+    def computeTau(self, period, maxperiod, rho):
+        """
+        compute a parameter $\tau_i^{t+h}$ indicates for each of the $\rho$ predicted steps 
+        the cumulative need of each actor $a_i$ in terms of stock if he only 
+        relied on his own productions
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+        maxperiod: int
+            max period
+        rho: int
+            number of steps to select for predition 
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == maxperiod-1 else period+1
+        
+        Si_tplus1 = self.storage[nextperiod]
+        
+        next_rho = 0    # max prediction slots t+rho 
+        next_rho = period+rho if maxperiod - (period+rho) >= 0 else maxperiod
+                
+        sum_trho = 0
+        for h in range(next_rho):
+            sum_trho += self.consumption[h] - self.production[h]
+        
+        self.tau[period] = sum_trho - Si_tplus1
+        
+    def computeX(self, period, maxperiod, rho):
+        """
+        the difference beteween tau and X is the absolute value
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+        
+        maxperiod: int
+            max period
+            
+        rho: int
+            number of steps to select for predition 
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == maxperiod-1 else period+1
+        
+        Si_tplus1 = self.storage[nextperiod]
+        
+        next_rho = 0    # max prediction slots t+rho 
+        next_rho = period+rho if maxperiod - (period+rho) >= 0 else maxperiod
+                
+        sum_trho = 0
+        for h in range(next_rho):
+            sum_trho += aux.apv(self.consumption[h] - self.production[h])
+        
+        self.Xi[period] = sum_trho - Si_tplus1
         
