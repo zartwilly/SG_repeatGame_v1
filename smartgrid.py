@@ -259,7 +259,48 @@ class Smartgrid :
             else :
                 self.prosumers[i].state[period] = ag.State.DEFICIT
                 
+    def updateSmartgrid(self, period, maxperiod): 
+        """
+        Update storage , consit, prodit based on mode and state
+        
+        """
+        N = self.prosumers.size
+        
+        nextperiod = period if period == maxperiod-1 else period+1
+        
+        for i in range(N):
+            if self.prosumers[i].state[period] == ag.State.DEFICIT:
+                self.prosumers[i].prodit[period] = 0
+                if self.prosumers[i].mode[period] == ag.Mode.CONSPLUS:
+                    self.prosumers[i].storage[nextperiod] = 0
+                    self.prosumers[i].consit[period] = self.prosumers[i].consumption[period] - (self.prosumers[i].production[period] + self.prosumers[i].storage[period])
                 
+                else :
+                    self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period]
+                    self.prosumers[i].consit[period] = self.prosumers[i].consumption[period] - self.prosumers[i].production[period]
+            
+            elif self.prosumers[i].state[period] == ag.State.SELF:
+                self.prosumers[i].prodit[period] = 0
+                
+                if self.prosumers[i].mode[period] == ag.Mode.CONSMINUS:
+                    self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period]
+                    self.prosumers[i].consit[period] = self.prosumers[i].consumption[period] - self.prosumers[i].production[period]
+                
+                else :
+                    self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period] - (self.prosumers[i].consumption[period] - self.prosumers[i].production[period])
+                    self.prosumers[i].consit[period] = 0
+            else :
+                self.prosumers[i].consit[period] = 0
+                
+                if self.prosumers[i].mode[period] == ag.Mode.DIS:
+                    self.prosumers[i].storage[nextperiod] = min(self.prosumers[i].smax,self.prosumers[i].storage[period] +\
+                                                                   (self.prosumers[i].production[period] - self.prosumers[i].consumption[period]))
+                    self.prosumers[i].prodit[period] = aux.apv(self.prosumers[i].production[period] - self.prosumers[i].consumption[period] -\
+                                                                (self.prosumers[i].smax - self.prosumers[i].storage[period] ))
+                else:
+                    self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period]
+                    self.prosumers[i].prodit[period] = self.prosumers[i].production[period] - self.prosumers[i].consumption[period]
+    
     
     ###########################################################################
     #                       update prosumers variables:: end
