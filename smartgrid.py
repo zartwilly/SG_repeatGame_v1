@@ -242,6 +242,24 @@ class Smartgrid :
     ###########################################################################
     #                       update prosumers variables:: start
     ###########################################################################
+    def updateState(self, period): 
+        """
+        Change prosumer's state based on its production, comsumption and available storage
+        
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):    
+            if self.prosumers[i].production[period] >= self.prosumers[i].consumption[period] :
+                self.prosumers[i].state[period] = ag.State.SURPLUS
+            
+            elif self.prosumers[i].production[period] + self.prosumers[i].storage[period] >= self.prosumers[i].consumption[period] :
+                self.prosumers[i].state[period] =ag. State.SELF
+            
+            else :
+                self.prosumers[i].state[period] = ag.State.DEFICIT
+                
+                
     
     ###########################################################################
     #                       update prosumers variables:: end
