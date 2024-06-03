@@ -106,7 +106,7 @@ class Smartgrid :
         
     def computeValEgoc(self, period):
         """
-        
+        compute ValEgoc ie the sum of all actors valOne
 
         Parameters
         ----------
@@ -123,6 +123,28 @@ class Smartgrid :
             sumValEgoc += self.prosumers[i].valOne[period]
             
         self.valEgoc[period] = sumValEgoc
+        
+    def computeValNoSG(self, period):
+        """
+        compute valNoSG for all actors
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        sumValNoSG = 0
+        for i in range(self.prosumers.size):
+            sumValNoSG += self.prosumers[i].valNoSG[period]
+            
+        self.ValNoSG[period] = sumValNoSG
+        
+    
     
     ###########################################################################
     #                   compute smartgrid variables :: start

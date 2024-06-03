@@ -10,7 +10,7 @@ in the game
 """
 import numpy as np
 from enum import Enum
-import fonctions_auxiliaires as fct_aux
+import fonctions_auxiliaires as aux
 
 #%% state
 class State(Enum): # Define possible states for a prosumer
@@ -131,14 +131,30 @@ class Prosumer:
         nextperiod = period if period == maxperiod-1 else period+1
         
         
-        phiminus = fct_aux.apv(self.consumption[period] 
+        phiminus = aux.apv(self.consumption[period] 
                                - self.production[period] 
                                - self.storage[period])
-        phiplus = fct_aux.apv(self.production[period] 
+        phiplus = aux.apv(self.production[period] 
                               - self.consumption[period] 
                               - (self.storage[nextperiod] - self.storage[period]))
         
         self.valOne[period] = phiminus - phiplus
         
-    
+    def computeValNoSG(self, period):
+        """
+        compute the value of one actor a_i at one period
+
+        Parameters
+        ----------
+        period : TYPE
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        self.valNoSG[period] = aux.phiepominus(self.consit[period]) \
+                                - aux.phiepoplus(self.prodit[period])
+        
         
