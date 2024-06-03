@@ -302,6 +302,29 @@ class Smartgrid :
                     self.prosumers[i].Low[period]
                     )
         
+    def compute_RS_lowMinus(self, period):
+        """
+        compute rs_{i, Low}^{minus} for all actors
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+
+        Returns
+        -------
+        None.
+
+        """
+        nextperiod = period if period == self.maxperiod-1 else period+1
+        
+        for i in range(self.prosumers.size):
+            self.prosumers[i].rs_low_plus[period] = \
+                min(aux.apv(self.prosumers[i].storage[period] - self.prosumers[i].storage[nextperiod] - self.prosumers[i].rs_high_plus[period]),
+                    aux.apv(self.prosumers[i].High[period] + self.prosumers[i].Low[period] - self.prosumers[i].storage[nextperiod]),
+                    self.prosumers[i].Low[period]
+                    )
+        
     ###########################################################################
     #                   compute smartgrid variables :: end
     ###########################################################################    
