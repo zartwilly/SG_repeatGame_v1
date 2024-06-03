@@ -73,7 +73,58 @@ class Smartgrid :
         self.Cost = np.zeros(maxperiod)
         self.DispSG = np.zeros(maxperiod)
         
+    ###########################################################################
+    #                   compute smartgrid variables :: start
+    ###########################################################################
+    def computeSumInput(self, period): 
+        """
+        Calculate the sum of the production of all prosumers during a period
         
+        Parameters
+        ----------
+        period: int 
+            an instance of time t
+        """
+        tmpsum = 0
+        for i in range(self.prosumers.size):
+            tmpsum = tmpsum + self.prosumers[i].prodit[period]
+        self.insg[period] = tmpsum
+    
+    def computeSumOutput(self, period): 
+        """
+        Calculate sum of the consumption of all prosumers during a period
         
+        Parameters
+        ----------
+        period: int 
+            an instance of time t
+        """
+        tmpsum = 0
+        for i in range(self.prosumers.size):
+            tmpsum = tmpsum + self.prosumers[i].consit[period]
+        self.outsg[period] = tmpsum
         
+    def computeValEgoc(self, period):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        sumValEgoc = 0
+        for i in range(self.prosumers.size):
+            sumValEgoc += self.prosumers[i].valOne[period]
+            
+        self.valEgoc[period] = sumValEgoc
+    
+    ###########################################################################
+    #                   compute smartgrid variables :: start
+    ###########################################################################    
         
