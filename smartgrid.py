@@ -351,7 +351,24 @@ class Smartgrid :
                         
             self.prosumers[i].valStock[period] = part1 * part2 * part3
             
-            
+    def computeLCost(self, period):
+        """
+        Compute the learninc Cost of all players
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+
+        Returns
+        -------
+        None.
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].Lcost[period] \
+                = self.prosumers[i].price[period] - self.prosumers[i].valStock[period]
+                
         
     ###########################################################################
     #                   compute smartgrid variables :: end
