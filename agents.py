@@ -98,7 +98,7 @@ class Prosumer:
         self.rho_cons = 0
         self.rho_prod = 0
         self.rho = rho
-        self.tau = np.zeros(maxperiod)
+        self.tau = np.zeros(rho+1)
         self.CP_th = np.zeros(rho+1)
         self.PC_th = np.zeros(rho+1)
         self.Xi = np.zeros(maxperiod)
@@ -213,14 +213,11 @@ class Prosumer:
         
         Si_tplus1 = self.storage[nextperiod]
         
-        next_rho = 0    # max prediction slots t+rho 
-        next_rho = period+rho if maxperiod - (period+rho) >= 0 else maxperiod
-                
-        sum_trho = 0
-        for h in range(next_rho):
-            sum_trho += self.consumption[h] - self.production[h]
+        rho_max = rho if period+rho <= maxperiod else maxperiod-period          # max prediction slots t+rho
         
-        self.tau[period] = sum_trho - Si_tplus1
+        for h in range(1, rho_max+1):
+           self.tau[h] = np.sum(self.CP_th[:h+1]) - Si_tplus1
+        
         
     def computeX(self, period, maxperiod, rho):
         """
@@ -242,16 +239,13 @@ class Prosumer:
         None.
 
         """
-        nextperiod = period if period == maxperiod-1 else period+1
         
-        Si_tplus1 = self.storage[nextperiod]
+        rho_max = rho if period+rho <= maxperiod else maxperiod-period          # max prediction slots t+rho
         
-        next_rho = 0    # max prediction slots t+rho 
-        next_rho = period+rho if maxperiod - (period+rho) >= 0 else maxperiod
-                
-        sum_trho = 0
-        for h in range(next_rho):
-            sum_trho += aux.apv(self.consumption[h] - self.production[h])
+        sum_X = 0
+        for h in range(1, rho_max+1):
+            sum_X += aux.apv(self.tau[h])
+            
+        self.Xi[period] = sum_X
         
-        self.Xi[period] = sum_trho - Si_tplus1
         
