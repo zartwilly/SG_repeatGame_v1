@@ -29,6 +29,8 @@ class Smartgrid :
     strategy_profile = None 
     Cost = None
     DispSG = None
+    rho = None
+    TauS = None # contains the tau array for all players at period t 
     
     
     # TODO to delete
@@ -54,6 +56,7 @@ class Smartgrid :
         
         """
         self.rho = rho
+        self.TauS = np.array(shape=(N, rho+1))
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.maxperiod = maxperiod
         for i in range(N):
@@ -244,8 +247,54 @@ class Smartgrid :
             sumDisp_th += Stplus1 + np.sum(self.prosumers[i].PC_th[:h+1])
             
         self.DispSG[h] = sumDisp_th
+     
+    def computeTau_actors(self, period, rho):
+        """
+        compute tau_i for all actors
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+        
+        maxperiod: int
+            max period
             
+        rho: int
+            number of steps to select for predition 
+
+        Returns
+        -------
+        TauS array of shape (N, rho+1).
+
+        """
+        
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeTau(period, self.maxperiod, rho)
+            self.TauS[i] = self.prosumers[i].tau
+            self.TauS[i][self.TauS[i] < 0] = 0
+            
+        
+    def computeHighLow(self, period, rho):
+        """
+        compute High, Low variable at period t for each actor
+        """
+        high_itj, low_itj = 0, 0
+        self.computeTau_actors(period, rho)
+        for i in range(self.prosumers.size):
+            for j in range(1, rho+1):
+                sumTauSAis = np.sum(self.TauS[:,j])
+                if self.DispSG[j] < sumTauSAis:
+                    high_itj += aux.apv(self.prosumers[i].tau[j])
+                else:
+                    low_itj += aux.apv(self.prosumers[i].tau[j])
+                    
+            self.prosumers[i].High[period] = high_itj
+            
+    
     # TODO High, Low
+    
+    
     
     def compute_RS_highPlus(self, period):
         """
