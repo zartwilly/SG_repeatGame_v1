@@ -45,13 +45,15 @@ class Smartgrid :
     # realstate = None # Real state of each prosumers when using real production value (can be the same as the one determined with predicted production)
     
     
-    def __init__(self, N, maxperiod, initialprob):
+    def __init__(self, N, maxperiod, initialprob, rho):
         """
         N = number of prosumers, 
         maxperiod = max numbers of periods
         initialprob : initial value of probabilities for LRI, 
+        rho = steps to be taken into account for stock prediction
         
         """
+        self.rho = rho
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.maxperiod = maxperiod
         for i in range(N):
@@ -71,7 +73,7 @@ class Smartgrid :
         dt = np.dtype([('agent', np.int), ('strategy', ag.Mode)])
         self.strategy_profile = np.ndarray(shape=(N, maxperiod), dtype=dt)
         self.Cost = np.zeros(maxperiod)
-        self.DispSG = np.zeros(maxperiod)
+        self.DispSG = np.zeros(rho+1)
         
     ###########################################################################
     #                   compute smartgrid variables :: start
@@ -215,6 +217,7 @@ class Smartgrid :
         None.
 
         """
+        """
         nextperiod = period if period == self.maxperiod-1 else period+1
         sumDisp_th = 0
         for i in range(self.prosumers.size):
@@ -232,6 +235,15 @@ class Smartgrid :
             sumDisp_th += Stplus1 + sumPC_th
             
         self.DispSG[period] = sumDisp_th
+        """
+        
+        nextperiod = period if period == self.maxperiod-1 else period+1
+        sumDisp_th = 0
+        for i in range(self.prosumers.size):
+            Stplus1 = self.prosumers[i].storage[nextperiod]
+            sumDisp_th += Stplus1 + np.sum(self.prosumers[i].PC_th[:h+1])
+            
+        self.DispSG[h] = sumDisp_th
             
     # TODO High, Low
     
