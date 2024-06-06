@@ -49,7 +49,10 @@ class Prosumer:
     # prediction stock
     rho_cons = None # a prediction capacity of an actor for consumption
     rho_prod = None # a prediction capacity of an actor for production
+    rho = None
     tau = None # the stock demand of each actor for h next periods
+    CP_th = None # the difference between consumption and production at t+h with h in [1,rho]
+    PC_th = None # the difference between production and consumption at t+h with h in [1,rho]
     Xi = None #
     High = None # a MAX needed stock for each actor at step t
     Low = None  # a MIN needed stock for each actor at step t
@@ -69,7 +72,7 @@ class Prosumer:
     benefit = None # reward for each prosumer at each period
     
 
-    def __init__(self, maxperiod, initialprob):
+    def __init__(self, maxperiod, initialprob, rho):
         """
         maxperiod : explicit ; 
         initialprob : initial value of prmode[0]
@@ -94,7 +97,10 @@ class Prosumer:
         ##### new parameters variables for Repeated game ########
         self.rho_cons = 0
         self.rho_prod = 0
+        self.rho = rho
         self.tau = np.zeros(maxperiod)
+        self.CP_th = np.zeros(rho+1)
+        self.PC_th = np.zeros(rho+1)
         self.Xi = np.zeros(maxperiod)
         self.High = np.zeros(maxperiod)
         self.Low = np.zeros(maxperiod)
@@ -160,6 +166,29 @@ class Prosumer:
                                 - aux.phiepoplus(self.prodit[period])
         
         
+    def computePC_CP_th(self, period, maxperiod, rho):
+        """
+        compute a difference between consumption and production at t+h with h \in [1, rho] 
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+        maxperiod: int
+            max period
+        rho: int
+            number of steps to select for predition 
+
+        Returns
+        -------
+        None.
+
+        """
+        rho_max = rho if period + rho <= maxperiod else maxperiod - period
+        for h in range(1, rho_max+1):
+            self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
+            self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
+            
     def computeTau(self, period, maxperiod, rho):
         """
         compute a parameter $\tau_i^{t+h}$ indicates for each of the $\rho$ predicted steps 
