@@ -50,6 +50,7 @@ class Prosumer:
     rho_cons = None # a prediction capacity of an actor for consumption
     rho_prod = None # a prediction capacity of an actor for production
     rho = None
+    ai = None       # the min value of tau_i^j such that tau_i < 0 and  1<=j<=rho 
     tau = None # the stock demand of each actor for h next periods
     CP_th = None # the difference between consumption and production at t+h with h in [1,rho]
     PC_th = None # the difference between production and consumption at t+h with h in [1,rho]
@@ -98,6 +99,7 @@ class Prosumer:
         self.rho_cons = 0
         self.rho_prod = 0
         self.rho = rho
+        self.ai = 0
         self.tau = np.zeros(rho+1)
         self.CP_th = np.zeros(rho+1)
         self.PC_th = np.zeros(rho+1)
