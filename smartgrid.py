@@ -402,9 +402,8 @@ class Smartgrid :
         None.
 
         """
-        # TODO how to get/compute ai
         for i in range(self.prosumers.size):
-            ai = 0
+            ai = self.prosumers[i].ai
             part3 = (rho+1-ai)/rho
             part2 = self.ValEgoc[period]/self.ValNoSG[period]
             part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
