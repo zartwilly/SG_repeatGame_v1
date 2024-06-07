@@ -273,6 +273,12 @@ class Smartgrid :
             self.prosumers[i].computeTau(period, self.maxperiod, rho)
             self.TauS[i] = self.prosumers[i].tau
             self.TauS[i][self.TauS[i] < 0] = 0
+            # select ai
+            a_ = self.prosumers[i].tau
+            if a_[a_<0].size == 0:
+                self.prosumer[i].ai = rho +1
+            else:
+                self.prosumer[i].ai = min(a_[a_<0])
             
         
     def computeHighLow(self, period, rho):
@@ -292,11 +298,6 @@ class Smartgrid :
             self.prosumers[i].High[period] = high_itj
             self.prosumers[i].Low[period] = low_itj
             
-    
-    # TODO High, Low
-    
-    
-    
     def compute_RS_highPlus(self, period):
         """
         compute rs_{i, High}^{plus} for all actors
