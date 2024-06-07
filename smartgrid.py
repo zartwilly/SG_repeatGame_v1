@@ -575,6 +575,51 @@ class Smartgrid :
                     self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period]
                     self.prosumers[i].prodit[period] = self.prosumers[i].production[period] - self.prosumers[i].consumption[period]
     
+    def updateProbaLRI(self, period, slowdown): 
+        """
+        Update probability for LRI based mode choice
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+            
+        slowdown : float
+            a learning parameter called slowdown factor 0 <= b <= 1
+            
+        Returns
+        -------
+        None.
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):
+            if self.prosumers[i].state[period] == ag.State.SURPLUS:
+                if self.prosumers[i].mode[period] == ag.Mode.DIS :
+                    self.prosumers[i].prmode[period][0] = min(1, self.prosumers[i].prmode[period][0] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][0]))
+                    self.prosumers[i].prmode[period][1] = 1 - self.prosumers[i].prmode[period][0]
+                
+                else :
+                    self.prosumers[i].prmode[period][1] = min(1, self.prosumers[i].prmode[period][1] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][1]))
+                    self.prosumers[i].prmode[period][0] = 1 - self.prosumers[i].prmode[period][1]
+                    
+            elif self.prosumers[i].state[period] == ag.State.SELF:
+                if self.prosumers[i].mode[period] == ag.Mode.DIS :
+                    self.prosumers[i].prmode[period][0] = min(1,self.prosumers[i].prmode[period][0] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][0]))
+                    self.prosumers[i].prmode[period][1] = 1 - self.prosumers[i].prmode[period][0]
+                
+                else :
+                    self.prosumers[i].prmode[period][1] = min(1,self.prosumers[i].prmode[period][1] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][1]))
+                    self.prosumers[i].prmode[period][0] = 1 - self.prosumers[i].prmode[period][1]
+            else :
+                if self.prosumers[i].mode[period] == ag.Mode.CONSPLUS :
+                    self.prosumers[i].prmode[period][0] = min(1,self.prosumers[i].prmode[period][0] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][0]))
+                    self.prosumers[i].prmode[period][1] = 1 - self.prosumers[i].prmode[period][0]
+                
+                else :
+                    self.prosumers[i].prmode[period][1] = min(1,self.prosumers[i].prmode[period][1] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][1]))
+                    self.prosumers[i].prmode[period][0] = 1 - self.prosumers[i].prmode[period][1]
+    
     
     def updateModeSyA(self, period): 
         """
