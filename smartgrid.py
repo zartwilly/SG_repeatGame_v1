@@ -448,7 +448,29 @@ class Smartgrid :
                 self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
                 self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
             
-                
+    def computeUtility(self, period): 
+        """
+        Calculate utility function using min, max and last prosumer's Learning cost (LCost)
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+            
+        Returns
+        -------
+        None.
+        
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):
+            if (self.prosumers[i].LCostmax !=0 or self.prosumers[i].LCostmin != 0):
+                self.prosumers[i].utility[period] \
+                    = (self.prosumers[i].LCostmax - self.prosumers[i].Lcost[period]) \
+                        / (self.prosumers[i].LCostmax - self.prosumers[i].LCostmin)
+            else:
+                self.prosumers[i].utility[period] = 0
         
     ###########################################################################
     #                   compute smartgrid variables :: end
