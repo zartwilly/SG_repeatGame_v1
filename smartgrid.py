@@ -620,6 +620,48 @@ class Smartgrid :
                     self.prosumers[i].prmode[period][1] = min(1,self.prosumers[i].prmode[period][1] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][1]))
                     self.prosumers[i].prmode[period][0] = 1 - self.prosumers[i].prmode[period][1]
     
+    def updateModeLRI(self, period, threshold): 
+        """
+        Update mode using rules from LRI
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+            
+        threshold : float
+            a parameter for which a we stop learning when prabability mode is greater than threshold
+            threshold in [0,1]
+            
+        Returns
+        -------
+        None.
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):
+            rand = rdm.uniform(0,1)
+            
+            if self.prosumers[i].state[period] == ag.State.SURPLUS:
+                if (rand <= self.prosumers[i].prmode[period][0] and self.prosumers[i].prmode[period][1] < threshold) or self.prosumers[i].prmode[period][0] > threshold :
+                    self.prosumers[i].mode[period] = ag.Mode.DIS
+                
+                else :
+                    self.prosumers[i].mode[period] = ag.Mode.PROD
+            
+            elif self.prosumers[i].state[period] == ag.State.SELF :
+                if (rand <= self.prosumers[i].prmode[period][0] and self.prosumers[i].prmode[period][1] < threshold) or self.prosumers[i].prmode[period][0] > threshold :
+                    self.prosumers[i].mode[period] = ag.Mode.DIS
+                
+                else :
+                    self.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+            
+            else :
+                if (rand <= self.prosumers[i].prmode[period][0] and self.prosumers[i].prmode[period][1] < threshold) or self.prosumers[i].prmode[period][0] > threshold :
+                    self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                else :
+                    self.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+                    
     
     def updateModeSyA(self, period): 
         """
