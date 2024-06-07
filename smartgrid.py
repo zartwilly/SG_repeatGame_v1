@@ -413,9 +413,10 @@ class Smartgrid :
                         
             self.prosumers[i].valStock[period] = part1 * part2 * part3
             
-    def computeLCost(self, period):
+    def computeLCost_LCostMinMax(self, period):
         """
-        Compute the learninc Cost of all players
+        Compute the learning Cost of all players, 
+        learning (max, min) Cost for all players over the learning steps
 
         Parameters
         ----------
@@ -430,6 +431,23 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].Lcost[period] \
                 = self.prosumers[i].price[period] - self.prosumers[i].valStock[period]
+                
+            if self.prosumers[i].LCostmin["Lcost"] == None \
+                or self.prosumers[i].LCostmin["Lcost"] > self.prosumers[i].Lcost[period] :
+                self.prosumers[i].LCostmin["Lcost"] = self.prosumers[i].Lcost[period]
+                self.prosumers[i].LCostmin["price"] = self.prosumers[i].price[period]
+                self.prosumers[i].LCostmin["valStock"] = self.prosumers[i].valStock[period]
+                self.prosumers[i].LCostmin["mode"] = self.prosumers[i].mode[period]
+                self.prosumers[i].LCostmin["state"] = self.prosumers[i].state[period]
+                
+            if self.prosumers[i].LCostmax["Lcost"] == None \
+                or self.prosumers[i].LCostmax["Lcost"] < self.prosumers[i].Lcost[period] :
+                self.prosumers[i].LCostmax["Lcost"] = self.prosumers[i].Lcost[period]
+                self.prosumers[i].LCostmax["price"] = self.prosumers[i].price[period]
+                self.prosumers[i].LCostmax["valStock"] = self.prosumers[i].valStock[period]
+                self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
+                self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
+            
                 
         
     ###########################################################################
