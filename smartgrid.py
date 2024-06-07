@@ -276,9 +276,9 @@ class Smartgrid :
             # select ai
             a_ = self.prosumers[i].tau
             if a_[a_<0].size == 0:
-                self.prosumer[i].ai = rho +1
+                self.prosumer[i].alphai = rho +1
             else:
-                self.prosumer[i].ai = min(a_[a_<0])
+                self.prosumer[i].alphai = min(a_[a_<0])
             
         
     def computeHighLow(self, period, rho):
@@ -403,8 +403,8 @@ class Smartgrid :
 
         """
         for i in range(self.prosumers.size):
-            ai = self.prosumers[i].ai
-            part3 = (rho+1-ai)/rho
+            alphai = self.prosumers[i].alphai
+            part3 = (rho+1-alphai)/rho
             part2 = self.ValEgoc[period]/self.ValNoSG[period]
             part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
                     + aux.phiepoplus(self.prosumers[i].rs_low_plus[period]) \
