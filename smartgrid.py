@@ -277,7 +277,7 @@ class Smartgrid :
         
     def computeHighLow(self, period, rho):
         """
-        compute High, Low variable at period t for each actor
+        compute High, Low variables at period t for each actor
         """
         high_itj, low_itj = 0, 0
         self.computeTau_actors(period, rho)
@@ -290,6 +290,7 @@ class Smartgrid :
                     low_itj += aux.apv(self.prosumers[i].tau[j])
                     
             self.prosumers[i].High[period] = high_itj
+            self.prosumers[i].Low[period] = low_itj
             
     
     # TODO High, Low
