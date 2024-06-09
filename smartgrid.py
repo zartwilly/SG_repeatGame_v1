@@ -146,6 +146,7 @@ class Smartgrid :
         """
         sumValNoSG = 0
         for i in range(self.prosumers.size):
+            self.prosumers[i].computeValNoSG(period=period)
             sumValNoSG += self.prosumers[i].valNoSG[period]
             
         self.ValNoSG[period] = sumValNoSG
