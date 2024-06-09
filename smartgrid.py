@@ -533,14 +533,14 @@ class Smartgrid :
             else :
                 self.prosumers[i].state[period] = ag.State.DEFICIT
                 
-    def updateSmartgrid(self, period, maxperiod): 
+    def updateSmartgrid(self, period): 
         """
         Update storage , consit, prodit based on mode and state
         
         """
         N = self.prosumers.size
         
-        nextperiod = period if period == maxperiod-1 else period+1
+        nextperiod = period if period == self.maxperiod-1 else period+1
         
         for i in range(N):
             if self.prosumers[i].state[period] == ag.State.DEFICIT:
