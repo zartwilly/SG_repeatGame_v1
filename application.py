@@ -175,7 +175,7 @@ class App:
             self.SG.updateState(period=t)
             
             # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeSSA(period=t)
+            self.SG.updateModeSSA(period=t, maxperiod=self.SG.maxperiod, rho=self.rho)
             
             # Update prodit,consit and period + 1 storage values
             self.SG.updateSmartgrid(period=t)
