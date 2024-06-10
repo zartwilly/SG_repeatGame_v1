@@ -10,7 +10,7 @@ in the game
 """
 import numpy as np
 from enum import Enum
-import fonctions_auxiliaires as aux
+import auxiliary_functions as aux
 
 #%% state
 class State(Enum): # Define possible states for a prosumer
