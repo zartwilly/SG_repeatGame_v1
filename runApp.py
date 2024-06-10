@@ -93,7 +93,8 @@ def run_syA(logfiletxt):
         for t in range(T):
             file.write("Period " + str(t + 1))
             file.write(" : Production : " + str(application.SG.prosumers[i].production[t]))
-            file.write(" Consumption : " + str(application.SG.prosumers[i].consumption[t]) + "\n")
+            file.write(" Consumption : " + str(application.SG.prosumers[i].consumption[t]))
+            file.write(" Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
             
     
     # Execute SyA
@@ -109,8 +110,15 @@ def run_syA(logfiletxt):
             
     file.write("\n___InSG, OutSG___ \n")
     for t in range(T):
-        file.write("Period " + str(t + 1))
-        file.write(" InSG : " + str(application.SG.insg[t])+ " OutSG: "+ str(application.SG.outsg[t]) +"\n")
+        file.write(" *** Period " + str(t + 1))
+        file.write(" InSG : " + str(application.SG.insg[t])+ " OutSG: "+ str(application.SG.outsg[t]) +"*** \n")
+        for i in range(N):
+            file.write("__Prosumer " + str(i + 1) +":")
+            file.write(" Cons = "+ str(application.SG.prosumers[i].consit[t]))
+            file.write(", Prod = "+ str(application.SG.prosumers[i].prodit[t]))
+            file.write(", mode = "+ str(application.SG.prosumers[i].mode[t]))
+            file.write(", state = "+ str(application.SG.prosumers[i].state[t]))
+            file.write("\n")
             
     file.write("\n___Metrics___"+ "\n")
     file.write("ValSG : "+ str(application.valSG_A)+ "\n")
