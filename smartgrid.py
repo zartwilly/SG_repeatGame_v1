@@ -25,6 +25,7 @@ class Smartgrid :
     ValEgoc = None # sum of all valOne 
     ValNoSG = None
     ValSG = None
+    ValNoSGCost = None
     Reduct = None
     strategy_profile = None 
     Cost = None
@@ -72,6 +73,7 @@ class Smartgrid :
         self.ValEgoc = np.zeros(maxperiod)
         self.ValNoSG = np.zeros(maxperiod)
         self.ValSG = np.zeros(maxperiod)
+        self.ValNoSGCost = np.zeros(maxperiod)
         self.Reduct = np.zeros(maxperiod)
         dt = np.dtype([('agent', int), ('strategy', ag.Mode)])
         self.strategy_profile = np.ndarray(shape=(N, maxperiod), dtype=dt)
@@ -169,6 +171,24 @@ class Smartgrid :
         inoutsg = aux.phiepoplus(self.insg[period] - self.outsg[period])
         self.ValSG[period] = outinsg - inoutsg
     
+    def computeValNoSGCost(self, period):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float.
+
+        """
+        phiPlusInsg = aux.insg[period]
+        phiMinusOutsg = aux.outsg[period]
+        self.ValNoSGCost[period] = phiPlusInsg - phiMinusOutsg
+        
     def computeReduct(self, period):
         """
         Compute Reduct ie ValNoSG_t - ValSG_t
