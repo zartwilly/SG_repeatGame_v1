@@ -505,7 +505,7 @@ class Smartgrid :
         
         
         for i in range(N):
-            frac = (self.Reduct[period] * self.prosumers[i].prodit[period]) / self.insg[period]
+            frac = (self.Reduct[period] * self.prosumers[i].prodit[period]) / max(1, self.insg[period])
              
             self.prosumers[i].Repart[period] = part1 + (1-mu) * frac
         
