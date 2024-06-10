@@ -138,6 +138,9 @@ class App:
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
             
+            # calculate valNoSGCost_t
+            self.SG.computeValNoSGCost(period=t)
+            
             # calculate valEgoc_t
             self.SG.computeValEgoc(period=t)
             
@@ -156,6 +159,7 @@ class App:
             # calculate price_t
             self.SG.computePrice(period=t)
             
+            
             ## ------ end -------
             
         # Compute metrics
@@ -163,7 +167,7 @@ class App:
         self.computeValNoSG()
         self.computeObjValai()
         self.computeObjSG()
-        self.computeValNoSGCost()
+        
         
         # plot variables ValNoSG, ValSG
             
@@ -198,6 +202,9 @@ class App:
             # Calculate inSG and outSG
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
+            
+            # calculate valNoSGCost_t
+            self.SG.computeValNoSGCost(period=t)
             
             # calculate valEgoc_t
             self.SG.computeValEgoc(period=t)
