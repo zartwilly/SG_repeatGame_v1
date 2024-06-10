@@ -123,6 +123,7 @@ def run_syA(logfiletxt):
     file.write("\n___Metrics___"+ "\n")
     file.write("ValSG : "+ str(application.valSG_A)+ "\n")
     file.write("valNoSG_A    : "+ str(application.valNoSG_A)+ "\n")
+    file.write("valNoSGCost_A    : "+ str(application.valNoSGCost_A)+ "\n")
     file.write("ValObjAi    : "+"\n")
     for i in range(N):
         file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
@@ -210,7 +211,9 @@ def run_SSA(logfiletxt):
     file.write("\n___InSG, OutSG___ \n")
     for t in range(T):
         file.write(" *** Period " + str(t + 1))
-        file.write(" InSG : " + str(application.SG.insg[t])+ " OutSG: "+ str(application.SG.outsg[t]) +"*** \n")
+        file.write(" InSG : " + str(application.SG.insg[t]))
+        file.write(" OutSG: "+ str(application.SG.outsg[t]))
+        file.write(" valNoSGCost: " + str(application.SG.ValNoSGCost[t]) +"*** \n")
         for i in range(N):
             file.write("__Prosumer " + str(i + 1) +":")
             file.write(" Cons = "+ str(application.SG.prosumers[i].consit[t]))
@@ -222,6 +225,7 @@ def run_SSA(logfiletxt):
     file.write("\n___Metrics___"+ "\n")
     file.write("ValSG : "+ str(application.valSG_A)+ "\n")
     file.write("valNoSG_A    : "+ str(application.valNoSG_A)+ "\n")
+    file.write("valNoSGCost_A    : "+ str(application.valNoSGCost_A)+ "\n")
     file.write("ValObjAi    : "+"\n")
     for i in range(N):
         file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
