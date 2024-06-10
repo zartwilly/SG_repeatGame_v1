@@ -183,7 +183,7 @@ class Smartgrid :
         float.
 
         """
-        self.Reduct[period] = self.valNoSG[period] - self.ValSG[period]
+        self.Reduct[period] = self.ValNoSG[period] - self.ValSG[period]
         
     def computePrice(self, period):
         """
