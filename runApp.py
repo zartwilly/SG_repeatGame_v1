@@ -63,7 +63,69 @@ def Initialization_game(maxstep, maxstep_init, slowdownfactor, threshold,
         
     return application
 
+def monitoring_after_algorithm(algoName, file, application):
+    """
     
+    monitoring some variables after running some algorithms
+    
+
+    Returns
+    -------
+    None.
+
+    """ 
+    file.write("\n___Storage___ \n")
+    for i in range(application.SG.prosumers.size):
+        file.write("__Prosumer " + str(i + 1) + "___\n")
+        for t in range(application.SG.maxperiod):
+            file.write("Period " + str(t + 1))
+            file.write(" : Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
+            
+    file.write("\n___InSG, OutSG___ \n")
+    for t in range(application.SG.maxperiod):
+        file.write(" *** Period " + str(t + 1))
+        file.write(" InSG : " + str(application.SG.insg[t]))
+        file.write(" OutSG: "+ str(application.SG.outsg[t]))
+        file.write(" valNoSGCost: " + str(application.SG.ValNoSGCost[t]) +"*** \n")
+        for i in range(application.SG.prosumers.size):
+            file.write("__Prosumer " + str(i + 1) +":")
+            file.write(" Cons = "+ str(application.SG.prosumers[i].consit[t]))
+            file.write(", Prod = "+ str(application.SG.prosumers[i].prodit[t]))
+            file.write(", mode = "+ str(application.SG.prosumers[i].mode[t]))
+            file.write(", state = "+ str(application.SG.prosumers[i].state[t]))
+            file.write("\n")
+            
+    file.write("\n___Metrics___"+ "\n")
+    file.write("ValSG : "+ str(application.valSG_A)+ "\n")
+    file.write("valNoSG_A    : "+ str(application.valNoSG_A)+ "\n")
+    file.write("valNoSGCost_A    : "+ str(application.valNoSGCost_A)+ "\n")
+    file.write("ValObjAi    : "+"\n")
+    for i in range(application.SG.prosumers.size):
+        file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
+        
+    file.write(f"________RUN END {algoName} " + str(1) +"_________" + "\n\n")
+    
+def monitoring_before_algorithm(file, application):
+    """
+    monitoring some variables BEFORE running some algorithms
+
+    Returns
+    -------
+    None.
+
+    """
+    print("________RUN ",1,"_________")
+    file.write("________RUN " + str(1) +"_________" + "\n")
+    
+    file.write("\n___Configuration___ \n")
+    for i in range(application.SG.prosumers.size):
+        file.write("__Prosumer " + str(i + 1) + "___\n")
+        for t in range(application.SG.maxperiod):
+            file.write("Period " + str(t + 1))
+            file.write(" : Production : " + str(application.SG.prosumers[i].production[t]))
+            file.write(" Consumption : " + str(application.SG.prosumers[i].consumption[t]))
+            file.write(" Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
+            
     
 def run_syA(logfiletxt):
     """
@@ -99,59 +161,21 @@ def run_syA(logfiletxt):
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
 
-    N = application.SG.prosumers.size
-    T = application.SG.maxperiod
 
     # Display for the run beginning 
     file = io.open(logfiletxt,"w")                                              # Logs file
     
-    print("________RUN ",1,"_________")
-    file.write("________RUN " + str(1) +"_________" + "\n")
-    
-    file.write("\n___Configuration___ \n")
-    for i in range(N):
-        file.write("__Prosumer " + str(i + 1) + "___\n")
-        for t in range(T):
-            file.write("Period " + str(t + 1))
-            file.write(" : Production : " + str(application.SG.prosumers[i].production[t]))
-            file.write(" Consumption : " + str(application.SG.prosumers[i].consumption[t]))
-            file.write(" Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
-            
+    monitoring_before_algorithm(file, application)
     
     # Execute SyA
     file.write("\n_______SyA_______"+ "\n")
     application.runSyA(plot=False,file=file)
     
-    file.write("\n___Storage___ \n")
-    for i in range(N):
-        file.write("__Prosumer " + str(i + 1) + "___\n")
-        for t in range(T):
-            file.write("Period " + str(t + 1))
-            file.write(" : Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
-            
-    file.write("\n___InSG, OutSG___ \n")
-    for t in range(T):
-        file.write(" *** Period " + str(t + 1))
-        file.write(" InSG : " + str(application.SG.insg[t])+ " OutSG: "+ str(application.SG.outsg[t]) +"*** \n")
-        for i in range(N):
-            file.write("__Prosumer " + str(i + 1) +":")
-            file.write(" Cons = "+ str(application.SG.prosumers[i].consit[t]))
-            file.write(", Prod = "+ str(application.SG.prosumers[i].prodit[t]))
-            file.write(", mode = "+ str(application.SG.prosumers[i].mode[t]))
-            file.write(", state = "+ str(application.SG.prosumers[i].state[t]))
-            file.write("\n")
-            
-    file.write("\n___Metrics___"+ "\n")
-    file.write("ValSG : "+ str(application.valSG_A)+ "\n")
-    file.write("valNoSG_A    : "+ str(application.valNoSG_A)+ "\n")
-    file.write("valNoSGCost_A    : "+ str(application.valNoSGCost_A)+ "\n")
-    file.write("ValObjAi    : "+"\n")
-    for i in range(N):
-        file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
+    monitoring_after_algorithm(algoName='syA', file=file, application=application)
     
     # End execute syA
     print("________RUN END syA ",1,"_________ \n")
-    file.write("________RUN END syA " + str(1) +"_________" + "\n\n")
+    
 
 def run_CSA(logfiletxt):
     """
@@ -362,7 +386,7 @@ def run_SSA(logfiletxt):
 if __name__ == '__main__':
 
     logfiletxt = "traceApplication.txt"
-    #run_syA(logfiletxt)
+    run_syA(logfiletxt)
     #run_SSA(logfiletxt)
-    run_CSA(logfiletxt)
+    #run_CSA(logfiletxt)
     pass
