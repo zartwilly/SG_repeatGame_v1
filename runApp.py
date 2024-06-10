@@ -91,28 +91,16 @@ def run_syA(logfiletxt):
     
         
     # Initialisation of the apps
-    application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
-                           b=slowdownfactor, rho=rho, h=h, maxstep_init=maxstep_init)
-    application.SG = sg.Smartgrid(N=N_actors, maxperiod=maxperiod, 
-                                  initialprob=initialprob, rho=rho)
+    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
+                        slowdownfactor=slowdownfactor, threshold=threshold, 
+                        N_actors=N_actors, maxperiod=maxperiod, 
+                        initialprob=initialprob, mu=mu, rho=rho, h=h)
     
-    # Configuration of the instance generator
-    g = config_instance(N_actors=N_actors, maxperiod=maxperiod)
-    
-    # Initialisation of production, consumption and storage using the instance generator
-    N = application.SG.prosumers.size
-    T = application.SG.maxperiod
-    
-    for i in range(N):
-        for t in range(T):
-            application.SG.prosumers[i].production[t] = g.production[i][t]
-            application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
-        application.SG.prosumers[i].storage[0] = 0
-        application.SG.prosumers[i].smax = 20
-        
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
 
+    N = application.SG.prosumers.size
+    T = application.SG.maxperiod
 
     # Display for the run beginning 
     file = io.open(logfiletxt,"w")                                              # Logs file
