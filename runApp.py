@@ -97,7 +97,29 @@ def run_syA(logfiletxt):
             
     
     # Execute SyA
-
+    file.write("\n_______SyA_______"+ "\n")
+    application.runSyA(plot=False,file=file)
+    
+    file.write("\n___Storage___ \n")
+    for i in range(N):
+        file.write("__Prosumer " + str(i + 1) + "___\n")
+        for t in range(T):
+            file.write("Period " + str(t + 1))
+            file.write(" : Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
+            
+    file.write("\n___InSG, OutSG___ \n")
+    for t in range(T):
+        file.write("Period " + str(t + 1))
+        file.write(" InSG : " + str(application.SG.insg[t])+ " OutSG: "+ str(application.SG.outsg[t]) +"\n")
+            
+    file.write("\n___Metrics___"+ "\n")
+    file.write("ValSG : "+ str(application.valSG_A)+ "\n")
+    file.write("valNoSG_A    : "+ str(application.valNoSG_A)+ "\n")
+    file.write("ValObjAi    : "+"\n")
+    for i in range(N):
+        file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
+    
+    # End execute syA
     print("________RUN END syA ",1,"_________ \n")
     file.write("________RUN END syA " + str(1) +"_________" + "\n\n")
 
