@@ -96,7 +96,7 @@ class App:
         """
         self.valNoSG_A = np.sum(self.SG.ValNoSG)
         
-    def computeValNoSGCost(self):
+    def computeValNoSGCost_A(self):
         """
         
 
@@ -167,6 +167,7 @@ class App:
         self.computeValNoSG()
         self.computeObjValai()
         self.computeObjSG()
+        self.computeValNoSGCost_A()
         
         
         # plot variables ValNoSG, ValSG
@@ -231,10 +232,72 @@ class App:
         self.computeValNoSG()
         self.computeObjValai()
         self.computeObjSG()
-        self.computeValNoSGCost()
+        self.computeValNoSGCost_A()
         
         # plot variables ValNoSG, ValSG
         
+    def runCSA(self, plot, file): 
+        """
+        Run CSA (centralised Stock Algorithm) algorithm on the app
+        
+        Parameters
+        ----------
+        plot : Boolean
+            a boolean determining if the plots are edited or not
+        
+        file : Boolean
+            file used to output logs
+        """
+        T_periods = self.SG.maxperiod
+        
+        for t in range(T_periods):
+            # Update the state of each prosumer
+            self.SG.updateState(period=t)
+            
+            # Update prosumers' modes following SyA mode selection
+            self.SG.updateModeCSA(period=t)
+            
+            # Update prodit,consit and period + 1 storage values
+            self.SG.updateSmartgrid(period=t)
+            
+            ## compute what each actor has to paid/gain at period t 
+            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
+            ## ------ start -------
+            # Calculate inSG and outSG
+            self.SG.computeSumInput(period=t)
+            self.SG.computeSumOutput(period=t)
+            
+            # calculate valNoSGCost_t
+            self.SG.computeValNoSGCost(period=t)
+            
+            # calculate valEgoc_t
+            self.SG.computeValEgoc(period=t)
+            
+            # calculate valNoSG_t
+            self.SG.computeValNoSG(period=t)
+            
+            # calculate ValSG_t
+            self.SG.computeValSG(period=t)
+            
+            # calculate Reduct_t
+            self.SG.computeReduct(period=t)
+            
+            # calculate repart_t
+            self.SG.computeRepart(period=t, mu=self.mu)
+            
+            # calculate price_t
+            self.SG.computePrice(period=t)
+            
+            ## ------ end -------
+            
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
+        
+        # plot variables ValNoSG, ValSG
         
         
     # def run_LRI_4_onePeriodT_oneStepK(self, period, boolInitMinMax):
