@@ -128,7 +128,7 @@ class Smartgrid :
             self.prosumers[i].computeValOne(period=period, maxperiod=self.maxperiod)
             sumValEgoc += self.prosumers[i].valOne[period]
             
-        self.valEgoc[period] = sumValEgoc
+        self.ValEgoc[period] = sumValEgoc
         
     def computeValNoSG(self, period):
         """
