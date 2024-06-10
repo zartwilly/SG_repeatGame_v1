@@ -185,8 +185,8 @@ class Smartgrid :
         float.
 
         """
-        phiPlusInsg = aux.insg[period]
-        phiMinusOutsg = aux.outsg[period]
+        phiPlusInsg = aux.phiepoplus(self.insg[period])
+        phiMinusOutsg = aux.phiepominus(self.outsg[period])
         self.ValNoSGCost[period] = phiPlusInsg - phiMinusOutsg
         
     def computeReduct(self, period):
