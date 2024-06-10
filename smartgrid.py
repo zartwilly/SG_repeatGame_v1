@@ -73,7 +73,7 @@ class Smartgrid :
         self.ValNoSG = np.zeros(maxperiod)
         self.ValSG = np.zeros(maxperiod)
         self.Reduct = np.zeros(maxperiod)
-        dt = np.dtype([('agent', np.int), ('strategy', ag.Mode)])
+        dt = np.dtype([('agent', int), ('strategy', ag.Mode)])
         self.strategy_profile = np.ndarray(shape=(N, maxperiod), dtype=dt)
         self.Cost = np.zeros(maxperiod)
         self.DispSG = np.zeros(rho+1)
