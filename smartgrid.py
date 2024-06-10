@@ -701,7 +701,25 @@ class Smartgrid :
                 
             else :
                 self.prosumers[i].mode[period] = ag.Mode.DIS
+    
+    def updateModeCSA(self, period): 
+        """
+        Update mode using rules from CSA algortihm
+        
+        """
+        N = self.prosumers.size
+        
+        for i in range(N):
+            if self.prosumers[i].state[period] == ag.State.DEFICIT :
+                self.prosumers[i].mode[period] = ag.Mode.CONSMINUS
                 
+            elif self.prosumers[i].state[period] == ag.State.SELF :
+                self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                
+            else :
+                self.prosumers[i].mode[period] = ag.Mode.PROD
+                
+    
     def updateModeSSA(self, period, maxperiod, rho):
         """
         Update Mode using the self stock algorithm (SSA)
@@ -723,6 +741,7 @@ class Smartgrid :
                 self.prosumers[i].mode[period] = ag.Mode.PROD
             else:
                 self.prosumers[i].mode[period] = ag.Mode.DIS
+    
     
     ###########################################################################
     #                       update prosumers variables:: end
