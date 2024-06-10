@@ -31,6 +31,39 @@ def config_instance(N_actors, maxperiod):
     g.generate(transitionprobabilities,repartition,values,probabilities)
     
     return g
+
+def Initialization_game(maxstep, maxstep_init, slowdownfactor, threshold, 
+                        N_actors, maxperiod, initialprob, mu, rho, h):
+    """
+    initialization of variables of an object application 
+    
+    Returns
+    -----
+    App
+    """
+    # Initialisation of the apps
+    application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
+                           b=slowdownfactor, rho=rho, h=h, maxstep_init=maxstep_init)
+    application.SG = sg.Smartgrid(N=N_actors, maxperiod=maxperiod, 
+                                  initialprob=initialprob, rho=rho)
+    
+    # Configuration of the instance generator
+    g = config_instance(N_actors=N_actors, maxperiod=maxperiod)
+    
+    # Initialisation of production, consumption and storage using the instance generator
+    N = application.SG.prosumers.size
+    T = application.SG.maxperiod
+    
+    for i in range(N):
+        for t in range(T):
+            application.SG.prosumers[i].production[t] = g.production[i][t]
+            application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
+        application.SG.prosumers[i].storage[0] = 0
+        application.SG.prosumers[i].smax = 20
+        
+    return application
+
+    
     
 def run_syA(logfiletxt):
     """
