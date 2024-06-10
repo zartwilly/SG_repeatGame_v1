@@ -112,38 +112,38 @@ class App:
         
         for t in range(T_periods):
             # Update the state of each prosumer
-            self.SG.updateState(self, period=t)
+            self.SG.updateState(period=t)
             
             # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeSyA(self, period=t)
+            self.SG.updateModeSyA(period=t)
             
             # Update prodit,consit and period + 1 storage values
-            self.SG.updateSmartgrid(self, period=t)
+            self.SG.updateSmartgrid(period=t)
             
             ## compute what each actor has to paid/gain at period t 
             ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
             ## ------ start -------
             # Calculate inSG and outSG
-            self.SG.computeSumInput(self, period=t)
-            self.SG.computeSumOutput(self, period=t)
+            self.SG.computeSumInput(period=t)
+            self.SG.computeSumOutput(period=t)
             
             # calculate valEgoc_t
-            self.SG.computeValEgoc(self, period=t)
+            self.SG.computeValEgoc(period=t)
             
             # calculate valNoSG_t
-            self.SG.computeValNoSG(self, period=t)
+            self.SG.computeValNoSG(period=t)
             
             # calculate ValSG_t
-            self.SG.computeValSG(self, period=t)
+            self.SG.computeValSG(period=t)
             
             # calculate Reduct_t
-            self.SG.computeReduct(self, period=t)
+            self.SG.computeReduct(period=t)
             
             # calculate repart_t
-            self.SG.computeRepart(self, period=t, mu=self.mu)
+            self.SG.computeRepart(period=t, mu=self.mu)
             
             # calculate price_t
-            self.SG.computePrice(self, period=t)
+            self.SG.computePrice(period=t)
             
             ## ------ end -------
             
