@@ -56,7 +56,7 @@ class Smartgrid :
         
         """
         self.rho = rho
-        self.TauS = np.array(shape=(N, rho+1))
+        self.TauS = np.ndarray(shape=(N, rho+1))
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.maxperiod = maxperiod
         for i in range(N):
