@@ -30,6 +30,7 @@ class App:
     ObjValai = None # Objective value for each actor over all periods for LRI
     valNoSG_A = None # sum of prices payed by all actors during all periods by running algo A without SG
     valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
+    valNoSGCost_A = None # 
     
     def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init):
         self.maxstep = maxstep
@@ -95,7 +96,17 @@ class App:
         """
         self.valNoSG_A = np.sum(self.SG.ValNoSG)
         
-            
+    def computeValNoSGCost(self):
+        """
+        
+
+        Returns
+        -------
+        None.
+
+        """
+        self.valNoSGCost_A = np.sum(self.SG.ValNoSGCost)
+        
     def runSyA(self, plot, file): 
         """
         Run SyA algorithm on the app
@@ -152,6 +163,7 @@ class App:
         self.computeValNoSG()
         self.computeObjValai()
         self.computeObjSG()
+        self.computeValNoSGCost()
         
         # plot variables ValNoSG, ValSG
             
@@ -212,6 +224,7 @@ class App:
         self.computeValNoSG()
         self.computeObjValai()
         self.computeObjSG()
+        self.computeValNoSGCost()
         
         # plot variables ValNoSG, ValSG
         
