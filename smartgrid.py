@@ -60,7 +60,7 @@ class Smartgrid :
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.maxperiod = maxperiod
         for i in range(N):
-            self.prosumers[i] = ag.Prosumer(maxperiod, initialprob)   
+            self.prosumers[i] = ag.Prosumer(maxperiod, initialprob, rho)   
         #self.bgmax = np.zeros((N,maxperiod))
         
         self.LCostmax = np.zeros(maxperiod)
