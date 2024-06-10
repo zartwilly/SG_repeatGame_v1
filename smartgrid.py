@@ -173,7 +173,7 @@ class Smartgrid :
     
     def computeValNoSGCost(self, period):
         """
-        
+        compute the gain when we have no smart grid.
 
         Parameters
         ----------
