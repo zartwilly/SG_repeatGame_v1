@@ -20,7 +20,6 @@ class App:
     
     SG = None # Smartgrid
     N_actors = None  # number of actors
-    maxperiod = None # max periods
     maxstep = None # Number of learning steps
     maxstep_init = None # Number of learning steps for initialisation Max, Min Prices. in this step, no strategies' policies are updated
     mu = None # To define
@@ -29,10 +28,11 @@ class App:
     rho = None
     ObjSG = None # Objective value for a SG over all periods for LRI
     ObjValai = None # Objective value for each actor over all periods for LRI
+    valNoSG_A = None # sum of prices payed by all actors during all periods by running algo A without SG
+    valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
     
-    def __init__(self, N_actors, maxperiod, maxstep, mu, b, rho, h, maxstep_init):
+    def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init):
         self.maxstep = maxstep
-        self.maxperiod = maxperiod
         self.N_actors = N_actors
         self.mu = mu
         self.b = b
@@ -41,9 +41,11 @@ class App:
         self.maxstep_init = maxstep_init
         self.ObjSG = 0
         self.ObjValai = np.zeros(N_actors)
+        self.valNoSG_A = 0
+        self.valSG_A = 0
         
         
-    def computeObjValai(self, application):
+    def computeObjValai(self):
         """
         Compute the fitness value of actors at the end of game
         
@@ -53,12 +55,12 @@ class App:
             an instance of an application
         """
                 
-        for i in range(application.SG.prosumers.size):
+        for i in range(self.SG.prosumers.size):
             sumObjai = 0
-            sumObjai = np.sum(application.SG.prosumers[i].price)
+            sumObjai = np.sum(self.SG.prosumers[i].price)
             self.ObjValai[i] = sumObjai
             
-    def computeObjSG(self, application):
+    def computeObjSG(self):
         """
         Compute the fitness value of the SG grid at the end of game
         
@@ -68,10 +70,93 @@ class App:
             an instance of time t
         """
         
-        sumValSG = np.sum(application.SG.ValSG)
+        sumValSG = np.sum(self.SG.ValSG)
         self.ObjSG = sumValSG
         
+    def computeValSG(self):
+        """
+        
+
+        Parameters
+        ----------
+        application : APP
+            an instance of an application
+        """
+        self.valSG_A = np.sum(self.SG.ValSG)
+        
+    def computeValNoSG(self):
+        """
+        
+
+        Parameters
+        ----------
+        application : APP
+            an instance of an application
+        """
+        self.valNoSG_A = np.sum(self.SG.ValNoSG)
+        
             
+    def runSyA(self, plot, file): 
+        """
+        Run SyA algorithm on the app
+        
+        Parameters
+        ----------
+        plot : Boolean
+            a boolean determining if the plots are edited or not
+        
+        file : Boolean
+            file used to output logs
+        """
+        T_periods = self.SG.maxperiod
+        
+        for t in range(T_periods):
+            # Update the state of each prosumer
+            self.SG.updateState(self, period=t)
+            
+            # Update prosumers' modes following SyA mode selection
+            self.SG.updateModeSyA(self, period=t)
+            
+            # Update prodit,consit and period + 1 storage values
+            self.SG.updateSmartgrid(self, period=t)
+            
+            ## compute what each actor has to paid/gain at period t 
+            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
+            ## ------ start -------
+            # Calculate inSG and outSG
+            self.SG.computeSumInput(self, period=t)
+            self.SG.computeSumOutput(self, period=t)
+            
+            # calculate valEgoc_t
+            self.SG.computeValEgoc(self, period=t)
+            
+            # calculate valNoSG_t
+            self.SG.computeValNoSG(self, period=t)
+            
+            # calculate ValSG_t
+            self.SG.computeValSG(self, period=t)
+            
+            # calculate Reduct_t
+            self.SG.computeReduct(self, period=t)
+            
+            # calculate repart_t
+            self.SG.computeRepart(self, period=t, mu=self.mu)
+            
+            # calculate price_t
+            self.SG.computePrice(self, period=t)
+            
+            ## ------ end -------
+            
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        
+        # plot variables ValNoSG, ValSG
+            
+            
+        
         
         
     # def run_LRI_4_onePeriodT_oneStepK(self, period, boolInitMinMax):
@@ -177,7 +262,7 @@ class App:
     #     # Determines for each period if it attained a Nash equilibrium and if not if one exist
     #     file.write("___Nash___ : NOT DEFINE \n")
                 
-            
+    
             
                 
                 
