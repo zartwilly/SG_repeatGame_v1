@@ -298,110 +298,129 @@ class App:
         self.computeValNoSGCost_A()
         
         # plot variables ValNoSG, ValSG
-        
-        
-    # def run_LRI_4_onePeriodT_oneStepK(self, period, boolInitMinMax):
-    #     """
-        
-
-    #     Parameters
-    #     ----------
-    #     period : int
-    #         an instance of time t.
-    #     boolInitMinMax : Bool
-    #         prescribe the game whether LRI probabilities strategies are updated or not.
-    #         if True, LRI probabilities are not updated otherwise
-
-    #     Returns
-    #     -------
-    #     None.
-
-    #     """
-    #     # Update prosumers' modes following LRI mode selection
-    #     self.SG.updatemodeLRI(period, self.threshold)
-        
-    #     # Update prodit, consit and period + 1 storage values
-    #     self.SG.updatesmartgrid(period)
-        
-    #     # Calculate inSG and outSG
-    #     self.SG.computeSumInput(period)
-    #     self.SG.computeSumOutput(period)
     
-    #     # Calculate ValOne, ValEgo, ValLess, ValSG, Reduct
-    #     self.SG.computeValOne(period)
-    #     self.SG.computeValEgoc(period)
-    #     self.SG.computeValLess(period)
-    #     self.SG.computeValSG(period)
-    #     self.SG.computeReduct(period)
         
-    #     # Calculate Repart, Price, Obj, Ant for prosumers
-    #     self.SG.computeRepart(period)
-    #     self.SG.computePrice(period)
-    #     self.SG.computeObjectiveValue(period)
-    #     self.SG.computeAnt(period)
+    def run_LRI_4_onePeriodT_oneStepK(self, period, boolInitMinMax):
+        """
         
-    #     # Update min/max prices for prosumers
-    #     self.SG.updateMaxMinPrice(period)
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+        boolInitMinMax : Bool
+            require the game whether LRI probabilities strategies are updated or not.
+            if True, LRI probabilities are not updated otherwise.
+            This part is used for initializing the min and max values
+
+        Returns
+        -------
+        None.
+
+        """
+        # Update prosumers' modes following LRI mode selection
+        self.SG.updateModeLRI(period, self.threshold)
         
-    #     # boolInitMinMax == False, we update probabilities (prmod) of prosumers strategies
-    #     if not boolInitMinMax:
-    #         # Calculate utility
-    #         self.SG.computeUtility(period)
+        # Update prodit, consit and period + 1 storage values
+        self.SG.updateSmartgrid(period)
+        
+        # Calculate inSG and outSG
+        self.SG.computeSumInput(period)
+        self.SG.computeSumOutput(period)
+    
+        ## compute what each actor has to paid/gain at period t 
+        ## Calculate ValNoSGCost, ValEgo, ValNoSG, ValSG, Reduct, Repart
+        ## ------ start ------
+        
+        # calculate valNoSGCost_t
+        self.SG.computeValNoSGCost(period)
+        
+        # calculate valEgoc_t
+        self.SG.computeValEgoc(period)
+        
+        # calculate valNoSG_t
+        self.SG.computeValNoSG(period)
+        
+        # calculate ValSG_t
+        self.SG.computeValSG(period)
+        
+        # calculate Reduct_t
+        self.SG.computeReduct(period)
+        
+        # calculate repart_t
+        self.SG.computeRepart(period, mu=self.mu)
+        
+        # calculate price_t
+        self.SG.computePrice(period)
+        
+        ## ------ end ------
+        
+        # Compute(Update) min/max Learning cost (LearningCost) for prosumers
+        self.SG.computeLCost_LCostMinMax(period)
+        
+        # boolInitMinMax == False, we update probabilities (prmod) of prosumers strategies
+        if not boolInitMinMax:
+            # Calculate utility
+            self.SG.computeUtility(period)
             
-    #         # Update probabilities for choosing modes
-    #         self.SG.updateProbaLRI(period, self.b)
+            # Update probabilities for choosing modes
+            self.SG.updateProbaLRI(period, self.b)
         
-    #     pass
+        pass
     
-    # def runLRI(self, file):
-    #     """
-    #     Run LRI algorithm with the repeated game
+    def runLRI(self, file):
+        """
+        Run LRI algorithm with the repeated game
         
-    #     Parameters
-    #     ----------
-    #     file : TextIO
-    #         file to save some informations of runtime
+        Parameters
+        ----------
+        file : TextIO
+            file to save some informations of runtime
 
-    #     Returns
-    #     -------
-    #     None.
+        Returns
+        -------
+        None.
 
-    #     """
-    #     K = self.maxstep
-    #     T = self.SG.maxperiod
-    #     L = self.maxstep_init
+        """
+        K = self.maxstep
+        T = self.SG.maxperiod
+        L = self.maxstep_init
         
-    #     for t in range(T):
+        for t in range(T):
                         
-    #         # Update the state of each prosumer
-    #         self.SG.updateState(t)
+            # Update the state of each prosumer
+            self.SG.updateState(t)
             
-    #         # Game for initialisation Min/Max Prices for prosumers
-    #         for l in range(L):
-    #             self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=True)
+            # Initialization game of min/max Learning cost (LearningCost) for prosumers
+            for l in range(L):
+                self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=True)
                 
-    #         # Game with learning steps
-    #         for k in range(K):
-    #             self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=False)
+            # Game with learning steps
+            for k in range(K):
+                self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=False)
                 
-    #     # Compute Benifit Bi
-    #     self.SG.computeBenefit()
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
         
-    #     file.write("___Threshold___ \n")
-    #     # Determines if the threshold has been reached
-    #     N = self.SG.prosumers.size
-    #     for t in range(T):
-    #         for i in range(N):
-    #             if (self.SG.prosumers[i].prmode[t][0] < self.threshold and \
-    #                 (self.SG.prosumers[i].prmode[t][1]) < self.threshold):
-    #                 file.write("Threshold not reached for period "+ str(i+1) +"\n") 
-    #                 for Ni in range(N):
-    #                     file.write("Prosumer " + str(Ni) + " : "+ str(self.SG.prosumers[Ni].prmode[i][0]) + "\n")
-    #                 break
+        file.write("___Threshold___ \n")
+        # Determines if the threshold has been reached
+        N = self.SG.prosumers.size
+        for t in range(T):
+            for i in range(N):
+                if (self.SG.prosumers[i].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[i].prmode[t][1]) < self.threshold):
+                    file.write("Threshold not reached for period "+ str(i+1) +"\n") 
+                    for Ni in range(N):
+                        file.write("Prosumer " + str(Ni) + " : "+ str(self.SG.prosumers[Ni].prmode[i][0]) + "\n")
+                    break
                 
         
-    #     # Determines for each period if it attained a Nash equilibrium and if not if one exist
-    #     file.write("___Nash___ : NOT DEFINE \n")
+        # Determines for each period if it attained a Nash equilibrium and if not if one exist
+        file.write("___Nash___ : NOT DEFINE \n")
                 
     
             
