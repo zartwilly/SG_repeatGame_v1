@@ -22,6 +22,7 @@ class App:
     N_actors = None  # number of actors
     maxstep = None # Number of learning steps
     maxstep_init = None # Number of learning steps for initialisation Max, Min Prices. in this step, no strategies' policies are updated
+    threshold = None
     mu = None # To define
     b = None # learning rate / Slowdown factor LRI
     h = None # value to indicate how many periods we use to predict futures values of P or C
@@ -32,7 +33,7 @@ class App:
     valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
     valNoSGCost_A = None # 
     
-    def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init):
+    def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init, threshold):
         self.maxstep = maxstep
         self.N_actors = N_actors
         self.mu = mu
@@ -40,6 +41,7 @@ class App:
         self.h = h
         self.rho = rho
         self.maxstep_init = maxstep_init
+        self.threshold = threshold
         self.ObjSG = 0
         self.ObjValai = np.zeros(N_actors)
         self.valNoSG_A = 0
