@@ -332,6 +332,6 @@ if __name__ == '__main__':
     logfiletxt = "traceApplication.txt"
     #run_syA(logfiletxt)
     #run_SSA(logfiletxt)
-    run_CSA(logfiletxt)
+    #run_CSA(logfiletxt)
     #run_LRI_REPART(logfiletxt)
     pass
