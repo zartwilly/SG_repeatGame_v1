@@ -95,7 +95,6 @@ class Prosumer:
             self.prmode[i][0] = initialprob
             self.prmode[i][1] = 1 - initialprob
         self.utility = np.zeros(maxperiod)
-        self.benefit = np.zeros(maxperiod)
         
         ##### new parameters variables for Repeated game ########
         self.rho_cons = 0
@@ -123,7 +122,7 @@ class Prosumer:
         self.Lcost = np.zeros(maxperiod)
         self.Lcostmax = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         self.Lcostmin = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
-        self.benefit = 0
+        
 
     def computeValOne(self, period, maxperiod):
         """
