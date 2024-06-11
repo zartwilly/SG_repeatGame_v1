@@ -43,7 +43,8 @@ def Initialization_game(maxstep, maxstep_init, slowdownfactor, threshold,
     """
     # Initialisation of the apps
     application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
-                           b=slowdownfactor, rho=rho, h=h, maxstep_init=maxstep_init)
+                           b=slowdownfactor, rho=rho, h=h, 
+                           maxstep_init=maxstep_init, threshold=threshold)
     application.SG = sg.Smartgrid(N=N_actors, maxperiod=maxperiod, 
                                   initialprob=initialprob, rho=rho)
     
@@ -317,7 +318,7 @@ def run_LRI_REPART(logfiletxt):
     # Execute CSA
     algoName = "LRI_REPART"
     file.write(f"\n_______{algoName}_______"+ "\n")
-    application.run_LRI_REPART(plot=False, file=file)
+    application.runLRI_REPART(plot=False, file=file)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
     
@@ -331,5 +332,6 @@ if __name__ == '__main__':
     logfiletxt = "traceApplication.txt"
     #run_syA(logfiletxt)
     #run_SSA(logfiletxt)
-    #run_CSA(logfiletxt)
+    run_CSA(logfiletxt)
+    #run_LRI_REPART(logfiletxt)
     pass
