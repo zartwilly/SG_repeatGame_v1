@@ -120,8 +120,8 @@ class Prosumer:
         self.Repart = np.zeros(maxperiod)
         self.cost = np.zeros(maxperiod)
         self.Lcost = np.zeros(maxperiod)
-        self.Lcostmax = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
-        self.Lcostmin = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
+        self.LCostmax = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
+        self.LCostmin = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         
 
     def computeValOne(self, period, maxperiod):
