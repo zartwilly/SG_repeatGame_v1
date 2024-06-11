@@ -489,8 +489,8 @@ class Smartgrid :
         for i in range(N):
             if (self.prosumers[i].LCostmax !=0 or self.prosumers[i].LCostmin != 0):
                 self.prosumers[i].utility[period] \
-                    = (self.prosumers[i].LCostmax - self.prosumers[i].Lcost[period]) \
-                        / (self.prosumers[i].LCostmax - self.prosumers[i].LCostmin)
+                    = (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].Lcost[period]) \
+                        / (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].LCostmin["Lcost"])
             else:
                 self.prosumers[i].utility[period] = 0
         
