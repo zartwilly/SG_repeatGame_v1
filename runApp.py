@@ -277,6 +277,54 @@ def run_SSA(logfiletxt):
     # End execute syA
     print("________RUN END SSA ",1,"_________ \n")
 
+def run_LRI_REPART(logfiletxt):
+    """
+    run LRI REPART algorithm
+
+    Parameters
+    ----------
+    logfile : txt
+        path Logs file 
+    Returns
+    -------
+    None.
+
+    """
+    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
+    maxstep_init = 5
+    slowdownfactor = pow(10, -3)        # 0.001
+    threshold = 0.8
+    N_actors = 15
+    maxperiod = 10                      # 101
+    initialprob = 0.5
+    mu = pow(10, -1)                    # 0.1
+    rho = 5                             # 0.1
+    h = 5
+    
+        
+    # Initialisation of the apps
+    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
+                        slowdownfactor=slowdownfactor, threshold=threshold, 
+                        N_actors=N_actors, maxperiod=maxperiod, 
+                        initialprob=initialprob, mu=mu, rho=rho, h=h)
+
+    # Display for the run beginning 
+    file = io.open(logfiletxt,"w")                                              # Logs file
+    
+    monitoring_before_algorithm(file, application)
+    
+    
+    # Execute CSA
+    algoName = "LRI_REPART"
+    file.write(f"\n_______{algoName}_______"+ "\n")
+    application.run_LRI_REPART(plot=False, file=file)
+    
+    monitoring_after_algorithm(algoName=algoName, file=file, application=application)
+    
+    
+    
+    # End execute CSA
+    print("________RUN END CSA ",1,"_________ \n")
 
 if __name__ == '__main__':
 
