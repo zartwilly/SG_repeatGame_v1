@@ -293,7 +293,7 @@ def run_LRI_REPART(logfiletxt):
     """
     maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
     maxstep_init = 5
-    slowdownfactor = pow(10, -3)        # 0.001
+    slowdownfactor = pow(10, -1)        # pow(10, -3)=0.001, pow(10, -1)=0.1
     threshold = 0.8
     N_actors = 15
     maxperiod = 10                      # 101
@@ -315,7 +315,7 @@ def run_LRI_REPART(logfiletxt):
     monitoring_before_algorithm(file, application)
     
     
-    # Execute CSA
+    # # Execute LRI_REPART
     algoName = "LRI_REPART"
     file.write(f"\n_______{algoName}_______"+ "\n")
     application.runLRI_REPART(plot=False, file=file)
@@ -325,7 +325,7 @@ def run_LRI_REPART(logfiletxt):
     
     
     # End execute CSA
-    print("________RUN END CSA ",1,"_________ \n")
+    print("________RUN END LRI_REPART ",1,"_________ \n")
 
 if __name__ == '__main__':
 
@@ -333,5 +333,5 @@ if __name__ == '__main__':
     #run_syA(logfiletxt)
     #run_SSA(logfiletxt)
     #run_CSA(logfiletxt)
-    #run_LRI_REPART(logfiletxt)
+    run_LRI_REPART(logfiletxt)
     pass
