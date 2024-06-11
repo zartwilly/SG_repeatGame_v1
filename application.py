@@ -409,17 +409,25 @@ class App:
         self.computeValNoSGCost_A()
         
         file.write("___Threshold___ \n")
-        # Determines if the threshold has been reached
+
+        ## show prmode for each prosumer at all period and determined when the threshold has been reached
         N = self.SG.prosumers.size
-        for t in range(T):
-            for i in range(N):
-                if (self.SG.prosumers[i].prmode[t][0] < self.threshold and \
-                    (self.SG.prosumers[i].prmode[t][1]) < self.threshold):
-                    file.write("Threshold not reached for period "+ str(i+1) +"\n") 
-                    for Ni in range(N):
-                        file.write("Prosumer " + str(Ni) + " : "+ str(self.SG.prosumers[Ni].prmode[i][0]) + "\n")
-                    break
+        for Ni in range(N):
+            file.write(f"Prosumer = {Ni} \n")
+            for t in range(T):
+                if (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" < threshold="+ str(self.threshold) + "\n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] >= self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" >= threshold="+ str(self.threshold) + " ==>  prob[0] #### \n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) >= self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
+                else:
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
                 
+                    
         
         # Determines for each period if it attained a Nash equilibrium and if not if one exist
         file.write("___Nash___ : NOT DEFINE \n")
