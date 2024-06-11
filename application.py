@@ -368,7 +368,7 @@ class App:
         
         pass
     
-    def runLRI(self, file):
+    def runLRI_REPART(self, file):
         """
         Run LRI algorithm with the repeated game
         
