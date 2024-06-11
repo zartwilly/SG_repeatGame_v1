@@ -177,6 +177,7 @@ def run_syA(logfiletxt):
     # End execute syA
     print("________RUN END syA ",1,"_________ \n")
     
+    return application
 
 def run_CSA(logfiletxt):
     """
@@ -225,6 +226,8 @@ def run_CSA(logfiletxt):
     
     # End execute CSA
     print("________RUN END CSA ",1,"_________ \n")
+    
+    return application
 
 
 def run_SSA(logfiletxt):
@@ -277,6 +280,8 @@ def run_SSA(logfiletxt):
     
     # End execute syA
     print("________RUN END SSA ",1,"_________ \n")
+    
+    return application
 
 def run_LRI_REPART(logfiletxt):
     """
@@ -324,8 +329,10 @@ def run_LRI_REPART(logfiletxt):
     
     
     
-    # End execute CSA
+    # End execute LRI REPART
     print("________RUN END LRI_REPART ",1,"_________ \n")
+    
+    return application
 
 if __name__ == '__main__':
 
