@@ -522,8 +522,9 @@ def plot_ManyApp_perfMeasure_DBG(df_APP: pd.DataFrame, df_SG: pd.DataFrame):
     new_header = df_APP_T.iloc[0]; 
     df_APP_T = df_APP_T[1:]; 
     df_APP_T.columns = new_header
+    index = df_APP_T.index.tolist(); index.remove("nameScenario")
     for num_app, nameAlgo in enumerate(df_APP_T.columns):
-        fig.add_trace(go.Bar(x=df_APP_T.index.tolist(), 
+        fig.add_trace(go.Bar(x=index, 
                               y=df_APP_T.iloc[:,num_app].tolist(), name=df_APP_T.columns.tolist()[num_app],
                               base = 0.0, width = 0.2, offset = 0.2*num_app,
                               marker = dict(color = COLORS[num_app])
