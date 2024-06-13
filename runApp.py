@@ -17,8 +17,32 @@ import agents as ag
 
 
 
-def config_instance(N_actors, maxperiod):
-    g = ig2.Instancegenaratorv2(N=N_actors, T=maxperiod)
+def config_instance(N_actors, nbperiod, rho):
+    """
+    generate data for a game with 
+    N_actors prosumers
+    nbperiod periods
+    rho next periods to predict values 
+    the shape data is N*(nbperiod+rho)
+
+    Parameters
+    ----------
+    N_actors : int
+        number of prosumers
+    nbperiod : int
+        number of periods .
+    rho : int
+        the next periods to add at T periods. In finish, we generate (T + rho) periods.
+        This parameter enables the prediction of values from T+1 to T + rho periods
+        rho << T ie rho=3 < T=5
+
+    Returns
+    -------
+    g : TYPE
+        DESCRIPTION.
+
+    """
+    g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
     transitionprobabilities = [0.4, 0.6, 0.5, 0.4]
     repartition = [8, 7]
     
@@ -68,15 +92,15 @@ def Initialization_game(scenario):
     application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
                            b=slowdownfactor, rho=rho, h=h, 
                            maxstep_init=maxstep_init, threshold=threshold)
-    application.SG = sg.Smartgrid(N=N_actors, maxperiod=nbPeriod, 
+    application.SG = sg.Smartgrid(N=N_actors, nbperiod=nbPeriod, 
                                   initialprob=initialprob, rho=rho)
     
     # Configuration of the instance generator
-    g = config_instance(N_actors=N_actors, maxperiod=nbPeriod)
+    g = config_instance(N_actors=N_actors, nbperiod=nbPeriod, rho=rho)
     
     # Initialisation of production, consumption and storage using the instance generator
     N = application.SG.prosumers.size
-    T = application.SG.maxperiod
+    T = application.SG.nbperiod
     
     for i in range(N):
         for t in range(T):
@@ -101,12 +125,12 @@ def monitoring_after_algorithm(algoName, file, application):
     file.write("\n___Storage___ \n")
     for i in range(application.SG.prosumers.size):
         file.write("__Prosumer " + str(i + 1) + "___\n")
-        for t in range(application.SG.maxperiod):
+        for t in range(application.SG.nbperiod):
             file.write("Period " + str(t + 1))
             file.write(" : Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
             
     file.write("\n___InSG, OutSG___ \n")
-    for t in range(application.SG.maxperiod):
+    for t in range(application.SG.nbperiod):
         file.write(" *** Period " + str(t + 1))
         file.write(" InSG : " + str(application.SG.insg[t]))
         file.write(" OutSG: "+ str(application.SG.outsg[t]))
@@ -144,7 +168,7 @@ def monitoring_before_algorithm(file, application):
     file.write("\n___Configuration___ \n")
     for i in range(application.SG.prosumers.size):
         file.write("__Prosumer " + str(i + 1) + "___\n")
-        for t in range(application.SG.maxperiod):
+        for t in range(application.SG.nbperiod):
             file.write("Period " + str(t + 1))
             file.write(" : Production : " + str(application.SG.prosumers[i].production[t]))
             file.write(" Consumption : " + str(application.SG.prosumers[i].consumption[t]))
