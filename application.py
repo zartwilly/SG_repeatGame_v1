@@ -33,6 +33,7 @@ class App:
     valNoSG_A = None # sum of prices payed by all actors during all periods by running algo A without SG
     valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
     valNoSGCost_A = None # 
+    dicoLRI_onePeriod_oneStep = None # a dictionnary to save a running for one period and one step
     
     def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init, threshold):
         self.maxstep = maxstep
@@ -47,6 +48,7 @@ class App:
         self.ObjValai = np.zeros(N_actors)
         self.valNoSG_A = 0
         self.valSG_A = 0
+        self.dicoLRI_onePeriod_oneStep = dict()
         
         
     def computeObjValai(self):
@@ -357,6 +359,10 @@ class App:
         # calculate price_t
         self.SG.computePrice(period)
         
+        # calculate ValStock
+        self.SG.computeValStock(period)
+        
+        
         ## ------ end ------
         
         # Compute(Update) min/max Learning cost (LearningCost) for prosumers
@@ -371,6 +377,8 @@ class App:
             self.SG.updateProbaLRI(period, self.b)
         
         pass
+    
+    
     
     def runLRI_REPART(self, plot, file):
         """
@@ -403,6 +411,8 @@ class App:
             for k in range(K):
                 self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
                 
+            pass
+                
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
@@ -434,7 +444,196 @@ class App:
         # Determines for each period if it attained a Nash equilibrium and if not if one exist
         file.write("___Nash___ : NOT DEFINE \n")
                 
+    ######### ----------------   debut : TEST SAVE running  ------------------------------------
+    def save_LRI_2_json_onePeriod_oneStep(self, period, step):
+        """
+        save data from LRI execution for one period 
+
+        Parameters
+        ----------
+        period : int, 
+            DESCRIPTION. The default is t.
+        step: int
+            one epoch/step for learning
+
+        Returns
+        -------
+        None.
+
+        """
+        N = self.N_actors
+        insg = self.SG.insg[period]
+        outsg = self.SG.outsg[period]
+        ValEgoc = self.SG.ValEgoc[period]
+        ValNoSG = self.SG.ValNoSG[period]
+        ValSG = self.SG.ValSG[period]
+        LCostmax = self.SG.LCostmax[period]
+        LCostmin = self.SG.LCostmin[period]
+        Cost = self.SG.Cost[period]
+        
+        #dicoLRI_onePeriod_oneStep = dict()
+        for i in range(N):
+            production = self.SG.prosumers[i].production[period]
+            consumption = self.SG.prosumers[i].consumption[period]
+            prodit = self.SG.prosumers[i].prodit[period]
+            consit = self.SG.prosumers[i].consit[period]
+            mode = self.SG.prosumers[i].mode[period]
+            state = self.SG.prosumers[i].state[period]
+            prmode0 = self.SG.prosumers[i].prmode[period][0]
+            prmode1 = self.SG.prosumers[i].prmode[period][1]
+            utility = self.SG.prosumers[i].utility[period]
+            price = self.SG.prosumers[i].price[period]
+            valOne_i = self.SG.prosumers[i].valOne[period]
+            valNoSG_i = self.SG.prosumers[i].valNoSG[period]
+            valStock_i = self.SG.prosumers[i].valStock[period]
+            Repart_i = self.SG.prosumers[i].Repart[period]
+            cost = self.SG.prosumers[i].cost[period]
+            Lcost = self.SG.prosumers[i].Lcost[period]
+            
+            self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
+                "period": period,
+                "step": step,
+                "production":production,
+                "consumption": consumption,
+                "prodit": prodit,
+                "consit": consit,
+                "mode": str(mode),
+                "state": str(state),
+                "prmode0": prmode0,
+                "prmode1": prmode1,
+                "utility": utility,
+                "price": price,
+                "valOne_i": valOne_i,
+                "valNoSG_i":valNoSG_i,
+                "valStock_i":valStock_i,
+                "Repart_i": Repart_i,
+                "cost": cost,
+                "Lcost": Lcost,
+                "insg": insg,
+                "outsg": outsg,
+                "ValEgoc": ValEgoc,
+                "ValNoSG": ValNoSG,
+                "ValSG": ValSG,
+                "LCostmax": LCostmax,
+                "LCostmin": LCostmin,
+                "Cost": Cost,
+                }
+        pass
     
+    def runLRI_REPART_SAVERunning(self, plot, file):
+        """
+        Run LRI algorithm with the repeated game
+        
+        Parameters
+        ----------
+        file : TextIO
+            file to save some informations of runtime
+
+        Returns
+        -------
+        None.
+
+        """
+        K = self.maxstep
+        T = self.SG.nbperiod
+        L = self.maxstep_init
+        
+        import pandas as pd
+        df_ts = []
+        for t in range(T):
+                        
+            # Update the state of each prosumer
+            self.SG.updateState(t)
+            
+            # Initialization game of min/max Learning cost (LearningCost) for prosumers
+            for l in range(L):
+                print(f"t={t} learning LCostMin_max l={l}")
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
+                
+            # # Game with learning steps
+            # for k in range(K):
+            #     self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
+                
+            # pass
+        
+            # --- DEBUG: START Game with learning steps
+            dicoLRI_onePeriod_KStep = dict()
+            df_t = []
+            for k in range(K):
+                self.dicoLRI_onePeriod_oneStep = dict()
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
+                
+                self.save_LRI_2_json_onePeriod_oneStep(period=t, step=k)
+                dicoLRI_onePeriod_KStep["step_"+str(k)] = self.dicoLRI_onePeriod_oneStep
+                df_tk = pd.DataFrame.from_dict(self.dicoLRI_onePeriod_oneStep, orient="index")
+                df_t.append(df_tk)
+            
+            df_ts.append(df_t)
+            
+            #####  start : save execution to json file
+            import json, io
+            try:
+                to_unicode = unicode
+            except NameError:
+                to_unicode = str
+            #jsonLRI_onePeriod = json.dumps(dicoLRI_onePeriod_KStep)
+            # Write JSON file
+            with io.open(f'./data/runLRI_t={t}.json', 'w', encoding='utf8') as outfile:
+                str_ = json.dumps(dicoLRI_onePeriod_KStep,
+                                  indent=4, sort_keys=True,
+                                  #separators=(',', ': '), 
+                                  ensure_ascii=False
+                                  )
+                outfile.write(to_unicode(str_))
+            #####  end : save execution to json file
+            
+            pass
+            
+            
+        
+            # --- DEBUG: END Game with learning steps
+                
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
+        
+        file.write("___Threshold___ \n")
+
+        ## show prmode for each prosumer at all period and determined when the threshold has been reached
+        N = self.SG.prosumers.size
+        for Ni in range(N):
+            file.write(f"Prosumer = {Ni} \n")
+            for t in range(T):
+                if (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" < threshold="+ str(self.threshold) + "\n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] >= self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" >= threshold="+ str(self.threshold) + " ==>  prob[0] #### \n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) >= self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
+                else:
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
+                
+                    
+        
+        # Determines for each period if it attained a Nash equilibrium and if not if one exist
+        file.write("___Nash___ : NOT DEFINE \n")
+        
+        
+        # merge list of dataframes to one dataframe
+        
+        import itertools as it
+        df_ts_ = list(it.chain.from_iterable(df_ts))
+        df = pd.concat(df_ts_, axis=0)
+        df.to_csv('./data/runLRI_MergeDF.csv')
+        
+        
+    ######### -------------------  END : TEST SAVE running  ------------------------------------
             
                 
                 
