@@ -16,7 +16,8 @@ import auxiliary_functions as aux
 class Smartgrid :
     
     # This class represent a smartgrid
-    maxperiod = None # Number of periods
+    nbperiod = None # Number of periods
+    rho = None      # the next periods to add at nbperiod periods. This parameter enables the prediction of values from nbperiod+1 to nbperiod+rho periods with rho << nbperiod
     prosumers = None # All prosumers inside the smartgrid
     LCostmax = None # Maximum benefit for each prosumer for each period
     LCostmin = None # Minimum benefit for each prosumer for each period
@@ -30,7 +31,6 @@ class Smartgrid :
     strategy_profile = None 
     Cost = None
     DispSG = None
-    rho = None
     TauS = None # contains the tau array for all players at period t 
     
     
@@ -48,42 +48,56 @@ class Smartgrid :
     # realstate = None # Real state of each prosumers when using real production value (can be the same as the one determined with predicted production)
     
     
-    def __init__(self, N, maxperiod, initialprob, rho):
+    def __init__(self, N: int, nbperiod:int, initialprob: float, rho:int):
         """
-        N = number of prosumers, 
-        maxperiod = max numbers of periods
-        initialprob : initial value of probabilities for LRI, 
-        rho = steps to be taken into account for stock prediction
+        
+        Parameters
+        ----------
+        N : int
+            number of prosumers
+            
+        nbperiod : int
+            explicit max number of periods for a game.
+            
+        initialprob : float 
+                initial value of probabilities for LRI 
+                
+        rho : int
+            steps to be taken into account for stock prediction
+            the next periods to add at nbperiod periods. 
+            This parameter enables the prediction of values from nbperiod+1 to nbperiod+rho periods 
+            with rho << nbperiod
+            
         
         """
         self.rho = rho
         self.TauS = np.ndarray(shape=(N, rho+1))
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
-        self.maxperiod = maxperiod
+        self.nbperiod = nbperiod
         for i in range(N):
-            self.prosumers[i] = ag.Prosumer(maxperiod, initialprob, rho)   
+            self.prosumers[i] = ag.Prosumer(nbperiod=nbperiod, initialprob=initialprob, rho=rho)   
         #self.bgmax = np.zeros((N,maxperiod))
         
-        self.LCostmax = np.zeros(maxperiod)
-        self.LCostmin = np.zeros(maxperiod)
+        self.LCostmax = np.zeros(nbperiod)
+        self.LCostmin = np.zeros(nbperiod)
         
-        self.insg = np.zeros(maxperiod)       
-        self.outsg = np.zeros(maxperiod)
+        self.insg = np.zeros(nbperiod)       
+        self.outsg = np.zeros(nbperiod)
         
-        self.ValEgoc = np.zeros(maxperiod)
-        self.ValNoSG = np.zeros(maxperiod)
-        self.ValSG = np.zeros(maxperiod)
-        self.ValNoSGCost = np.zeros(maxperiod)
-        self.Reduct = np.zeros(maxperiod)
+        self.ValEgoc = np.zeros(nbperiod)
+        self.ValNoSG = np.zeros(nbperiod)
+        self.ValSG = np.zeros(nbperiod)
+        self.ValNoSGCost = np.zeros(nbperiod)
+        self.Reduct = np.zeros(nbperiod)
         dt = np.dtype([('agent', int), ('strategy', ag.Mode)])
-        self.strategy_profile = np.ndarray(shape=(N, maxperiod), dtype=dt)
-        self.Cost = np.zeros(maxperiod)
+        self.strategy_profile = np.ndarray(shape=(N, nbperiod), dtype=dt)
+        self.Cost = np.zeros(nbperiod)
         self.DispSG = np.zeros(rho+1)
         
     ###########################################################################
     #                   compute smartgrid variables :: start
     ###########################################################################
-    def computeSumInput(self, period): 
+    def computeSumInput(self, period:int) -> float: 
         """
         Calculate the sum of the production of all prosumers during a period
         
@@ -97,7 +111,7 @@ class Smartgrid :
             tmpsum = tmpsum + self.prosumers[i].prodit[period]
         self.insg[period] = tmpsum
     
-    def computeSumOutput(self, period): 
+    def computeSumOutput(self, period:int) -> float: 
         """
         Calculate sum of the consumption of all prosumers during a period
         
@@ -111,7 +125,7 @@ class Smartgrid :
             tmpsum = tmpsum + self.prosumers[i].consit[period]
         self.outsg[period] = tmpsum
         
-    def computeValEgoc(self, period):
+    def computeValEgoc(self, period:int) -> float:
         """
         compute ValEgoc ie the sum of all actors valOne
 
@@ -127,12 +141,12 @@ class Smartgrid :
         """
         sumValEgoc = 0
         for i in range(self.prosumers.size):
-            self.prosumers[i].computeValOne(period=period, maxperiod=self.maxperiod)
+            self.prosumers[i].computeValOne(period=period, nbperiod=self.nbperiod, rho=self.rho)
             sumValEgoc += self.prosumers[i].valOne[period]
             
         self.ValEgoc[period] = sumValEgoc
         
-    def computeValNoSG(self, period):
+    def computeValNoSG(self, period:int) -> float:
         """
         compute valNoSG for all actors
 
@@ -153,7 +167,7 @@ class Smartgrid :
             
         self.ValNoSG[period] = sumValNoSG
         
-    def computeValSG(self, period):
+    def computeValSG(self, period:int) -> float:
         """
         compute the gain of the grid ie what a grid have to pay to EPO minus what a grid receive from EPO
 
@@ -171,7 +185,7 @@ class Smartgrid :
         inoutsg = aux.phiepoplus(self.insg[period] - self.outsg[period])
         self.ValSG[period] = outinsg - inoutsg
     
-    def computeValNoSGCost(self, period):
+    def computeValNoSGCost(self, period:int) -> float:
         """
         compute the gain when we have no smart grid.
 
@@ -189,7 +203,7 @@ class Smartgrid :
         phiMinusOutsg = aux.phiepominus(self.outsg[period])
         self.ValNoSGCost[period] = phiPlusInsg - phiMinusOutsg
         
-    def computeReduct(self, period):
+    def computeReduct(self, period:int) -> float:
         """
         Compute Reduct ie ValNoSG_t - ValSG_t
 
@@ -205,7 +219,7 @@ class Smartgrid :
         """
         self.Reduct[period] = self.ValNoSG[period] - self.ValSG[period]
         
-    def computePrice(self, period):
+    def computePrice(self, period:int) -> float:
         """
         compute the price by which each actor have to pay or sell an electricity 
 
@@ -225,7 +239,7 @@ class Smartgrid :
                     - self.prosumers[i].Repart[period]
             
         
-    def computeDispSG(self, period, h):
+    def computeDispSG(self, period:int, h:int) -> float:
         """
         
 
@@ -262,7 +276,7 @@ class Smartgrid :
         self.DispSG[period] = sumDisp_th
         """
         
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         sumDisp_th = 0
         for i in range(self.prosumers.size):
             Stplus1 = self.prosumers[i].storage[nextperiod]
@@ -270,7 +284,7 @@ class Smartgrid :
             
         self.DispSG[h] = sumDisp_th
      
-    def computeTau_actors(self, period, rho):
+    def computeTau_actors(self, period:int, rho:int):
         """
         compute tau_i for all actors
 
@@ -278,12 +292,10 @@ class Smartgrid :
         ----------
         period : int
             an instance of time t
-        
-        maxperiod: int
-            max period
             
-        rho: int
-            number of steps to select for predition 
+        rho : int
+            number of periods to select for predition 
+            rho << nbperiod ie rho=3 < nbperiod=5
 
         Returns
         -------
@@ -292,7 +304,7 @@ class Smartgrid :
         """
         
         for i in range(self.prosumers.size):
-            self.prosumers[i].computeTau(period, self.maxperiod, rho)
+            self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=self.rho)
             self.TauS[i] = self.prosumers[i].tau
             self.TauS[i][self.TauS[i] < 0] = 0
             # select ai
@@ -303,14 +315,24 @@ class Smartgrid :
                 self.prosumer[i].alphai = min(a_[a_<0])
             
         
-    def computeHighLow(self, period, rho):
+    def computeHighLow(self, period:int) -> float:
         """
         compute High, Low variables at period t for each actor
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float
+        
         """
         high_itj, low_itj = 0, 0
-        self.computeTau_actors(period, rho)
+        self.computeTau_actors(period, self.rho)
         for i in range(self.prosumers.size):
-            for j in range(1, rho+1):
+            for j in range(1, self.rho+1):
                 sumTauSAis = np.sum(self.TauS[:,j])
                 if self.DispSG[j] < sumTauSAis:
                     high_itj += aux.apv(self.prosumers[i].tau[j])
@@ -320,7 +342,7 @@ class Smartgrid :
             self.prosumers[i].High[period] = high_itj
             self.prosumers[i].Low[period] = low_itj
             
-    def compute_RS_highPlus(self, period):
+    def compute_RS_highPlus(self, period:int) -> float:
         """
         compute rs_{i, High}^{plus} for all actors
 
@@ -331,10 +353,10 @@ class Smartgrid :
 
         Returns
         -------
-        None.
+        float.
 
         """
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(self.prosumers.size):
             self.prosumers[i].rs_high_plus[period] = \
@@ -342,7 +364,7 @@ class Smartgrid :
                     aux.apv( self.prosumers[i].High[period] - self.prosumers[i].storage[period])
                     )
         
-    def compute_RS_highMinus(self, period):
+    def compute_RS_highMinus(self, period:int) -> float:
         """
         compute rs_{i, High}^{minus} for all actors
 
@@ -353,10 +375,10 @@ class Smartgrid :
 
         Returns
         -------
-        None.
+        float.
 
         """
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(self.prosumers.size):
             self.prosumers[i].rs_high_minus[period] = \
@@ -364,7 +386,7 @@ class Smartgrid :
                     aux.apv(self.prosumers[i].High[period] - self.prosumers[i].storage[nextperiod])
                     )
         
-    def compute_RS_lowPlus(self, period):
+    def compute_RS_lowPlus(self, period:int) -> float:
         """
         compute rs_{i, Low}^{plus} for all actors
 
@@ -375,10 +397,10 @@ class Smartgrid :
             
         Returns
         -------
-        None.
+        float.
 
         """
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(self.prosumers.size):
             self.prosumers[i].rs_low_plus[period] = \
@@ -387,7 +409,7 @@ class Smartgrid :
                     self.prosumers[i].Low[period]
                     )
         
-    def compute_RS_lowMinus(self, period):
+    def compute_RS_lowMinus(self, period:int) -> float:
         """
         compute rs_{i, Low}^{minus} for all actors
 
@@ -398,10 +420,10 @@ class Smartgrid :
 
         Returns
         -------
-        None.
+        float.
 
         """
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(self.prosumers.size):
             self.prosumers[i].rs_low_plus[period] = \
@@ -410,9 +432,9 @@ class Smartgrid :
                     self.prosumers[i].Low[period]
                     )
         
-    def computeValStock(self, period, rho):
+    def computeValStock(self, period:int) -> float:
         """
-        
+        calculate the prosumer stock impact during a strategy profile SP^t=strat_{1,s}^t,...,strat_{N,s}^t
 
         Parameters
         ----------
@@ -426,8 +448,8 @@ class Smartgrid :
         """
         for i in range(self.prosumers.size):
             alphai = self.prosumers[i].alphai
-            part3 = (rho+1-alphai)/rho
-            part2 = self.ValEgoc[period]/self.ValNoSG[period]
+            part3 = (self.rho+1-alphai) / self.rho
+            part2 = self.ValEgoc[period] / self.ValNoSG[period]
             part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
                     + aux.phiepoplus(self.prosumers[i].rs_low_plus[period]) \
                     - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
@@ -435,7 +457,7 @@ class Smartgrid :
                         
             self.prosumers[i].valStock[period] = part1 * part2 * part3
             
-    def computeLCost_LCostMinMax(self, period):
+    def computeLCost_LCostMinMax(self, period:int):
         """
         Compute the learning Cost of all players, 
         learning (max, min) Cost for all players over the learning steps
@@ -470,7 +492,7 @@ class Smartgrid :
                 self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
                 self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
             
-    def computeUtility(self, period): 
+    def computeUtility(self, period:int): 
         """
         Calculate utility function using min, max and last prosumer's Learning cost (LCost)
         
@@ -502,7 +524,7 @@ class Smartgrid :
     #                   compute actors' repartition gains :: start
     #                       repart, shapley, UCB
     ########################################################################### 
-    def computeRepart(self, period, mu):
+    def computeRepart(self, period:int, mu:float):
         """
         compute the part of the gain of each actor
         
@@ -538,9 +560,18 @@ class Smartgrid :
     ###########################################################################
     #                       update prosumers variables:: start
     ###########################################################################
-    def updateState(self, period): 
+    def updateState(self, period:int): 
         """
         Change prosumer's state based on its production, comsumption and available storage
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        
         
         """
         N = self.prosumers.size
@@ -550,19 +581,27 @@ class Smartgrid :
                 self.prosumers[i].state[period] = ag.State.SURPLUS
             
             elif self.prosumers[i].production[period] + self.prosumers[i].storage[period] >= self.prosumers[i].consumption[period] :
-                self.prosumers[i].state[period] =ag. State.SELF
+                self.prosumers[i].state[period] = ag. State.SELF
             
             else :
                 self.prosumers[i].state[period] = ag.State.DEFICIT
                 
-    def updateSmartgrid(self, period): 
+    def updateSmartgrid(self, period:int): 
         """
         Update storage , consit, prodit based on mode and state
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
         
         """
         N = self.prosumers.size
         
-        nextperiod = period if period == self.maxperiod-1 else period+1
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(N):
             if self.prosumers[i].state[period] == ag.State.DEFICIT:
@@ -597,7 +636,7 @@ class Smartgrid :
                     self.prosumers[i].storage[nextperiod] = self.prosumers[i].storage[period]
                     self.prosumers[i].prodit[period] = self.prosumers[i].production[period] - self.prosumers[i].consumption[period]
     
-    def updateProbaLRI(self, period, slowdown): 
+    def updateProbaLRI(self, period:int, slowdown:float): 
         """
         Update probability for LRI based mode choice
         
@@ -642,7 +681,7 @@ class Smartgrid :
                     self.prosumers[i].prmode[period][1] = min(1,self.prosumers[i].prmode[period][1] + slowdown * self.prosumers[i].utility[period] * (1 - self.prosumers[i].prmode[period][1]))
                     self.prosumers[i].prmode[period][0] = 1 - self.prosumers[i].prmode[period][1]
     
-    def updateModeLRI(self, period, threshold): 
+    def updateModeLRI(self, period:int, threshold:float): 
         """
         Update mode using rules from LRI
         
@@ -685,7 +724,7 @@ class Smartgrid :
                     self.prosumers[i].mode[period] = ag.Mode.CONSMINUS
                     
     
-    def updateModeSyA(self, period): 
+    def updateModeSyA(self, period:int): 
         """
         Update mode using rules from SyA algortihm
         
@@ -702,7 +741,7 @@ class Smartgrid :
             else :
                 self.prosumers[i].mode[period] = ag.Mode.DIS
     
-    def updateModeCSA(self, period): 
+    def updateModeCSA(self, period:int): 
         """
         Update mode using rules from CSA algortihm
         
@@ -720,7 +759,7 @@ class Smartgrid :
                 self.prosumers[i].mode[period] = ag.Mode.PROD
                 
     
-    def updateModeSSA(self, period, maxperiod, rho):
+    def updateModeSSA(self, period:int):
         """
         Update Mode using the self stock algorithm (SSA)
         
@@ -729,7 +768,7 @@ class Smartgrid :
         """
         for i in range(self.prosumers.size):
             
-            self.prosumers[i].computeX(period, maxperiod, rho)
+            self.prosumers[i].computeX(period=period, nbperiod=self.nbperiod, rho=self.rho)
             Xi = self.prosumers[i].Xi[period]
             if self.prosumers[i].state[period] == ag.State.DEFICIT :
                 self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
