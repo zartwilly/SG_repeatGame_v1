@@ -19,12 +19,31 @@ class Instancegenaratorv2:
     situation = None
     laststate = None
 
-    def __init__(self, N, T):  
-        # N : number of prosumers 
-        # T : number of periods 
-        self.production = np.zeros((N,T))
-        self.consumption = np.zeros((N,T))
-        self.situation = np.zeros((N,T))
+    def __init__(self, N:int, T:int, rho:int):
+        """
+        
+        We generate N actors and maxPeriod=T+h periods 
+
+        Parameters
+        ----------
+        N : int
+            number of prosumers
+        T : int
+            number of periods .
+        rho : int
+            the next periods to add at T periods. In finish, we generate (T + rho) periods.
+            This parameter enables the prediction of values from T+1 to T + rho periods
+            rho << T ie rho=3 < T=5
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        self.production = np.zeros((N, T+rho))
+        self.consumption = np.zeros((N,T+rho))
+        self.situation = np.zeros((N, T+rho))
         self.laststate = np.ones((N,3))
         
     def generate(self, transitionprobabilities, repartition, values, probabilities):
@@ -145,7 +164,8 @@ if __name__ == "__main__":
     
     N_actors = 10
     T_periods = 10
-    g = Instancegenaratorv2(N=N_actors,T=T_periods)
+    rho = 5 # the next periods to add at T_periods. In finish, we generate (T_periods + rho) periods
+    g = Instancegenaratorv2(N=N_actors,T=T_periods, rho=rho)
     
     repartition = [5,5]
     #values = [m1a,M1a,m1b,M1b,m2b,M2b,cb,m1c,M1c,m2c,M2c,m3c,M3c,m4c,M4c]
