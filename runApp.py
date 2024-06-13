@@ -8,6 +8,7 @@ Created on Mon Jun 10 09:04:24 2024
 run the developped algortihms for evaluation some variables
 """
 import io
+import json
 import application as apps
 import Instancegeneratorversion2 as ig2
 import smartgrid as sg
@@ -32,8 +33,7 @@ def config_instance(N_actors, maxperiod):
     
     return g
 
-def Initialization_game(maxstep, maxstep_init, slowdownfactor, threshold, 
-                        N_actors, maxperiod, initialprob, mu, rho, h):
+def Initialization_game(scenario):
     """
     initialization of variables of an object application 
     
@@ -41,15 +41,38 @@ def Initialization_game(maxstep, maxstep_init, slowdownfactor, threshold,
     -----
     App
     """
+    # Load all scenario parameters
+    name = scenario["name"]
+    for var, val in scenario["algo"]["LRIRepart"].items():
+        globals()[var] = val
+    
+    for var, val in scenario["instance"].items():
+        globals()[var] = val
+        
+    for var, val in scenario["simul"].items():
+        globals()[var] = val
+        """
+    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
+    maxstep_init = 5
+    slowdownfactor = pow(10, -3)        # 0.001
+    threshold = 0.8
+    N_actors = 15
+    nbPeriod = 10                      # 101
+    initialprob = 0.5
+    mu = pow(10, -1)                    # 0.1
+    rho = 5                             # 0.1
+    h = 5
+"""
+
     # Initialisation of the apps
     application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
                            b=slowdownfactor, rho=rho, h=h, 
                            maxstep_init=maxstep_init, threshold=threshold)
-    application.SG = sg.Smartgrid(N=N_actors, maxperiod=maxperiod, 
+    application.SG = sg.Smartgrid(N=N_actors, maxperiod=nbPeriod, 
                                   initialprob=initialprob, rho=rho)
     
     # Configuration of the instance generator
-    g = config_instance(N_actors=N_actors, maxperiod=maxperiod)
+    g = config_instance(N_actors=N_actors, maxperiod=nbPeriod)
     
     # Initialisation of production, consumption and storage using the instance generator
     N = application.SG.prosumers.size
@@ -128,7 +151,7 @@ def monitoring_before_algorithm(file, application):
             file.write(" Storage : " + str(application.SG.prosumers[i].storage[t])+ "\n")
             
     
-def run_syA(logfiletxt):
+def run_syA(scenario, logfiletxt):
     """
     run syA algorithm
 
@@ -141,23 +164,9 @@ def run_syA(logfiletxt):
     None.
 
     """
-    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
-    maxstep_init = 5
-    slowdownfactor = pow(10, -3)        # 0.001
-    threshold = 0.8
-    N_actors = 15
-    maxperiod = 10                      # 101
-    initialprob = 0.5
-    mu = pow(10, -1)                    # 0.1
-    rho = 5                             # 0.1
-    h = 5
     
-        
     # Initialisation of the apps
-    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
-                        slowdownfactor=slowdownfactor, threshold=threshold, 
-                        N_actors=N_actors, maxperiod=maxperiod, 
-                        initialprob=initialprob, mu=mu, rho=rho, h=h)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -179,7 +188,7 @@ def run_syA(logfiletxt):
     
     return application
 
-def run_CSA(logfiletxt):
+def run_CSA(scenario, logfiletxt):
     """
     run CSA algorithm
 
@@ -192,23 +201,8 @@ def run_CSA(logfiletxt):
     None.
 
     """
-    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
-    maxstep_init = 5
-    slowdownfactor = pow(10, -3)        # 0.001
-    threshold = 0.8
-    N_actors = 15
-    maxperiod = 10                      # 101
-    initialprob = 0.5
-    mu = pow(10, -1)                    # 0.1
-    rho = 5                             # 0.1
-    h = 5
-    
-        
     # Initialisation of the apps
-    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
-                        slowdownfactor=slowdownfactor, threshold=threshold, 
-                        N_actors=N_actors, maxperiod=maxperiod, 
-                        initialprob=initialprob, mu=mu, rho=rho, h=h)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning 
     file = io.open(logfiletxt,"w")                                              # Logs file
@@ -230,7 +224,7 @@ def run_CSA(logfiletxt):
     return application
 
 
-def run_SSA(logfiletxt):
+def run_SSA(scenario, logfiletxt):
     """
     run SSA (selfish stock algorithm) algorithm
 
@@ -243,23 +237,8 @@ def run_SSA(logfiletxt):
     None.
 
     """
-    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
-    maxstep_init = 5
-    slowdownfactor = pow(10, -3)        # 0.001
-    threshold = 0.8
-    N_actors = 15
-    maxperiod = 10                      # 101
-    initialprob = 0.5
-    mu = pow(10, -1)                    # 0.1
-    rho = 5                             # 0.1
-    h = 5
-    
-        
     # Initialisation of the apps
-    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
-                        slowdownfactor=slowdownfactor, threshold=threshold, 
-                        N_actors=N_actors, maxperiod=maxperiod, 
-                        initialprob=initialprob, mu=mu, rho=rho, h=h)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -283,7 +262,7 @@ def run_SSA(logfiletxt):
     
     return application
 
-def run_LRI_REPART(logfiletxt):
+def run_LRI_REPART(scenario, logfiletxt):
     """
     run LRI REPART algorithm
 
@@ -296,23 +275,9 @@ def run_LRI_REPART(logfiletxt):
     None.
 
     """
-    maxstep = 5 * pow(10, 1)            #  5 * pow(10, 4)
-    maxstep_init = 5
-    slowdownfactor = pow(10, -1)        # pow(10, -3)=0.001, pow(10, -1)=0.1
-    threshold = 0.8
-    N_actors = 15
-    maxperiod = 10                      # 101
-    initialprob = 0.5
-    mu = pow(10, -1)                    # 0.1
-    rho = 5                             # 0.1
-    h = 5
-    
         
     # Initialisation of the apps
-    application = Initialization_game(maxstep=maxstep, maxstep_init=maxstep_init, 
-                        slowdownfactor=slowdownfactor, threshold=threshold, 
-                        N_actors=N_actors, maxperiod=maxperiod, 
-                        initialprob=initialprob, mu=mu, rho=rho, h=h)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning 
     file = io.open(logfiletxt,"w")                                              # Logs file
@@ -337,8 +302,17 @@ def run_LRI_REPART(logfiletxt):
 if __name__ == '__main__':
 
     logfiletxt = "traceApplication.txt"
-    #run_syA(logfiletxt)
-    #run_SSA(logfiletxt)
-    #run_CSA(logfiletxt)
-    run_LRI_REPART(logfiletxt)
-    pass
+    scenarioPath = "./scenario1.json"
+    
+    with open(scenarioPath) as file:
+        scenario = json.load(file)
+
+        if "SyA" in scenario["algo"]:
+            run_syA(scenario, logfiletxt)
+        if "SSA" in scenario["algo"]:
+            run_SSA(scenario, logfiletxt)
+        if "CSA" in scenario["algo"]:
+            run_CSA(scenario, logfiletxt)
+        if "LRIRepart" in scenario["algo"]:
+            run_LRI_REPART(scenario, logfiletxt)
+        pass
