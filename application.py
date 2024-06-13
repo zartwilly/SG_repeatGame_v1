@@ -20,13 +20,14 @@ class App:
     
     SG = None # Smartgrid
     N_actors = None  # number of actors
+    nbperiod = None # max number of periods for a game.
     maxstep = None # Number of learning steps
     maxstep_init = None # Number of learning steps for initialisation Max, Min Prices. in this step, no strategies' policies are updated
     threshold = None
     mu = None # To define
     b = None # learning rate / Slowdown factor LRI
     h = None # value to indicate how many periods we use to predict futures values of P or C
-    rho = None
+    rho = None # the next periods to add at Nb_periods
     ObjSG = None # Objective value for a SG over all periods for LRI
     ObjValai = None # Objective value for each actor over all periods for LRI
     valNoSG_A = None # sum of prices payed by all actors during all periods by running algo A without SG
@@ -109,7 +110,7 @@ class App:
         """
         self.valNoSGCost_A = np.sum(self.SG.ValNoSGCost)
         
-    def runSyA(self, plot, file): 
+    def runSyA(self, plot:bool, file:bool): 
         """
         Run SyA algorithm on the app
         
@@ -121,7 +122,7 @@ class App:
         file : Boolean
             file used to output logs
         """
-        T_periods = self.SG.maxperiod
+        T_periods = self.SG.nbperiod
         
         for t in range(T_periods):
             # Update the state of each prosumer
@@ -175,7 +176,7 @@ class App:
         # plot variables ValNoSG, ValSG
             
     
-    def runSSA(self, plot, file): 
+    def runSSA(self, plot:bool, file:bool): 
         """
         Run SSA (selfish Stock Algorithm) algorithm on the app
         
@@ -187,14 +188,14 @@ class App:
         file : Boolean
             file used to output logs
         """
-        T_periods = self.SG.maxperiod
+        T_periods = self.SG.nbperiod
         
         for t in range(T_periods):
             # Update the state of each prosumer
             self.SG.updateState(period=t)
             
             # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeSSA(period=t, maxperiod=self.SG.maxperiod, rho=self.rho)
+            self.SG.updateModeSSA(period=t)
             
             # Update prodit,consit and period + 1 storage values
             self.SG.updateSmartgrid(period=t)
@@ -238,7 +239,7 @@ class App:
         
         # plot variables ValNoSG, ValSG
         
-    def runCSA(self, plot, file): 
+    def runCSA(self, plot:bool, file:bool): 
         """
         Run CSA (centralised Stock Algorithm) algorithm on the app
         
@@ -250,7 +251,7 @@ class App:
         file : Boolean
             file used to output logs
         """
-        T_periods = self.SG.maxperiod
+        T_periods = self.SG.nbperiod
         
         for t in range(T_periods):
             # Update the state of each prosumer
@@ -302,7 +303,7 @@ class App:
         # plot variables ValNoSG, ValSG
     
         
-    def run_LRI_4_onePeriodT_oneStepK(self, period, boolInitMinMax):
+    def run_LRI_4_onePeriodT_oneStepK(self, period:int, boolInitMinMax:bool):
         """
         
 
@@ -310,6 +311,7 @@ class App:
         ----------
         period : int
             an instance of time t.
+            
         boolInitMinMax : Bool
             require the game whether LRI probabilities strategies are updated or not.
             if True, LRI probabilities are not updated otherwise.
@@ -385,7 +387,7 @@ class App:
 
         """
         K = self.maxstep
-        T = self.SG.maxperiod
+        T = self.SG.nbperiod
         L = self.maxstep_init
         
         for t in range(T):
@@ -395,11 +397,11 @@ class App:
             
             # Initialization game of min/max Learning cost (LearningCost) for prosumers
             for l in range(L):
-                self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=True)
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
                 
             # Game with learning steps
             for k in range(K):
-                self.run_LRI_4_onePeriodT_oneStepK(t, boolInitMinMax=False)
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
                 
         # Compute metrics
         self.computeValSG()
