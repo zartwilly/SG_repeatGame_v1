@@ -453,7 +453,7 @@ class Smartgrid :
             part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
                     + aux.phiepoplus(self.prosumers[i].rs_low_plus[period]) \
                     - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
-                       + aux.phiepoplus(self.prosumers[i].rs_low_minus))
+                       + aux.phiepoplus(self.prosumers[i].rs_low_minus[period]))
                         
             self.prosumers[i].valStock[period] = part1 * part2 * part3
             
