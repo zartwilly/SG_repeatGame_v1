@@ -49,7 +49,7 @@ class Prosumer:
     # prediction stock
     rho_cons = None # a prediction capacity of an actor for consumption
     rho_prod = None # a prediction capacity of an actor for production
-    rho = None
+    rho = None # the next periods to add at nbperiod periods. This parameter enables the prediction of values from nbperiod+1 to nbperiod+rho periods with rho << nbperiod
     alphai = None       # the min value of tau_i^j such that tau_i < 0 and  1<=j<=rho 
     tau = None # the stock demand of each actor for h next periods
     CP_th = None # the difference between consumption and production at t+h with h in [1,rho]
@@ -75,26 +75,45 @@ class Prosumer:
     benefit = None # reward for each prosumer at each period
     
 
-    def __init__(self, maxperiod, initialprob, rho):
-        """
-        maxperiod : explicit ; 
-        initialprob : initial value of prmode[0]
+    def __init__(self, nbperiod:int, initialprob:float, rho:int):
         """
         
-        self.state = np.zeros(maxperiod, dtype=State)
-        self.production = np.zeros(maxperiod) 
-        self.consumption = np.zeros(maxperiod)
-        self.prodit = np.zeros(maxperiod)
-        self.consit = np.zeros(maxperiod)
-        self.storage = np.zeros(maxperiod) 
+
+        Parameters
+        ----------
+        nbperiod : int
+            explicit max number of periods for a game.
+            
+        initialprob : float
+            initial probability value of prmode[0]. 
+            
+        rho : int
+            This parameter enables the prediction of values 
+            from nbperiod+1 to nbperiod+rho periods or 
+            from nbperiod to nbperiod+rho+1 periods
+            rho << nbperiod ie rho=3 < nbperiod=5
+            
+        Returns
+        -------
+        None.
+
+        """
+        
+        
+        self.state = np.zeros(nbperiod, dtype=State)
+        self.production = np.zeros(nbperiod+rho) 
+        self.consumption = np.zeros(nbperiod+rho)
+        self.prodit = np.zeros(nbperiod)
+        self.consit = np.zeros(nbperiod)
+        self.storage = np.zeros(nbperiod+rho) 
         self.smax = 0
-        self.gamma = np.zeros(maxperiod) 
-        self.mode = np.zeros(maxperiod, dtype=Mode)
-        self.prmode = np.zeros((maxperiod,2))
-        for i in range(maxperiod):
+        self.gamma = np.zeros(nbperiod) 
+        self.mode = np.zeros(nbperiod, dtype=Mode)
+        self.prmode = np.zeros((nbperiod,2))
+        for i in range(nbperiod):
             self.prmode[i][0] = initialprob
             self.prmode[i][1] = 1 - initialprob
-        self.utility = np.zeros(maxperiod)
+        self.utility = np.zeros(nbperiod)
         
         ##### new parameters variables for Repeated game ########
         self.rho_cons = 0
@@ -104,27 +123,27 @@ class Prosumer:
         self.tau = np.zeros(rho+1)
         self.CP_th = np.zeros(rho+1)
         self.PC_th = np.zeros(rho+1)
-        self.Xi = np.zeros(maxperiod)
-        self.High = np.zeros(maxperiod)
-        self.Low = np.zeros(maxperiod)
-        self.rs_high_plus = np.zeros(maxperiod)
-        self.rs_low_plus = np.zeros(maxperiod)
-        self.rs_high_minus = np.zeros(maxperiod)
-        self.rs_low_minus = np.zeros(maxperiod)
+        self.Xi = np.zeros(nbperiod+rho)
+        self.High = np.zeros(nbperiod+rho)
+        self.Low = np.zeros(nbperiod+rho)
+        self.rs_high_plus = np.zeros(nbperiod)
+        self.rs_low_plus = np.zeros(nbperiod)
+        self.rs_high_minus = np.zeros(nbperiod)
+        self.rs_low_minus = np.zeros(nbperiod)
         
         self.ObjValue = 0 #np.zeros(maxperiod)
-        self.price = np.zeros(maxperiod)
-        self.valOne = np.zeros(maxperiod)
-        self.valNoSG = np.zeros(maxperiod)
-        self.valStock = np.zeros(maxperiod)
-        self.Repart = np.zeros(maxperiod)
-        self.cost = np.zeros(maxperiod)
-        self.Lcost = np.zeros(maxperiod)
+        self.price = np.zeros(nbperiod)
+        self.valOne = np.zeros(nbperiod)
+        self.valNoSG = np.zeros(nbperiod)
+        self.valStock = np.zeros(nbperiod)
+        self.Repart = np.zeros(nbperiod)
+        self.cost = np.zeros(nbperiod)
+        self.Lcost = np.zeros(nbperiod)
         self.LCostmax = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         self.LCostmin = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         
 
-    def computeValOne(self, period, maxperiod):
+    def computeValOne(self, period:int, nbperiod:int, rho:int) -> float:
         """
         compute the value of each actor at one period
 
@@ -133,15 +152,19 @@ class Prosumer:
         period : int
             an instance of time t
             
-        maxperiod : int
+        nbperiod : int
             explicit max number of periods for a game
+            
+        rho: int
+            the next periods to add from the nbperiod periods
+            rho << nbperiod ie rho=3 < nbperiod=5
 
         Returns
         -------
         float.
 
         """
-        nextperiod = period if period == maxperiod-1 else period+1
+        nextperiod = period if period == nbperiod+rho-1 else period+1
         
         
         phiminus = aux.apv(self.consumption[period] 
@@ -153,13 +176,13 @@ class Prosumer:
         
         self.valOne[period] = phiminus - phiplus
         
-    def computeValNoSG(self, period):
+    def computeValNoSG(self, period:int) -> float:
         """
         compute the value of one actor a_i at one period
 
         Parameters
         ----------
-        period : TYPE
+        period : int
             an instance of time t
 
         Returns
@@ -171,7 +194,7 @@ class Prosumer:
                                 - aux.phiepoplus(self.prodit[period])
         
         
-    def computePC_CP_th(self, period, maxperiod, rho):
+    def computePC_CP_th(self, period:int, nbperiod:int, rho:int):
         """
         compute a difference between consumption and production at t+h with h \in [1, rho] 
 
@@ -179,22 +202,23 @@ class Prosumer:
         ----------
         period : int
             an instance of time t
-        maxperiod: int
+        nbperiod: int
             max period
         rho: int
-            number of steps to select for predition 
+            number of periods to select for predition
+            rho << nbperiod ie rho=3 < nbperiod=5
 
         Returns
         -------
-        None.
+        np.ndarray.
 
-        """
-        rho_max = rho if period + rho <= maxperiod else maxperiod - period
+        """        
+        rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho  
         for h in range(1, rho_max+1):
             self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
             self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
             
-    def computeTau(self, period, maxperiod, rho):
+    def computeTau(self, period:int, nbperiod:int, rho:int) -> float:
         """
         compute a parameter $\tau_i^{t+h}$ indicates for each of the $\rho$ predicted steps 
         the cumulative need of each actor $a_i$ in terms of stock if he only 
@@ -207,24 +231,35 @@ class Prosumer:
         maxperiod: int
             max period
         rho: int
-            number of steps to select for predition 
+            number of periods to select for predition 
+            rho << nbperiod ie rho=3 < nbperiod=5
 
         Returns
         -------
-        None.
+        float.
 
         """
-        nextperiod = period if period == maxperiod-1 else period+1
+        nextperiod = period if period == nbperiod+rho-1 else period+1
         
         Si_tplus1 = self.storage[nextperiod]
         
-        rho_max = rho if period+rho <= maxperiod else maxperiod-period          # max prediction slots t+rho
+        rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho  
         
+        # TODO A tester : 1er version
         for h in range(1, rho_max+1):
            self.tau[h] = np.sum(self.CP_th[:h+1]) - Si_tplus1
+          
+        # TODO A tester : 2e version
+        # for h in range(1, rho_max+1):
+        #     CP_thj = 0
+        #     for j in range(1,h+1):
+        #         CP_thj += self.consumption[period+j] - self.production[period+j]
+                
+        #     self.tau[h] = CP_thj - Si_tplus1
+           
         
         
-    def computeX(self, period, maxperiod, rho):
+    def computeX(self, period:int, nbperiod:int, rho:int)-> float:
         """
         the difference beteween tau and X is the absolute value
 
@@ -237,15 +272,16 @@ class Prosumer:
             max period
             
         rho: int
-            number of steps to select for predition 
+            number of periods to select for predition from t+1 to t+rho 
+            rho << nbperiod ie rho=3 < nbperiod=5
 
         Returns
         -------
-        None.
+        float.
 
         """
         
-        rho_max = rho if period+rho <= maxperiod else maxperiod-period          # max prediction slots t+rho
+        rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
         
         sum_X = 0
         for h in range(1, rho_max+1):
