@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import agents as ag
 import smartgrid as sg
+import itertools as it
 import json, io, os
 
 
@@ -646,8 +647,6 @@ class App:
         
         
         # merge list of dataframes to one dataframe
-        
-        import itertools as it
         df_ts_ = list(it.chain.from_iterable(df_ts))
         df = pd.concat(df_ts_, axis=0)
         runLRI_SumUp_txt = "runLRI_MergeDF.csv"
@@ -660,10 +659,137 @@ class App:
     ######### -------------------  END : TEST SAVE running  ------------------------------------
             
                 
+    ######### -------------------  SyA START : TEST SAVE running  ------------------------------------
+    def create_dico_for_onePeriod(self, period:int):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        dico_onePeriod : dict
+            DESCRIPTION.
+
+        """
+        dico_onePeriod = dict()
+        for i in range(self.N_actors):
+            dico_onePeriod["prosumer"+str(i)] = {
+                "period": period,
+                "production": self.SG.prosumers[i].production[period],
+                "consumption": self.SG.prosumers[i].consumption[period],
+                "storage": self.SG.prosumers[i].storage[period],
+                "storaget+1": self.SG.prosumers[i].storage[period+1],
+                "prodit": self.SG.prosumers[i].prodit[period],
+                "consit": self.SG.prosumers[i].consit[period],
+                "mode": str(self.SG.prosumers[i].mode[period]),
+                "state": str(self.SG.prosumers[i].state[period]),
+                "prmode0": self.SG.prosumers[i].prmode[period][0],
+                "prmode1": self.SG.prosumers[i].prmode[period][1],
+                "utility": self.SG.prosumers[i].utility[period],
+                "price": self.SG.prosumers[i].price[period],
+                "Cost": self.SG.Cost[period],
+                "valOne_i": self.SG.prosumers[i].valOne[period],
+                "valNoSG_i": self.SG.prosumers[i].valNoSG[period],
+                "Repart_i": self.SG.prosumers[i].Repart[period],
+                "cost": self.SG.prosumers[i].cost[period],
+                "Lcost": self.SG.prosumers[i].Lcost[period],
+                "insg": self.SG.insg[period],
+                "outsg": self.SG.outsg[period],
+                "ValEgoc": self.SG.ValEgoc[period],
+                "ValNoSG": self.SG.ValNoSG[period],
+                "ValSG": self.SG.ValSG[period],
+                }
+            
+        return dico_onePeriod
+    
+    def runSyA_SAVERunning(self, plot:bool, file:bool, scenario:dict): 
+        """
+        Run SyA algorithm on the app
+        
+        Parameters
+        ----------
+        plot : Boolean
+            a boolean determining if the plots are edited or not
+        
+        file : Boolean
+            file used to output logs
+            
+        scenario: dict
+            dictionnary of all parameters for a game
+            
+        """
+        T_periods = self.SG.nbperiod
+        
+        df_ts = []
+        for t in range(T_periods):
+            # Update the state of each prosumer
+            self.SG.updateState(period=t)
+            
+            # Update prosumers' modes following SyA mode selection
+            self.SG.updateModeSyA(period=t)
+            
+            # Update prodit,consit and period + 1 storage values
+            self.SG.updateSmartgrid(period=t)
+            
+            ## compute what each actor has to paid/gain at period t 
+            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
+            ## ------ start -------
+            # Calculate inSG and outSG
+            self.SG.computeSumInput(period=t)
+            self.SG.computeSumOutput(period=t)
+            
+            # calculate valNoSGCost_t
+            self.SG.computeValNoSGCost(period=t)
+            
+            # calculate valEgoc_t
+            self.SG.computeValEgoc(period=t)
+            
+            # calculate valNoSG_t
+            self.SG.computeValNoSG(period=t)
+            
+            # calculate ValSG_t
+            self.SG.computeValSG(period=t)
+            
+            # calculate Reduct_t
+            self.SG.computeReduct(period=t)
+            
+            # calculate repart_t
+            self.SG.computeRepart(period=t, mu=self.mu)
+            
+            # calculate price_t
+            self.SG.computePrice(period=t)
+            
+            dico_onePeriod = dict()
+            dico_onePeriod = self.create_dico_for_onePeriod(period=t)
+                
+            df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
+            df_ts.append(df_t)
+            
+            
+            ## ------ end -------
+            
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
+        
+        
+        # plot variables ValNoSG, ValSG
+        
+        # merge list of dataframes to one dataframe
+        df = pd.concat(df_ts, axis=0)
+        runAlgo_SumUp_txt = "runSyA_MergeDF.csv"
+        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
                 
                 
-                
-                
+    ######### -------------------  SyA END : TEST SAVE running  ------------------------------------
+            
         
         
 
