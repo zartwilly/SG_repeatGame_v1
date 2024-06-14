@@ -8,8 +8,10 @@ Created on Mon May 13 20:48:57 2024
 application is the environment of the repeted game
 """
 import numpy as np
+import pandas as pd
 import agents as ag
 import smartgrid as sg
+import json, io, os
 
 
 class App:
@@ -475,6 +477,11 @@ class App:
         for i in range(N):
             production = self.SG.prosumers[i].production[period]
             consumption = self.SG.prosumers[i].consumption[period]
+            storage = self.SG.prosumers[i].storage[period]
+            rs_highplus = self.SG.prosumers[i].rs_high_plus[period]
+            rs_highminus = self.SG.prosumers[i].rs_high_minus[period]
+            rs_lowplus = self.SG.prosumers[i].rs_low_plus[period]
+            rs_lowminus = self.SG.prosumers[i].rs_low_minus[period]
             prodit = self.SG.prosumers[i].prodit[period]
             consit = self.SG.prosumers[i].consit[period]
             mode = self.SG.prosumers[i].mode[period]
@@ -490,11 +497,19 @@ class App:
             cost = self.SG.prosumers[i].cost[period]
             Lcost = self.SG.prosumers[i].Lcost[period]
             
+            storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
+            
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
                 "period": period,
                 "step": step,
                 "production":production,
                 "consumption": consumption,
+                "storage": storage,
+                "storaget+1": storage_t_plus_1,
+                "rs_high+": rs_highplus,
+                "rs_high-": rs_highminus,
+                "rs_low+": rs_lowplus,
+                "rs_low-": rs_lowminus,
                 "prodit": prodit,
                 "consit": consit,
                 "mode": str(mode),
@@ -520,14 +535,18 @@ class App:
                 }
         pass
     
-    def runLRI_REPART_SAVERunning(self, plot, file):
+    def runLRI_REPART_SAVERunning(self, plot, file, scenario):
         """
         Run LRI algorithm with the repeated game
         
         Parameters
         ----------
+        plot: bool
+            yes if you want a figure of some variables
         file : TextIO
             file to save some informations of runtime
+        scenario: dict
+            DESCRIPTION
 
         Returns
         -------
@@ -538,7 +557,6 @@ class App:
         T = self.SG.nbperiod
         L = self.maxstep_init
         
-        import pandas as pd
         df_ts = []
         for t in range(T):
                         
@@ -571,14 +589,16 @@ class App:
             df_ts.append(df_t)
             
             #####  start : save execution to json file
-            import json, io
             try:
                 to_unicode = unicode
             except NameError:
                 to_unicode = str
             #jsonLRI_onePeriod = json.dumps(dicoLRI_onePeriod_KStep)
             # Write JSON file
-            with io.open(f'./data/runLRI_t={t}.json', 'w', encoding='utf8') as outfile:
+            # os.path.join(scenario['scenarioPath'], 'data', f'runLRI_t={t}.json    ====> TODELETE
+            # with io.open(os.path.join(scenario['scenarioCorePath'],'data', f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:   ====> TODELETE
+            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+            #with io.open(f'./data/runLRI_t={t}.json', 'w', encoding='utf8') as outfile:  ====> TODELETE
                 str_ = json.dumps(dicoLRI_onePeriod_KStep,
                                   indent=4, sort_keys=True,
                                   #separators=(',', ': '), 
@@ -630,7 +650,11 @@ class App:
         import itertools as it
         df_ts_ = list(it.chain.from_iterable(df_ts))
         df = pd.concat(df_ts_, axis=0)
-        df.to_csv('./data/runLRI_MergeDF.csv')
+        runLRI_SumUp_txt = "runLRI_MergeDF.csv"
+        # df.to_csv(os.path.join(scenario['scenarioCorePath'], 'data', runLRI_SumUp_txt))  ====> TODELETE
+        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_SumUp_txt))
+        
+        
         
         
     ######### -------------------  END : TEST SAVE running  ------------------------------------
