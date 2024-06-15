@@ -581,7 +581,7 @@ def run_CSA_DBG(scenario, logfiletxt):
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
-    application = Initialization_game(scenario)
+    application = Initialization_game_DBG(scenario)
 
     # Display for the run beginning 
     logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
@@ -630,7 +630,7 @@ def run_SSA_DBG(scenario, logfiletxt):
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
-    application = Initialization_game(scenario)
+    application = Initialization_game_DBG(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -784,6 +784,7 @@ if __name__ == '__main__':
     logfiletxt = "traceApplication.txt"
     scenarioPath = "./scenario1.json"
     scenarioPath = "./data_scenario/scenario_test_LRI.json"
+    scenarioPath = "./data_scenario/scenario_SelfishDebug_LRI_N4_T3.json"
     
     
     import time
