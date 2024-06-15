@@ -238,7 +238,7 @@ class Smartgrid :
                 = self.prosumers[i].valNoSG[period] \
                     - self.prosumers[i].Repart[period]
             
-        
+            
     def computeDispSG(self, period:int, h:int) -> float:
         """
         
@@ -283,7 +283,7 @@ class Smartgrid :
             sumDisp_th += Stplus1 + np.sum(self.prosumers[i].PC_th[:h+1])
             
         self.DispSG[h] = sumDisp_th
-     
+    
     def computeTau_actors(self, period:int, rho:int):
         """
         compute tau_i for all actors
@@ -310,12 +310,12 @@ class Smartgrid :
             # select ai
             a_ = self.prosumers[i].tau
             if a_[a_<0].size == 0:
-                self.prosumer[i].alphai = rho +1
+                self.prosumers[i].alphai = rho +1
             else:
-                self.prosumer[i].alphai = min(a_[a_<0])
+                self.prosumers[i].alphai = min(a_[a_<0])
             
         
-    def computeHighLow(self, period:int) -> float:
+    def computeHighLow_OLD(self, period:int) -> float:
         """
         compute High, Low variables at period t for each actor
         
@@ -334,7 +334,38 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             for j in range(1, self.rho+1):
                 sumTauSAis = np.sum(self.TauS[:,j])
+                # if self.DispSG[j] < sumTauSAis:
                 if self.DispSG[j] < sumTauSAis:
+                    high_itj += aux.apv(self.prosumers[i].tau[j])
+                else:
+                    low_itj += aux.apv(self.prosumers[i].tau[j])
+                    
+            self.prosumers[i].High[period] = high_itj
+            self.prosumers[i].Low[period] = low_itj
+            
+    def computeHighLow(self, period:int) -> float:
+        """
+        compute High, Low variables at period t for each actor
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float
+        
+        """
+        high_itj, low_itj = 0, 0
+        self.computeTau_actors(period, self.rho)
+        for i in range(self.prosumers.size):
+            for j in range(1, self.rho+1):
+                # TODO DEBUG
+                sumTauSForRhos = np.sum(self.TauS, axis=0)
+                print(f"sumTauSAis: shape = {sumTauSForRhos.shape}, TauS: shape = {self.TauS.shape}")
+                # if self.DispSG[j] < sumTauSAis:
+                if self.DispSG[j] < sumTauSForRhos[j]:
                     high_itj += aux.apv(self.prosumers[i].tau[j])
                 else:
                     low_itj += aux.apv(self.prosumers[i].tau[j])
@@ -455,6 +486,12 @@ class Smartgrid :
                     - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
                        + aux.phiepoplus(self.prosumers[i].rs_low_minus[period]))
                         
+            # print(f"t={period},Ai={i} => part1 : {round(part1, 2)}, part2 : {round(part2, 5)}, part3 : {round(part3, 2)} ")
+            # print(f"        =>  rs_high+: {self.prosumers[i].rs_high_plus[period]},")  
+            # print(f"        =>  rs_low+: {self.prosumers[i].rs_low_plus[period]},") 
+            # print(f"        =>  rs_high-: {self.prosumers[i].rs_high_minus[period]},") 
+            # print(f"        =>  rs_low-: {self.prosumers[i].rs_low_minus[period]} ")
+
             self.prosumers[i].valStock[period] = part1 * part2 * part3
             
     def computeLCost_LCostMinMax(self, period:int):
@@ -491,6 +528,24 @@ class Smartgrid :
                 self.prosumers[i].LCostmax["valStock"] = self.prosumers[i].valStock[period]
                 self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
                 self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
+                
+            # if self.prosumers[i].Lcostmin[period] == 0 \
+            #     or self.prosumers[i].Lcostmin[period] > self.prosumers[i].Lcost[period]:
+            #         #self.prosumers[i].Lcostmin[period] = self.prosumers[i].Lcost[period]
+            #         self.prosumers[i].LCostmin["Lcost"] = self.prosumers[i].Lcost[period]
+            #         self.prosumers[i].LCostmin["price"] = self.prosumers[i].price[period]
+            #         self.prosumers[i].LCostmin["valStock"] = self.prosumers[i].valStock[period]
+            #         self.prosumers[i].LCostmin["mode"] = self.prosumers[i].mode[period]
+            #         self.prosumers[i].LCostmin["state"] = self.prosumers[i].state[period]
+                    
+            # if self.prosumers[i].Lcostmax[period] == 0 \
+            #     or self.prosumers[i].Lcostmax[period] < self.prosumers[i].Lcost[period] :
+            #         #self.prosumers[i].Lcostmax[period] = self.prosumers[i].Lcost[period]
+            #         self.prosumers[i].LCostmax["Lcost"] = self.prosumers[i].Lcost[period]
+            #         self.prosumers[i].LCostmax["price"] = self.prosumers[i].price[period]
+            #         self.prosumers[i].LCostmax["valStock"] = self.prosumers[i].valStock[period]
+            #         self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
+            #         self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
             
     def computeUtility(self, period:int): 
         """
@@ -509,7 +564,17 @@ class Smartgrid :
         N = self.prosumers.size
         
         for i in range(N):
-            if (self.prosumers[i].LCostmax !=0 or self.prosumers[i].LCostmin != 0):
+            print(f"i={i}, Lcost={round(self.prosumers[i].Lcost[period],2)}, LCostmax={round(self.prosumers[i].LCostmax['Lcost'],2)}, LCostmin={round(self.prosumers[i].LCostmin['Lcost'], 2)}")
+            # if (self.prosumers[i].LCostmax !=0 or self.prosumers[i].LCostmin != 0):
+            #     self.prosumers[i].utility[period] \
+            #         = (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].Lcost[period]) \
+            #             / (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].LCostmin["Lcost"])
+            # else:
+            #     self.prosumers[i].utility[period] = 0
+                
+            # print(f"i={i}, LCostmax={self.prosumers[i].LCostmax != 0 }")
+            
+            if self.prosumers[i].LCostmax["Lcost"] != self.prosumers[i].LCostmin["Lcost"]:
                 self.prosumers[i].utility[period] \
                     = (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].Lcost[period]) \
                         / (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].LCostmin["Lcost"])
