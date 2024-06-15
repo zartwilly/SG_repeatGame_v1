@@ -139,6 +139,8 @@ class Prosumer:
         self.Repart = np.zeros(nbperiod)
         self.cost = np.zeros(nbperiod)
         self.Lcost = np.zeros(nbperiod)
+        self.Lcostmin = np.ndarray(shape=nbperiod, dtype='object')
+        self.Lcostmax = np.zeros(shape=nbperiod, dtype='object')
         self.LCostmax = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         self.LCostmin = dict({"price":None, "valStock":None, "mode":None, "state":None, "Lcost":None})
         
@@ -248,7 +250,8 @@ class Prosumer:
         # TODO A tester : 1er version
         for h in range(1, rho_max+1):
            self.tau[h] = np.sum(self.CP_th[:h+1]) - Si_tplus1
-          
+        
+        print(f" tau = {self.tau[h]}")
         # TODO A tester : 2e version
         # for h in range(1, rho_max+1):
         #     CP_thj = 0
