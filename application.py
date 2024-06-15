@@ -362,6 +362,17 @@ class App:
         # calculate price_t
         self.SG.computePrice(period)
         
+        # compute PC_CP_th for all prosumers at a period t
+        for i in range(self.N_actors):
+            self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
+            
+        # calculate DispSG
+        for h in range(1, self.rho):
+            self.SG.computeDispSG(period, h=h)
+            
+        # calculate High_t, Low_t
+        self.SG.computeHighLow(period)
+        
         # calculate ValStock
         self.SG.computeValStock(period)
         
@@ -470,9 +481,16 @@ class App:
         ValEgoc = self.SG.ValEgoc[period]
         ValNoSG = self.SG.ValNoSG[period]
         ValSG = self.SG.ValSG[period]
+        Reduct = self.SG.Reduct[period]
         LCostmax = self.SG.LCostmax[period]
         LCostmin = self.SG.LCostmin[period]
         Cost = self.SG.Cost[period]
+        dispSG = dict()
+        for h, elt in enumerate(self.SG.DispSG):
+            dispSG["rho="+str(h+1)] = elt
+        tauS = dict()
+        for h, elt in enumerate(self.SG.TauS):
+            tauS["rho="+str(h+1)] = elt
         
         #dicoLRI_onePeriod_oneStep = dict()
         for i in range(N):
@@ -492,11 +510,17 @@ class App:
             utility = self.SG.prosumers[i].utility[period]
             price = self.SG.prosumers[i].price[period]
             valOne_i = self.SG.prosumers[i].valOne[period]
+            high_i = self.SG.prosumers[i].High[period]
+            low_i = self.SG.prosumers[i].Low[period]
             valNoSG_i = self.SG.prosumers[i].valNoSG[period]
             valStock_i = self.SG.prosumers[i].valStock[period]
             Repart_i = self.SG.prosumers[i].Repart[period]
             cost = self.SG.prosumers[i].cost[period]
             Lcost = self.SG.prosumers[i].Lcost[period]
+            LCostmax = self.SG.prosumers[i].LCostmax["Lcost"]
+            LCostmin = self.SG.prosumers[i].LCostmin["Lcost"]
+            
+            tau = self.SG.prosumers[i].tau
             
             storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
             
@@ -521,8 +545,8 @@ class App:
                 "price": price,
                 "valOne_i": valOne_i,
                 "valNoSG_i":valNoSG_i,
-                "valStock_i":valStock_i,
                 "Repart_i": Repart_i,
+                
                 "cost": cost,
                 "Lcost": Lcost,
                 "insg": insg,
@@ -530,9 +554,20 @@ class App:
                 "ValEgoc": ValEgoc,
                 "ValNoSG": ValNoSG,
                 "ValSG": ValSG,
+                "Reduct": Reduct,
                 "LCostmax": LCostmax,
+                "Lcostmax": self.SG.prosumers[i].Lcostmax[period],
                 "LCostmin": LCostmin,
+                "Lcostmin": self.SG.prosumers[i].Lcostmin[period], 
                 "Cost": Cost,
+                
+                "dispSG": str(dispSG),
+                "tau": str(tau),
+                "tauS": str(tauS),
+                "high_i": high_i,
+                "low_i": low_i,
+                "alpha_i": self.SG.prosumers[i].alphai,
+                "valStock_i":valStock_i,
                 }
         pass
     
