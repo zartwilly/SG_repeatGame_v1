@@ -373,6 +373,12 @@ class App:
         # calculate High_t, Low_t
         self.SG.computeHighLow(period)
         
+        # calculate rs_{high,low}_{minus,plus}_t
+        self.SG.compute_RS_highPlus(period)
+        self.SG.compute_RS_highMinus(period)
+        self.SG.compute_RS_lowPlus(period)
+        self.SG.compute_RS_lowMinus(period)
+        
         # calculate ValStock
         self.SG.computeValStock(period)
         
@@ -531,10 +537,6 @@ class App:
                 "consumption": consumption,
                 "storage": storage,
                 "storaget+1": storage_t_plus_1,
-                "rs_high+": rs_highplus,
-                "rs_high-": rs_highminus,
-                "rs_low+": rs_lowplus,
-                "rs_low-": rs_lowminus,
                 "prodit": prodit,
                 "consit": consit,
                 "mode": str(mode),
@@ -566,6 +568,10 @@ class App:
                 "tauS": str(tauS),
                 "high_i": high_i,
                 "low_i": low_i,
+                "rs_high+": rs_highplus,
+                "rs_high-": rs_highminus,
+                "rs_low+": rs_lowplus,
+                "rs_low-": rs_lowminus,
                 "alpha_i": self.SG.prosumers[i].alphai,
                 "valStock_i":valStock_i,
                 }
