@@ -115,356 +115,7 @@ class App:
         """
         self.valNoSGCost_A = np.sum(self.SG.ValNoSGCost)
         
-    def runSyA(self, plot:bool, file:bool): 
-        """
-        Run SyA algorithm on the app
-        
-        Parameters
-        ----------
-        plot : Boolean
-            a boolean determining if the plots are edited or not
-        
-        file : Boolean
-            file used to output logs
-        """
-        T_periods = self.SG.nbperiod
-        
-        for t in range(T_periods):
-            # Update the state of each prosumer
-            self.SG.updateState(period=t)
-            
-            # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeSyA(period=t)
-            
-            # Update prodit,consit and period + 1 storage values
-            self.SG.updateSmartgrid(period=t)
-            
-            ## compute what each actor has to paid/gain at period t 
-            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
-            ## ------ start -------
-            # Calculate inSG and outSG
-            self.SG.computeSumInput(period=t)
-            self.SG.computeSumOutput(period=t)
-            
-            # calculate valNoSGCost_t
-            self.SG.computeValNoSGCost(period=t)
-            
-            # calculate valEgoc_t
-            self.SG.computeValEgoc(period=t)
-            
-            # calculate valNoSG_t
-            self.SG.computeValNoSG(period=t)
-            
-            # calculate ValSG_t
-            self.SG.computeValSG(period=t)
-            
-            # calculate Reduct_t
-            self.SG.computeReduct(period=t)
-            
-            # calculate repart_t
-            self.SG.computeRepart(period=t, mu=self.mu)
-            
-            # calculate price_t
-            self.SG.computePrice(period=t)
-            
-            
-            ## ------ end -------
-            
-        # Compute metrics
-        self.computeValSG()
-        self.computeValNoSG()
-        self.computeObjValai()
-        self.computeObjSG()
-        self.computeValNoSGCost_A()
-        
-        
-        # plot variables ValNoSG, ValSG
-            
-    
-    def runSSA(self, plot:bool, file:bool): 
-        """
-        Run SSA (selfish Stock Algorithm) algorithm on the app
-        
-        Parameters
-        ----------
-        plot : Boolean
-            a boolean determining if the plots are edited or not
-        
-        file : Boolean
-            file used to output logs
-        """
-        T_periods = self.SG.nbperiod
-        
-        for t in range(T_periods):
-            # Update the state of each prosumer
-            self.SG.updateState(period=t)
-            
-            # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeSSA(period=t)
-            
-            # Update prodit,consit and period + 1 storage values
-            self.SG.updateSmartgrid(period=t)
-            
-            ## compute what each actor has to paid/gain at period t 
-            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
-            ## ------ start -------
-            # Calculate inSG and outSG
-            self.SG.computeSumInput(period=t)
-            self.SG.computeSumOutput(period=t)
-            
-            # calculate valNoSGCost_t
-            self.SG.computeValNoSGCost(period=t)
-            
-            # calculate valEgoc_t
-            self.SG.computeValEgoc(period=t)
-            
-            # calculate valNoSG_t
-            self.SG.computeValNoSG(period=t)
-            
-            # calculate ValSG_t
-            self.SG.computeValSG(period=t)
-            
-            # calculate Reduct_t
-            self.SG.computeReduct(period=t)
-            
-            # calculate repart_t
-            self.SG.computeRepart(period=t, mu=self.mu)
-            
-            # calculate price_t
-            self.SG.computePrice(period=t)
-            
-            ## ------ end -------
-            
-        # Compute metrics
-        self.computeValSG()
-        self.computeValNoSG()
-        self.computeObjValai()
-        self.computeObjSG()
-        self.computeValNoSGCost_A()
-        
-        # plot variables ValNoSG, ValSG
-        
-    def runCSA(self, plot:bool, file:bool): 
-        """
-        Run CSA (centralised Stock Algorithm) algorithm on the app
-        
-        Parameters
-        ----------
-        plot : Boolean
-            a boolean determining if the plots are edited or not
-        
-        file : Boolean
-            file used to output logs
-        """
-        T_periods = self.SG.nbperiod
-        
-        for t in range(T_periods):
-            # Update the state of each prosumer
-            self.SG.updateState(period=t)
-            
-            # Update prosumers' modes following SyA mode selection
-            self.SG.updateModeCSA(period=t)
-            
-            # Update prodit,consit and period + 1 storage values
-            self.SG.updateSmartgrid(period=t)
-            
-            ## compute what each actor has to paid/gain at period t 
-            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
-            ## ------ start -------
-            # Calculate inSG and outSG
-            self.SG.computeSumInput(period=t)
-            self.SG.computeSumOutput(period=t)
-            
-            # calculate valNoSGCost_t
-            self.SG.computeValNoSGCost(period=t)
-            
-            # calculate valEgoc_t
-            self.SG.computeValEgoc(period=t)
-            
-            # calculate valNoSG_t
-            self.SG.computeValNoSG(period=t)
-            
-            # calculate ValSG_t
-            self.SG.computeValSG(period=t)
-            
-            # calculate Reduct_t
-            self.SG.computeReduct(period=t)
-            
-            # calculate repart_t
-            self.SG.computeRepart(period=t, mu=self.mu)
-            
-            # calculate price_t
-            self.SG.computePrice(period=t)
-            
-            ## ------ end -------
-            
-        # Compute metrics
-        self.computeValSG()
-        self.computeValNoSG()
-        self.computeObjValai()
-        self.computeObjSG()
-        self.computeValNoSGCost_A()
-        
-        # plot variables ValNoSG, ValSG
-    
-        
-    def run_LRI_4_onePeriodT_oneStepK(self, period:int, boolInitMinMax:bool):
-        """
-        
-
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
-            
-        boolInitMinMax : Bool
-            require the game whether LRI probabilities strategies are updated or not.
-            if True, LRI probabilities are not updated otherwise.
-            This part is used for initializing the min and max values
-
-        Returns
-        -------
-        None.
-
-        """
-        # Update prosumers' modes following LRI mode selection
-        self.SG.updateModeLRI(period, self.threshold)
-        
-        # Update prodit, consit and period + 1 storage values
-        self.SG.updateSmartgrid(period)
-        
-        # Calculate inSG and outSG
-        self.SG.computeSumInput(period)
-        self.SG.computeSumOutput(period)
-    
-        ## compute what each actor has to paid/gain at period t 
-        ## Calculate ValNoSGCost, ValEgo, ValNoSG, ValSG, Reduct, Repart
-        ## ------ start ------
-        
-        # calculate valNoSGCost_t
-        self.SG.computeValNoSGCost(period)
-        
-        # calculate valEgoc_t
-        self.SG.computeValEgoc(period)
-        
-        # calculate valNoSG_t
-        self.SG.computeValNoSG(period)
-        
-        # calculate ValSG_t
-        self.SG.computeValSG(period)
-        
-        # calculate Reduct_t
-        self.SG.computeReduct(period)
-        
-        # calculate repart_t
-        self.SG.computeRepart(period, mu=self.mu)
-        
-        # calculate price_t
-        self.SG.computePrice(period)
-        
-        # compute PC_CP_th for all prosumers at a period t
-        for i in range(self.N_actors):
-            self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
-            
-        # calculate DispSG
-        for h in range(1, self.rho):
-            self.SG.computeDispSG(period, h=h)
-            
-        # calculate High_t, Low_t
-        self.SG.computeHighLow(period)
-        
-        # calculate rs_{high,low}_{minus,plus}_t
-        self.SG.compute_RS_highPlus(period)
-        self.SG.compute_RS_highMinus(period)
-        self.SG.compute_RS_lowPlus(period)
-        self.SG.compute_RS_lowMinus(period)
-        
-        # calculate ValStock
-        self.SG.computeValStock(period)
-        
-        
-        ## ------ end ------
-        
-        # Compute(Update) min/max Learning cost (LearningCost) for prosumers
-        self.SG.computeLCost_LCostMinMax(period)
-        
-        # boolInitMinMax == False, we update probabilities (prmod) of prosumers strategies
-        if not boolInitMinMax:
-            # Calculate utility
-            self.SG.computeUtility(period)
-            
-            # Update probabilities for choosing modes
-            self.SG.updateProbaLRI(period, self.b)
-        
-        pass
-    
-    
-    
-    def runLRI_REPART(self, plot, file):
-        """
-        Run LRI algorithm with the repeated game
-        
-        Parameters
-        ----------
-        file : TextIO
-            file to save some informations of runtime
-
-        Returns
-        -------
-        None.
-
-        """
-        K = self.maxstep
-        T = self.SG.nbperiod
-        L = self.maxstep_init
-        
-        for t in range(T):
-                        
-            # Update the state of each prosumer
-            self.SG.updateState(t)
-            
-            # Initialization game of min/max Learning cost (LearningCost) for prosumers
-            for l in range(L):
-                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
-                
-            # Game with learning steps
-            for k in range(K):
-                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
-                
-            pass
-                
-        # Compute metrics
-        self.computeValSG()
-        self.computeValNoSG()
-        self.computeObjValai()
-        self.computeObjSG()
-        self.computeValNoSGCost_A()
-        
-        file.write("___Threshold___ \n")
-
-        ## show prmode for each prosumer at all period and determined when the threshold has been reached
-        N = self.SG.prosumers.size
-        for Ni in range(N):
-            file.write(f"Prosumer = {Ni} \n")
-            for t in range(T):
-                if (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
-                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
-                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" < threshold="+ str(self.threshold) + "\n")
-                elif (self.SG.prosumers[Ni].prmode[t][0] >= self.threshold and \
-                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
-                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" >= threshold="+ str(self.threshold) + " ==>  prob[0] #### \n")
-                elif (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
-                    (self.SG.prosumers[Ni].prmode[t][1]) >= self.threshold):
-                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
-                else:
-                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
-                
-                    
-        
-        # Determines for each period if it attained a Nash equilibrium and if not if one exist
-        file.write("___Nash___ : NOT DEFINE \n")
-                
-    ######### ----------------   debut : TEST SAVE running  ------------------------------------
+    ######### ----------------   LRI START ------------------------------------
     def save_LRI_2_json_onePeriod_oneStep(self, period, step):
         """
         save data from LRI execution for one period 
@@ -577,7 +228,99 @@ class App:
                 }
         pass
     
-    def runLRI_REPART_SAVERunning(self, plot, file, scenario):
+    
+    def run_LRI_4_onePeriodT_oneStepK(self, period:int, boolInitMinMax:bool):
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+            
+        boolInitMinMax : Bool
+            require the game whether LRI probabilities strategies are updated or not.
+            if True, LRI probabilities are not updated otherwise.
+            This part is used for initializing the min and max values
+
+        Returns
+        -------
+        None.
+
+        """
+        # Update prosumers' modes following LRI mode selection
+        self.SG.updateModeLRI(period, self.threshold)
+        
+        # Update prodit, consit and period + 1 storage values
+        self.SG.updateSmartgrid(period)
+        
+        # Calculate inSG and outSG
+        self.SG.computeSumInput(period)
+        self.SG.computeSumOutput(period)
+    
+        ## compute what each actor has to paid/gain at period t 
+        ## Calculate ValNoSGCost, ValEgo, ValNoSG, ValSG, Reduct, Repart
+        ## ------ start ------
+        
+        # calculate valNoSGCost_t
+        self.SG.computeValNoSGCost(period)
+        
+        # calculate valEgoc_t
+        self.SG.computeValEgoc(period)
+        
+        # calculate valNoSG_t
+        self.SG.computeValNoSG(period)
+        
+        # calculate ValSG_t
+        self.SG.computeValSG(period)
+        
+        # calculate Reduct_t
+        self.SG.computeReduct(period)
+        
+        # calculate repart_t
+        self.SG.computeRepart(period, mu=self.mu)
+        
+        # calculate price_t
+        self.SG.computePrice(period)
+        
+        # compute PC_CP_th for all prosumers at a period t
+        for i in range(self.N_actors):
+            self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
+            
+        # calculate DispSG
+        for h in range(1, self.rho):
+            self.SG.computeDispSG(period, h=h)
+            
+        # calculate High_t, Low_t
+        self.SG.computeHighLow(period)
+        
+        # calculate rs_{high,low}_{minus,plus}_t
+        self.SG.compute_RS_highPlus(period)
+        self.SG.compute_RS_highMinus(period)
+        self.SG.compute_RS_lowPlus(period)
+        self.SG.compute_RS_lowMinus(period)
+        
+        # calculate ValStock
+        self.SG.computeValStock(period)
+        
+        
+        ## ------ end ------
+        
+        # Compute(Update) min/max Learning cost (LearningCost) for prosumers
+        self.SG.computeLCost_LCostMinMax(period)
+        
+        # boolInitMinMax == False, we update probabilities (prmod) of prosumers strategies
+        if not boolInitMinMax:
+            # Calculate utility
+            self.SG.computeUtility(period)
+            
+            # Update probabilities for choosing modes
+            self.SG.updateProbaLRI(period, self.b)
+        
+        pass
+    
+    
+    def runLRI_REPART(self, plot, file, scenario):
         """
         Run LRI algorithm with the repeated game
         
@@ -609,14 +352,8 @@ class App:
             for l in range(L):
                 print(f"t={t} learning LCostMin_max l={l}")
                 self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
-                
-            # # Game with learning steps
-            # for k in range(K):
-            #     self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
-                
-            # pass
         
-            # --- DEBUG: START Game with learning steps
+            # --- START Game with learning steps
             dicoLRI_onePeriod_KStep = dict()
             df_t = []
             for k in range(K):
@@ -630,30 +367,22 @@ class App:
             
             df_ts.append(df_t)
             
-            #####  start : save execution to json file
+            ## ---> start : save execution to json file
             try:
                 to_unicode = unicode
             except NameError:
                 to_unicode = str
-            #jsonLRI_onePeriod = json.dumps(dicoLRI_onePeriod_KStep)
             # Write JSON file
-            # os.path.join(scenario['scenarioPath'], 'data', f'runLRI_t={t}.json    ====> TODELETE
-            # with io.open(os.path.join(scenario['scenarioCorePath'],'data', f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:   ====> TODELETE
             with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
-            #with io.open(f'./data/runLRI_t={t}.json', 'w', encoding='utf8') as outfile:  ====> TODELETE
                 str_ = json.dumps(dicoLRI_onePeriod_KStep,
                                   indent=4, sort_keys=True,
                                   #separators=(',', ': '), 
                                   ensure_ascii=False
                                   )
                 outfile.write(to_unicode(str_))
-            #####  end : save execution to json file
+            ## ---> end : save execution to json file
             
-            pass
-            
-            
-        
-            # --- DEBUG: END Game with learning steps
+            # --- END Game with learning steps
                 
         # Compute metrics
         self.computeValSG()
@@ -691,16 +420,12 @@ class App:
         df_ts_ = list(it.chain.from_iterable(df_ts))
         df = pd.concat(df_ts_, axis=0)
         runLRI_SumUp_txt = "runLRI_MergeDF.csv"
-        # df.to_csv(os.path.join(scenario['scenarioCorePath'], 'data', runLRI_SumUp_txt))  ====> TODELETE
         df.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_SumUp_txt))
         
-        
-        
-        
-    ######### -------------------  END : TEST SAVE running  ------------------------------------
+    ######### -------------------  LRI END ------------------------------------
             
                 
-    ######### -------------------  SyA START : TEST SAVE running  ------------------------------------
+    ######### -------------------  SyA START ----------------------------------
     def create_dico_for_onePeriod(self, period:int):
         """
         
@@ -747,7 +472,7 @@ class App:
             
         return dico_onePeriod
     
-    def runSyA_SAVERunning(self, plot:bool, file:bool, scenario:dict): 
+    def runSyA(self, plot:bool, file:bool, scenario:dict): 
         """
         Run SyA algorithm on the app
         
@@ -810,7 +535,6 @@ class App:
             df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
             df_ts.append(df_t)
             
-            
             ## ------ end -------
             
         # Compute metrics
@@ -829,11 +553,11 @@ class App:
         df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
                 
                 
-    ######### -------------------  SyA END : TEST SAVE running  ------------------------------------
+    ######### -------------------  SyA END ------------------------------------
             
     
-    ######### -------------------  SSA START : TEST SAVE running  ------------------------------------
-    def runSSA_SAVERunning(self, plot:bool, file:bool, scenario:dict): 
+    ######### -------------------  SSA START ----------------------------------
+    def runSSA(self, plot:bool, file:bool, scenario:dict): 
         """
         Run SSA (selfish Stock Algorithm) algorithm on the app
         
@@ -912,10 +636,10 @@ class App:
         runAlgo_SumUp_txt = "runSSA_MergeDF.csv"
         df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
         
-    ######### -------------------  SSA END : TEST SAVE running  ------------------------------------
+    ######### -------------------  SSA END ------------------------------------
 
-    ######### -------------------  CSA START : TEST SAVE running  ------------------------------------
-    def runCSA_SAVERunning(self, plot:bool, file:bool, scenario:dict): 
+    ######### -------------------  CSA START ----------------------------------
+    def runCSA(self, plot:bool, file:bool, scenario:dict): 
         """
         Run CSA (centralised Stock Algorithm) algorithm on the app
         
@@ -994,5 +718,5 @@ class App:
         runAlgo_SumUp_txt = "runCSA_MergeDF.csv"
         df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
         
-    ######### -------------------  CSA END : TEST SAVE running  ------------------------------------
+    ######### -------------------  CSA END ------------------------------------
     
