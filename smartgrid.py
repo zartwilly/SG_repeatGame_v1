@@ -315,33 +315,33 @@ class Smartgrid :
                 self.prosumers[i].alphai = min(a_[a_<0])
             
         
-    def computeHighLow_OLD(self, period:int) -> float:
-        """
-        compute High, Low variables at period t for each actor
+    # def computeHighLow_OLD(self, period:int) -> float:
+    #     """
+    #     compute High, Low variables at period t for each actor
         
-        Parameters
-        ----------
-        period : int
-            an instance of time t
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         an instance of time t
 
-        Returns
-        -------
-        float
+    #     Returns
+    #     -------
+    #     float
         
-        """
-        high_itj, low_itj = 0, 0
-        self.computeTau_actors(period, self.rho)
-        for i in range(self.prosumers.size):
-            for j in range(1, self.rho+1):
-                sumTauSAis = np.sum(self.TauS[:,j])
-                # if self.DispSG[j] < sumTauSAis:
-                if self.DispSG[j] < sumTauSAis:
-                    high_itj += aux.apv(self.prosumers[i].tau[j])
-                else:
-                    low_itj += aux.apv(self.prosumers[i].tau[j])
+    #     """
+    #     high_itj, low_itj = 0, 0
+    #     self.computeTau_actors(period, self.rho)
+    #     for i in range(self.prosumers.size):
+    #         for j in range(1, self.rho+1):
+    #             sumTauSAis = np.sum(self.TauS[:,j])
+    #             # if self.DispSG[j] < sumTauSAis:
+    #             if self.DispSG[j] < sumTauSAis:
+    #                 high_itj += aux.apv(self.prosumers[i].tau[j])
+    #             else:
+    #                 low_itj += aux.apv(self.prosumers[i].tau[j])
                     
-            self.prosumers[i].High[period] = high_itj
-            self.prosumers[i].Low[period] = low_itj
+    #         self.prosumers[i].High[period] = high_itj
+    #         self.prosumers[i].Low[period] = low_itj
             
     def computeHighLow(self, period:int) -> float:
         """
@@ -361,9 +361,9 @@ class Smartgrid :
         self.computeTau_actors(period, self.rho)
         for i in range(self.prosumers.size):
             for j in range(1, self.rho+1):
-                # TODO DEBUG
+                # TODO DEBUG                                                    =====> TODELETE
                 sumTauSForRhos = np.sum(self.TauS, axis=0)
-                print(f"sumTauSAis: shape = {sumTauSForRhos.shape}, TauS: shape = {self.TauS.shape}")
+                # print(f"sumTauSAis: shape = {sumTauSForRhos.shape}, TauS: shape = {self.TauS.shape}") =====> TODELETE
                 # if self.DispSG[j] < sumTauSAis:
                 if self.DispSG[j] < sumTauSForRhos[j]:
                     high_itj += aux.apv(self.prosumers[i].tau[j])
@@ -486,6 +486,7 @@ class Smartgrid :
                     - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
                        + aux.phiepoplus(self.prosumers[i].rs_low_minus[period]))
                         
+            # TODO =====> TODELETE
             # print(f"t={period},Ai={i} => part1 : {round(part1, 2)}, part2 : {round(part2, 5)}, part3 : {round(part3, 2)} ")
             # print(f"        =>  rs_high+: {self.prosumers[i].rs_high_plus[period]},")  
             # print(f"        =>  rs_low+: {self.prosumers[i].rs_low_plus[period]},") 
@@ -529,6 +530,7 @@ class Smartgrid :
                 self.prosumers[i].LCostmax["mode"] = self.prosumers[i].mode[period]
                 self.prosumers[i].LCostmax["state"] = self.prosumers[i].state[period]
                 
+            # TODO =====> TODELETE
             # if self.prosumers[i].Lcostmin[period] == 0 \
             #     or self.prosumers[i].Lcostmin[period] > self.prosumers[i].Lcost[period]:
             #         #self.prosumers[i].Lcostmin[period] = self.prosumers[i].Lcost[period]
@@ -564,7 +566,8 @@ class Smartgrid :
         N = self.prosumers.size
         
         for i in range(N):
-            print(f"i={i}, Lcost={round(self.prosumers[i].Lcost[period],2)}, LCostmax={round(self.prosumers[i].LCostmax['Lcost'],2)}, LCostmin={round(self.prosumers[i].LCostmin['Lcost'], 2)}")
+            # TODO =====> TODELETE
+            # print(f"i={i}, Lcost={round(self.prosumers[i].Lcost[period],2)}, LCostmax={round(self.prosumers[i].LCostmax['Lcost'],2)}, LCostmin={round(self.prosumers[i].LCostmin['Lcost'], 2)}")
             # if (self.prosumers[i].LCostmax !=0 or self.prosumers[i].LCostmin != 0):
             #     self.prosumers[i].utility[period] \
             #         = (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].Lcost[period]) \
