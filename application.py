@@ -283,9 +283,12 @@ class App:
         # calculate price_t
         self.SG.computePrice(period)
         
-        # compute PC_CP_th for all prosumers at a period t
-        for i in range(self.N_actors):
-            self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
+        # # compute PC_CP_th for all prosumers at a period t
+        # for i in range(self.N_actors):
+        #     self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
+        
+        # calculate tau for all prosumers at a period t
+        self.SG.computeTau_actors(period, rho=self.rho)
             
         # calculate DispSG
         for h in range(1, self.rho):
