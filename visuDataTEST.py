@@ -926,6 +926,8 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame):
 if __name__ == '__main__':
     scenarioPath = "./scenario1.json"
     scenarioPath = "./data_scenario/scenario_test_LRI.json"
+    scenarioPath = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
+    
     
     with open(scenarioPath) as file:
         scenario = json.load(file)
