@@ -99,8 +99,7 @@ def monitoring_before_algorithm(file, application):
 #                DEBUT : Generer des donnees selon scenarios
 #------------------------------------------------------------------------------
 
-
-def generer_data_from_scenario_DBG(scenario:dict,
+def generer_data_from_scenario(scenario:dict,
                                    N_actors:int, nbperiod:int, rho:int,
                                     transitionprobabilities:list,
                                    repartition:list,
@@ -143,7 +142,7 @@ def generer_data_from_scenario_DBG(scenario:dict,
         
     return g
     
-def Initialization_game_DBG(scenario):
+def Initialization_game(scenario):
     """
     initialization of variables of an object application  for DEBUGGING
     
@@ -192,8 +191,7 @@ def Initialization_game_DBG(scenario):
                                   initialprob=initialprob, rho=rho)
     
     # Configuration of the instance generator
-    # g = config_instance(N_actors=N_actors, nbperiod=nbPeriod, rho=rho        ====> TODELETE
-    g = generer_data_from_scenario_DBG(scenario=scenario,
+    g = generer_data_from_scenario(scenario=scenario,
                                        N_actors=N_actors, nbperiod=N_actors, 
                                        rho=rho,
                                        transitionprobabilities=transitionprobabilities,
@@ -233,7 +231,7 @@ def create_repo_for_save_jobs(scenario:dict):
 #------------------------------------------------------------------------------
 #                DEBUT : algo CSA avec instance charge
 #------------------------------------------------------------------------------
-def run_CSA_DBG(scenario, logfiletxt):
+def run_CSA(scenario, logfiletxt):
     """
     run CSA algorithm
 
@@ -250,11 +248,11 @@ def run_CSA_DBG(scenario, logfiletxt):
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
-    application = Initialization_game_DBG(scenario)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning 
     logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
-    file = io.open(logfile,"w")                                              # Logs file
+    file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
     
@@ -282,7 +280,7 @@ def run_CSA_DBG(scenario, logfiletxt):
 #------------------------------------------------------------------------------
 #                DEBUT : algo SSA avec instance charge
 #------------------------------------------------------------------------------
-def run_SSA_DBG(scenario, logfiletxt):
+def run_SSA(scenario, logfiletxt):
     """
     run SSA (selfish stock algorithm) algorithm
 
@@ -299,7 +297,7 @@ def run_SSA_DBG(scenario, logfiletxt):
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
-    application = Initialization_game_DBG(scenario)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -307,7 +305,7 @@ def run_SSA_DBG(scenario, logfiletxt):
 
     # Display for the run beginning 
     logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
-    file = io.open(logfile,"w")                                              # Logs file
+    file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
     
@@ -336,7 +334,7 @@ def run_SSA_DBG(scenario, logfiletxt):
 #------------------------------------------------------------------------------
 #                DEBUT : algo SyA avec instance charge
 #------------------------------------------------------------------------------
-def run_syA_DBG(scenario, logfiletxt):
+def run_syA(scenario, logfiletxt):
     """
     run syA algorithm
 
@@ -354,7 +352,7 @@ def run_syA_DBG(scenario, logfiletxt):
     
 
     # Initialisation of the apps
-    application = Initialization_game_DBG(scenario)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -390,7 +388,7 @@ def run_syA_DBG(scenario, logfiletxt):
 #------------------------------------------------------------------------------
 #                DEBUT : algo LRI avec instance charge
 #------------------------------------------------------------------------------
-def run_LRI_REPART_DBG(scenario, logfiletxt):
+def run_LRI_REPART(scenario, logfiletxt):
     """
     run LRI REPART algorithm for debug
 
@@ -410,7 +408,7 @@ def run_LRI_REPART_DBG(scenario, logfiletxt):
     
     
     # Initialisation of the apps
-    application = Initialization_game_DBG(scenario)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning
     logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
@@ -462,20 +460,14 @@ if __name__ == '__main__':
     with open(scenarioPath) as file:
         scenario = json.load(file)
         
-        # g = Initialization_game_DBG(scenario)
-
         if "SyA" in scenario["algo"]:
-            # run_syA(scenario, logfiletxt)
-            run_syA_DBG(scenario, logfiletxt)
+            run_syA(scenario, logfiletxt)
         if "SSA" in scenario["algo"]:
-            #run_SSA(scenario, logfiletxt)
-            run_SSA_DBG(scenario, logfiletxt)
+            run_SSA(scenario, logfiletxt)
         if "CSA" in scenario["algo"]:
-            #run_CSA(scenario, logfiletxt)
-            run_CSA_DBG(scenario, logfiletxt)
+            run_CSA(scenario, logfiletxt)
         if "LRI_REPART" in scenario["algo"]:
-            # run_LRI_REPART(scenario, logfiletxt)
-            run_LRI_REPART_DBG(scenario, logfiletxt )
+            run_LRI_REPART(scenario, logfiletxt )
         pass
 
     print(f"Running time = {time.time() - start}")
