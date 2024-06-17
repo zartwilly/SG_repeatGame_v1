@@ -259,7 +259,7 @@ def run_CSA(scenario, logfiletxt):
     
     # Execute CSA
     file.write("\n_______CSA_______"+ "\n")
-    application.runCSA_SAVERunning(plot=False, file=file, scenario=scenario)
+    application.runCSA(plot=False, file=file, scenario=scenario)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
     
@@ -312,7 +312,7 @@ def run_SSA(scenario, logfiletxt):
     
     # Execute SSA
     file.write(f"\n_______{algoName}_______"+ "\n")
-    application.runSSA_SAVERunning(plot=False,file=file, scenario=scenario)
+    application.runSSA(plot=False,file=file, scenario=scenario)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
     
@@ -367,7 +367,7 @@ def run_syA(scenario, logfiletxt):
     # Execute SyA
     file.write(f"\n_______{algoName}_______"+ "\n")
     # application.runSyA(plot=False,file=file)
-    application.runSyA_SAVERunning(plot=False, file=file, scenario=scenario)
+    application.runSyA(plot=False, file=file, scenario=scenario)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
     
@@ -420,7 +420,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     # # Execute LRI_REPART
     file.write(f"\n_______{algoName}_______"+ "\n")
     #application.runLRI_REPART(plot=False, file=file)
-    application.runLRI_REPART_SAVERunning(plot=False, file=file, 
+    application.runLRI_REPART(plot=False, file=file, 
                                           scenario=scenario)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
