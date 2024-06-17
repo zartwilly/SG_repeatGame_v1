@@ -304,7 +304,8 @@ class Smartgrid :
         """
         
         for i in range(self.prosumers.size):
-            self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=self.rho)
+            self.prosumers[i].computePC_CP_th(period=period, nbperiod=period, rho=rho)
+            self.prosumers[i].computeTau(period=period, nbperiod=period, rho=rho)
             self.TauS[i] = self.prosumers[i].tau
             self.TauS[i][self.TauS[i] < 0] = 0
             # select ai
@@ -358,7 +359,7 @@ class Smartgrid :
         
         """
         high_itj, low_itj = 0, 0
-        self.computeTau_actors(period, self.rho)
+        # self.computeTau_actors(period, self.rho)
         for i in range(self.prosumers.size):
             for j in range(1, self.rho+1):
                 # TODO DEBUG                                                    =====> TODELETE
