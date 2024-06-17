@@ -251,7 +251,7 @@ class Prosumer:
         for h in range(1, rho_max+1):
            self.tau[h] = np.sum(self.CP_th[:h+1]) - Si_tplus1
         
-        print(f" tau = {self.tau[h]}")
+        # print(f" tau = {self.tau[h]}")                                        =====> TODELETE
         # TODO A tester : 2e version
         # for h in range(1, rho_max+1):
         #     CP_thj = 0
