@@ -192,7 +192,7 @@ def Initialization_game(scenario):
     
     # Configuration of the instance generator
     g = generer_data_from_scenario(scenario=scenario,
-                                       N_actors=N_actors, nbperiod=N_actors, 
+                                       N_actors=N_actors, nbperiod=nbPeriod, 
                                        rho=rho,
                                        transitionprobabilities=transitionprobabilities,
                                        repartition=repartition,
