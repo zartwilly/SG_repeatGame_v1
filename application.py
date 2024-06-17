@@ -350,7 +350,6 @@ class App:
             
             # Initialization game of min/max Learning cost (LearningCost) for prosumers
             for l in range(L):
-                print(f"t={t} learning LCostMin_max l={l}")
                 self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
         
             # --- START Game with learning steps
