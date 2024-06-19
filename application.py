@@ -359,6 +359,7 @@ class App:
             dicoLRI_onePeriod_KStep = dict()
             df_t = []
             for k in range(K):
+                print(f"t = {t}, k={k}") if k%(K//5) == 0 else None
                 self.dicoLRI_onePeriod_oneStep = dict()
                 self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
                 
@@ -385,6 +386,7 @@ class App:
             ## ---> end : save execution to json file
             
             # --- END Game with learning steps
+            print(f"t={t} termine")
                 
         # Compute metrics
         self.computeValSG()
