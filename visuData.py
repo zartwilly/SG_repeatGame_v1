@@ -748,6 +748,8 @@ def create_df_SG_V1(apps_pkls_algos:list) -> pd.DataFrame:
     """
     df_algos = list()
     df_APPs = list()
+    df_PROSUMERS = list()
+    df_prosumers_algos =list() 
     for tu_app_algo in apps_pkls_algos:
         app_al, algoName, nameScenario = tu_app_algo
         valEgoc_ts = app_al.SG.ValEgoc
@@ -772,14 +774,40 @@ def create_df_SG_V1(apps_pkls_algos:list) -> pd.DataFrame:
                                "valNoSG_A": [app_al.valNoSG_A], 
                                "valSG_A": [app_al.valSG_A],
                                "nameScenario": [nameScenario]})
+        
+        for i in range(app_al.SG.prosumers.size):
+            Pis = app_al.SG.prosumers[i].production[:T]
+            Cis = app_al.SG.prosumers[i].consumption[:T]
+            Sis = app_al.SG.prosumers[i].storage[:T]
+            prodits = app_al.SG.prosumers[i].prodit
+            consits = app_al.SG.prosumers[i].consit
+            utilities = app_al.SG.prosumers[i].utility
+            modes = app_al.SG.prosumers[i].mode
+            ValNoSGis = app_al.SG.prosumers[i].valNoSG
+            ValStocks = app_al.SG.prosumers[i].valStock
+            ValRepartis = app_al.SG.prosumers[i].Repart
+            
+            algos = np.repeat(algoName, repeats=T)
+            prosumers = np.repeat("prosumer"+str(i), repeats=T)
+            dico = {"algoName": algos, "T":Ts, "Prosumers": prosumers,
+                    "Pis": Pis, "Cis":Cis, "Sis":Sis, "Prodits":prodits, 
+                    "Consits":consits, "utility": utilities, "modes":modes, 
+                    "ValNoSGis":ValNoSGis, "ValStocks":ValStocks, 
+                    "ValRepartis":ValRepartis}
+            df_prosumeri = pd.DataFrame(dico)
+            
+            df_prosumers_algos.append(df_prosumeri)
+            
         df_algos.append(df_algo)
         df_APPs.append(df_APP)
     
     df_SG = pd.concat(df_algos, axis=0, ignore_index=True)
     
     df_APP = pd.concat(df_APPs, axis=0, ignore_index=True)
+    
+    df_PROSUMERS = pd.concat(df_prosumers_algos, axis=0, ignore_index=True)
         
-    return df_SG, df_APP
+    return df_SG, df_APP, df_PROSUMERS
 
 
 def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame):
@@ -936,7 +964,7 @@ if __name__ == '__main__':
     
     apps_pkls = load_all_algos(scenario)
     
-    df_SG, df_APP = create_df_SG_V1(apps_pkls_algos=apps_pkls)
+    df_SG, df_APP, df_PROSUMERS = create_df_SG_V1(apps_pkls_algos=apps_pkls)
     
     app_PerfMeas = plot_ManyApp_perfMeasure_V1(df_APP, df_SG)
     app_PerfMeas.run_server(debug=True)
