@@ -215,7 +215,7 @@ class Prosumer:
         np.ndarray.
 
         """        
-        rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho  
+        rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
         for h in range(1, rho_max+1):
             self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
             self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
