@@ -181,8 +181,8 @@ class Smartgrid :
         float.
 
         """
-        outinsg = aux.phiepominus(self.outsg[period] - self.insg[period])
-        inoutsg = aux.phiepoplus(self.insg[period] - self.outsg[period])
+        outinsg = aux.phiepominus( aux.apv(self.outsg[period] - self.insg[period] ))
+        inoutsg = aux.phiepoplus( aux.apv(self.insg[period] - self.outsg[period] ))
         self.ValSG[period] = outinsg - inoutsg
     
     def computeValNoSGCost(self, period:int) -> float:
