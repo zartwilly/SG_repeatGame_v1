@@ -810,7 +810,7 @@ def create_df_SG_V1(apps_pkls_algos:list) -> pd.DataFrame:
     return df_SG, df_APP, df_PROSUMERS
 
 
-def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame):
+def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame):
     """
     plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
 
@@ -927,6 +927,55 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame):
     
     ####################### 1er version DF_SG: end  #################################
     
+    #####################  1er version DF_PROSUMERS: START   ###################
+    # TODO 
+    DICO_COLORS = {'LRI_REPART':'gray', 'CSA':'red', 'SSA':'yellow', 'SyA':'green'}
+    for nameScenario in nameScenarios:
+        for algoName in df_PROSUMERS.algoName.unique().tolist():
+            
+            df_pro_algo = df_PROSUMERS[df_PROSUMERS.algoName == algoName]
+            
+            df_pro_algo_PCS = df_pro_algo.groupby("T")[['Pis', 'Cis', 'Sis']].aggregate('sum')
+            df_pro_algo_PCS["T"] = np.arange(df_pro_algo_PCS.shape[0])
+            
+            fig_PCS = go.Figure()
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Pis"], 
+                                         name= "Pis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[0])
+                                         )
+                              )
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Cis"], 
+                                         name= "Cis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[1])
+                                         )
+                              )
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Sis"], 
+                                         name= "Sis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[2])
+                                         )
+                              )
+            
+            fig_PCS.update_layout(xaxis_title='periods', yaxis_title='values', 
+                                     title={'text':f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage ''',
+                                             #'xanchor': 'center',
+                                             'yanchor': 'bottom', 
+                                             }, 
+                                     legend_title_text='left'
+                                    )
+            htmlDiv = html.Div([html.H1(children=algoName+" Pis, Cis, Sis"), 
+                                html.Div(children=f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage  '''), 
+                                dcc.Graph(id='graph_PCS_'+algoName, figure=fig_PCS),
+                                ])
+            
+            htmlDivs.append(htmlDiv)
+            
+            
+    #####################  1er version DF_PROSUMERS: END    ###################
+    
+    
     
     # run app 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -966,7 +1015,7 @@ if __name__ == '__main__':
     
     df_SG, df_APP, df_PROSUMERS = create_df_SG_V1(apps_pkls_algos=apps_pkls)
     
-    app_PerfMeas = plot_ManyApp_perfMeasure_V1(df_APP, df_SG)
+    app_PerfMeas = plot_ManyApp_perfMeasure_V1(df_APP, df_SG, df_PROSUMERS)
     app_PerfMeas.run_server(debug=True)
     
     
