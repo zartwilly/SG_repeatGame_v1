@@ -155,7 +155,46 @@ class Instancegenaratorv2:
                             self.laststate[i][0] = 2
                         else :
                             self.situation[i][j+1] = 4
-                        
+                  
+      
+    def generate_TESTDBG(self, transitionprobabilities, repartition, values, probabilities):
+        """
+        transitionprobabilities = probabilities of transition from A to B1, B1 to A, B2 to C, C to B2
+        repartition = repartition between the two groups of situation {A,B1} and {B2,C}
+        values : matrix containing the ranges of values used in each situation dedicated generator
+        values[0] = [m1a,M1a]
+        values[1] = [m1b,M1b,m2b,M2b,cb]
+        values[2] = [m1c,M1c,m2c,M2c,m3c,M3c,m4c,M4c]
+        probabilities : matrix containing probabilities for changing from one state to another inside the two state Markov chains B,C1,C2
+        probabilities[0] = [P1b,P2b]
+        probabilities[1] = [P1c,P2c,P3c,P4c]
+        
+        
+        """
+        
+        # Initial random repartition between situation A(1), B1(2), B2(3) and C(4)
+        for i in range(repartition[0]):
+            self.situation[i][0] = rdm.randint(1,2)
+        for i in range(repartition[1]):
+            self.situation[repartition[0] + i][0] = rdm.randint(3,4)
+        
+        for i in range(self.production.shape[0]):
+            
+            for t in range(self.production.shape[1]):
+                
+                if i < 10 :
+                    self.consumption[i][t] = 10
+                    if t % 15 < 9 :
+                        self.production[i][t] = 11
+                    else:
+                        self.production[i][t] = 9
+
+                else:
+                    self.consumption[i][t] = 3
+                    if t % 15 < 5 :
+                        self.production[i][t] = 3
+                    else:
+                        self.production[i][t] = 2
 
 if __name__ == "__main__":
     
