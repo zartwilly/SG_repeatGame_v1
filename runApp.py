@@ -550,8 +550,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     # # Execute LRI_REPART
     file.write(f"\n_______{algoName}_______"+ "\n")
     #application.runLRI_REPART(plot=False, file=file)
-    application.runLRI_REPART(plot=False, file=file, 
-                                          scenario=scenario)
+    application.runLRI_REPART(plot=False, file=file, scenario=scenario, algoName=algoName)
     
     monitoring_after_algorithm(algoName=algoName, file=file, application=application)
     
