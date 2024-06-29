@@ -723,9 +723,12 @@ def load_all_algos(scenario:dict):
     
     for algoName in scenario["algo"].keys():
         # load pickle file
-        with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'rb') as f:
-            app_pkl = pickle.load(f) # deserialize using load()
-            app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
+        try:
+            with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'rb') as f:
+                app_pkl = pickle.load(f) # deserialize using load()
+                app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
+        except FileNotFoundError:
+            print(f" {scenario['scenarioName']+'_'+algoName+'_APP.pkl'}  NOT EXIST")
         pass
 
     return app_pkls
@@ -1076,6 +1079,201 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     
     return app_PerfMeas
     
+
+def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame):
+    """
+    plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
+
+    Parameters
+    ----------
+    df_APP : pd.DataFrame
+        a dataframe that the columns are : algoName, ValNoSG_A, ValSG_A 
+        
+    df_SG : pd.DataFrame
+        a dataframe that the columns are : 'algoName', 'Cost_ts', 'T', '
+        valEgoc_ts', 'ValSG_ts', 'ValNoSG_ts', 'Reduct_ts'
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    ####################### 3er version DF_APP: first  ###############################
+    htmlDivs = list()
+    
+    fig = go.Figure()
+    df_APP_T = df_APP.T
+    new_header = df_APP_T.iloc[0]; 
+    df_APP_T = df_APP_T[1:]; 
+    df_APP_T.columns = new_header
+    index = df_APP_T.index.tolist(); index.remove("nameScenario")
+    for num_app, algoName in enumerate(df_APP_T.columns):
+        fig.add_trace(go.Bar(x=index, 
+                              y=df_APP_T.iloc[:,num_app].tolist(), name=df_APP_T.columns.tolist()[num_app],
+                              base = 0.0, width = 0.2, offset = 0.2*num_app,
+                              marker = dict(color = COLORS[num_app])
+                              )
+                      )
+    
+    fig.update_layout(barmode='stack', # "stack" | "group" | "overlay" | "relative"
+                      #boxmode='group', 
+                      xaxis={'categoryorder':'array', 'categoryarray':df_APP.algoName.tolist()},  
+                      xaxis_title="algorithms", yaxis_title="values", 
+                      title_text="Performance Measures")
+    
+    htmlDiv_df_APP = html.Div([
+                html.H1(children='Performance Measures',
+                        style={'textAlign': 'center'}
+                        ),
+                html.Div(children=f"scenario <{df_APP_T.loc['nameScenario',:].unique()[0]}>: plot measures for all algorithms.", 
+                         style={'textAlign': 'center'}),
+                dcc.Graph(id='perfMeas-graph', figure=fig),
+            ])
+    htmlDivs.append(htmlDiv_df_APP)
+    
+    ####################### 3er version DF_APP: end  ###############################
+    
+    ####################### 1er version DF_SG: first  ###############################
+    ## show in xaxis the algorithms and yaxis the values of val{NoSG_A, SG_A}
+    
+    # compute Out_SG_ts - In_SG_ts
+    df_SG["QttEPO_ts"] = df_SG.Out_SG_ts - df_SG.In_SG_ts
+    
+    cpt = 0
+    #htmlDivs = list()
+    #fig_SG = go.Figure()
+    nameScenarios = df_SG.nameScenario.unique()
+    name_cols = ['ValSG_ts', 'ValNoSG_ts', "QttEPO_ts", "maxPrMode"]
+    for nameScenario in nameScenarios:
+        for name_col in name_cols:
+            fig_SG_col = go.Figure()
+            cpt += 1
+            if name_col == "maxPrMode":
+                for num_app, algoName in enumerate(df_SG.algoName.unique()):
+                    df_SG_algo = df_SG[df_SG.algoName == algoName]
+                    fig_SG_col.add_trace(go.Scatter(x=df_SG_algo['T'], y=df_SG_algo[name_col], 
+                                              name= algoName,
+                                              mode='lines+markers', 
+                                              marker = dict(color = COLORS[num_app])
+                                              )
+                                         )
+            elif name_col == "QttEPO_ts":
+                for num_app, algoName in enumerate(df_SG.algoName.unique()):
+                    #cpt += 1
+                    df_SG_algo = df_SG[df_SG.algoName == algoName]
+                    fig_SG_col.add_trace(go.Scatter(x=df_SG_algo['T'], y=df_SG_algo[name_col], 
+                                              name= algoName,
+                                              mode='lines+markers', 
+                                              marker = dict(color = COLORS[num_app])
+                                              )
+                                         )
+                    fig_SG_col.add_trace(go.Scatter(x=df_SG_algo['T'], y=df_SG_algo["In_SG_ts"], 
+                                              name= algoName+'_In_SG_ts',
+                                              mode='lines+markers', 
+                                              marker = dict(color = COLORS[num_app])
+                                              )
+                                         )
+                    fig_SG_col.add_trace(go.Scatter(x=df_SG_algo['T'], y=df_SG_algo["Out_SG_ts"], 
+                                              name= algoName+'_Out_SG_ts',
+                                              mode='lines+markers', 
+                                              marker = dict(color = COLORS[num_app])
+                                              )
+                                         )
+            else:
+                for num_app, algoName in enumerate(df_SG.algoName.unique()):
+                    #cpt += 1
+                    df_SG_algo = df_SG[df_SG.algoName == algoName]
+                    fig_SG_col.add_trace(go.Scatter(x=df_SG_algo['T'], y=df_SG_algo[name_col], 
+                                              name= algoName,
+                                              mode='lines+markers', 
+                                              marker = dict(color = COLORS[num_app])
+                                              )
+                                         )
+            fig_SG_col.update_layout(xaxis_title='periods', yaxis_title='values', 
+                                     title={'text':f''' {nameScenario}: show {name_col} KPI for all algorithms ''',
+                                             #'xanchor': 'center',
+                                             'yanchor': 'bottom', 
+                                             }, 
+                                     legend_title_text='left'
+                                    )
+            htmlDiv = html.Div([html.H1(children=name_col), 
+                                html.Div(children=f''' {nameScenario}: show {name_col} KPI for all algorithms '''), 
+                                dcc.Graph(id='graph'+str(cpt), figure=fig_SG_col),
+                                ])
+            
+            htmlDivs.append(htmlDiv)
+    
+    ####################### 1er version DF_SG: end  #################################
+    
+    #####################  1er version DF_PROSUMERS: START   ###################
+    # TODO 
+    DICO_COLORS = {'LRI_REPART':'gray', 'CSA':'red', 'SSA':'yellow', 'SyA':'green'}
+    for nameScenario in nameScenarios:
+        for algoName in df_PROSUMERS.algoName.unique().tolist():
+            
+            df_pro_algo = df_PROSUMERS[df_PROSUMERS.algoName == algoName]
+            
+            df_pro_algo_PCS = df_pro_algo.groupby("T")[['Pis', 'Cis', 'Sis']].aggregate('sum')
+            df_pro_algo_PCS["T"] = np.arange(df_pro_algo_PCS.shape[0])
+            
+            fig_PCS = go.Figure()
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Pis"], 
+                                         name= "Pis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[0])
+                                         )
+                              )
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Cis"], 
+                                         name= "Cis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[1])
+                                         )
+                              )
+            fig_PCS.add_trace(go.Scatter(x=df_pro_algo_PCS["T"], y=df_pro_algo_PCS["Sis"], 
+                                         name= "Sis",
+                                         mode='lines+markers', 
+                                         marker = dict(color = COLORS[2])
+                                         )
+                              )
+            
+            fig_PCS.update_layout(xaxis_title='periods', yaxis_title='values', 
+                                     title={'text':f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage ''',
+                                             #'xanchor': 'center',
+                                             'yanchor': 'bottom', 
+                                             }, 
+                                     legend_title_text='left'
+                                    )
+            htmlDiv = html.Div([html.H1(children=algoName+" Pis, Cis, Sis"), 
+                                html.Div(children=f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage  '''), 
+                                dcc.Graph(id='graph_PCS_'+algoName, figure=fig_PCS),
+                                ])
+            
+            htmlDivs.append(htmlDiv)
+            
+            
+    #####################  1er version DF_PROSUMERS: END    ###################
+    
+    
+    
+    # run app 
+    external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+    app_PerfMeas = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+    
+    # app_PerfMeas.layout = html.Div(children=[ 
+    #                         html.H1(children='Performance Measures',
+    #                                 style={'textAlign': 'center'}
+    #                                 ),
+    #                         html.Div(children='Dash: plot measures for all algorithms.', 
+    #                                  style={'textAlign': 'center'}),
+    #                         dcc.Graph(id='perfMeas-graph', figure=fig),
+    #                         dcc.Graph(id='perfMeas-graph_SG', figure=fig_SG),
+    #                         ])
+    app_PerfMeas.layout = html.Div(children=htmlDivs)
+    
+    return app_PerfMeas
+    
+
 
 ###############################################################################
 #                END : Plot with Pickle backup
