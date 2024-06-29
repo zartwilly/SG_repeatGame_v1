@@ -116,7 +116,7 @@ class App:
         self.valNoSGCost_A = np.sum(self.SG.ValNoSGCost)
         
     ######### ----------------   LRI START ------------------------------------
-    def save_LRI_2_json_onePeriod_oneStep(self, period, step):
+    def save_LRI_2_json_onePeriod_oneStep(self, period, step, algoName, scenarioName):
         """
         save data from LRI execution for one period 
 
@@ -182,6 +182,7 @@ class App:
             storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
             
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
+                "prosumers": "prosumer"+str(i),
                 "period": period,
                 "step": step,
                 "production":production,
@@ -225,6 +226,9 @@ class App:
                 "rs_low-": rs_lowminus,
                 "alpha_i": self.SG.prosumers[i].alphai,
                 "valStock_i":valStock_i,
+                
+                "algoName": algoName, 
+                "scenarioName": scenarioName
                 }
         pass
     
@@ -323,7 +327,7 @@ class App:
         pass
     
     
-    def runLRI_REPART(self, plot, file, scenario):
+    def runLRI_REPART_DBG(self, plot, file, scenario):
         """
         Run LRI algorithm with the repeated game
         
@@ -425,7 +429,142 @@ class App:
         df = pd.concat(df_ts_, axis=0)
         runLRI_SumUp_txt = "runLRI_MergeDF.csv"
         df.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_SumUp_txt))
+    
         
+    def runLRI_REPART(self, plot, file, scenario, algoName):
+        """
+        Run LRI algorithm with the repeated game
+        
+        Parameters
+        ----------
+        plot: bool
+            yes if you want a figure of some variables
+        file : TextIO
+            file to save some informations of runtime
+        scenario: dict
+            DESCRIPTION
+        algoName: txt
+            name of the algorithm
+
+        Returns
+        -------
+        None.
+
+        """
+        K = self.maxstep
+        T = self.SG.nbperiod
+        L = self.maxstep_init
+        
+        df_T_Kmax = []
+        for t in range(T):
+                        
+            # Update the state of each prosumer
+            self.SG.updateState(t)
+            
+            # Initialization game of min/max Learning cost (LearningCost) for prosumers
+            for l in range(L):
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=True)
+        
+            # --- START Game with learning steps
+            dicoLRI_onePeriod_KStep = dict()
+            df_t_K = []
+            datas = []
+            for k in range(K):
+                print(f"t = {t}, k={k}") if k%(K//5) == 0 else None
+                self.dicoLRI_onePeriod_oneStep = dict()
+                self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
+                
+                self.save_LRI_2_json_onePeriod_oneStep(period=t, step=k, 
+                                                       algoName=algoName, 
+                                                       scenarioName=scenario["scenarioName"])
+                dicoLRI_onePeriod_KStep["step_"+str(k)] = self.dicoLRI_onePeriod_oneStep
+                
+                datas.append(self.dicoLRI_onePeriod_oneStep)
+                
+                df_tk = pd.DataFrame.from_dict(self.dicoLRI_onePeriod_oneStep, orient="index")
+                df_t_K.append(df_tk)
+            
+            
+            ## ---> start : save execution to json file
+            try:
+                to_unicode = unicode
+            except NameError:
+                to_unicode = str
+            # Write JSON file
+            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+                str_ = json.dumps(dicoLRI_onePeriod_KStep,
+                                  indent=4, sort_keys=True,
+                                  #separators=(',', ': '), 
+                                  ensure_ascii=False
+                                  )
+                outfile.write(to_unicode(str_))
+            ## ---> end : save execution to json file
+            
+            ## ---> start : save execution to JSON file by data over period
+            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runDataLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+                str_ = json.dumps(datas,
+                                  indent=4, sort_keys=True,
+                                  #separators=(',', ': '), 
+                                  ensure_ascii=False
+                                  )
+                outfile.write(to_unicode(str_))
+            ## ---> end : save execution to JSON file by data over period
+            
+            ## ---> start : save execution to CSV file by data over period
+            # merge list of dataframes of K steps to one dataframe 
+            df_t_K = pd.concat(df_t_K, axis=0)
+            runLRI_sumUp_K_txt = f"runLRI_df_t_{t}.csv"
+            df_t_K.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_sumUp_K_txt))
+            
+            df_t_kmax = df_t_K[df_t_K['step']==df_t_K['step'].max()].copy(deep=True)
+            df_T_Kmax.append(df_t_kmax)
+                        
+            ## ---> end : save execution to CSV file by data over period
+            
+            # --- END Game with learning steps
+            print(f"t={t} termine")
+         
+        ## ---> start : save execution to CSV file Over periods with the k max steps
+        df_T_Kmax = pd.concat(df_T_Kmax, axis=0)
+        runLRI_sumUp_K_txt = f"run_{algoName}_DF_T_Kmax.csv"
+        df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_sumUp_K_txt))
+        ## ---> end : save execution to CSV file Over periods with the k max steps
+            
+         
+        ## Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
+        
+        file.write("___Threshold___ \n")
+
+        ## show prmode for each prosumer at all period and determined when the threshold has been reached
+        N = self.SG.prosumers.size
+        for Ni in range(N):
+            file.write(f"Prosumer = {Ni} \n")
+            for t in range(T):
+                if (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" < threshold="+ str(self.threshold) + "\n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] >= self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) < self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][0])+" >= threshold="+ str(self.threshold) + " ==>  prob[0] #### \n")
+                elif (self.SG.prosumers[Ni].prmode[t][0] < self.threshold and \
+                    (self.SG.prosumers[Ni].prmode[t][1]) >= self.threshold):
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
+                else:
+                    file.write("Period " + str(t) + " : "+ str(self.SG.prosumers[Ni].prmode[t][1])+" >= threshold="+ str(self.threshold) + " ==> prob[1] #### \n")
+                
+                    
+        
+        # Determines for each period if it attained a Nash equilibrium and if not if one exist
+        file.write("___Nash___ : NOT DEFINE \n")
+        
+        
+        
+      
     ######### -------------------  LRI END ------------------------------------
             
                 
