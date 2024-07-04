@@ -313,7 +313,7 @@ class Smartgrid :
             if a_[a_<0].size == 0:
                 self.prosumers[i].alphai = rho +1
             else:
-                self.prosumers[i].alphai = min(a_[a_<0])
+                self.prosumers[i].alphai = np.argmin( a_[a_<0] )#min(a_[a_<0])
             
         
     # def computeHighLow_OLD(self, period:int) -> float:
@@ -579,6 +579,7 @@ class Smartgrid :
             # print(f"i={i}, LCostmax={self.prosumers[i].LCostmax != 0 }")
             
             if self.prosumers[i].LCostmax["Lcost"] != self.prosumers[i].LCostmin["Lcost"]:
+                # print(f"t={period}, prosu={i} LCostmax={self.prosumers[i].LCostmax['Lcost']}, LCostmin={self.prosumers[i].LCostmin['Lcost']}")
                 self.prosumers[i].utility[period] \
                     = (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].Lcost[period]) \
                         / (self.prosumers[i].LCostmax["Lcost"] - self.prosumers[i].LCostmin["Lcost"])
