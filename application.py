@@ -491,13 +491,13 @@ class App:
             except NameError:
                 to_unicode = str
             # Write JSON file
-            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
-                str_ = json.dumps(dicoLRI_onePeriod_KStep,
-                                  indent=4, sort_keys=True,
-                                  #separators=(',', ': '), 
-                                  ensure_ascii=False
-                                  )
-                outfile.write(to_unicode(str_))
+            # with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+            #     str_ = json.dumps(dicoLRI_onePeriod_KStep,
+            #                       indent=4, sort_keys=True,
+            #                       #separators=(',', ': '), 
+            #                       ensure_ascii=False
+            #                       )
+            #     outfile.write(to_unicode(str_))
             ## ---> end : save execution to json file
             
             ## ---> start : save execution to JSON file by data over period
