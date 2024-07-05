@@ -14,6 +14,16 @@ import smartgrid as sg
 import itertools as it
 import json, io, os
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
 
 class App:
     
@@ -380,7 +390,7 @@ class App:
             except NameError:
                 to_unicode = str
             # Write JSON file
-            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+            with io.open(os.path.join(scenario["scenarioCorePathDataAlgoName"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
                 str_ = json.dumps(dicoLRI_onePeriod_KStep,
                                   indent=4, sort_keys=True,
                                   #separators=(',', ': '), 
@@ -428,8 +438,8 @@ class App:
         df_ts_ = list(it.chain.from_iterable(df_ts))
         df = pd.concat(df_ts_, axis=0)
         runLRI_SumUp_txt = "runLRI_MergeDF.csv"
-        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_SumUp_txt))
-    
+        df.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_SumUp_txt))
+   
         
     def runLRI_REPART(self, plot, file, scenario, algoName):
         """
@@ -491,7 +501,7 @@ class App:
             except NameError:
                 to_unicode = str
             # Write JSON file
-            # with io.open(os.path.join(scenario["scenarioCorePathData"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+            # with io.open(os.path.join(scenario["scenarioCorePathDataAlgoName"], f'runLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
             #     str_ = json.dumps(dicoLRI_onePeriod_KStep,
             #                       indent=4, sort_keys=True,
             #                       #separators=(',', ': '), 
@@ -501,20 +511,21 @@ class App:
             ## ---> end : save execution to json file
             
             ## ---> start : save execution to JSON file by data over period
-            with io.open(os.path.join(scenario["scenarioCorePathData"], f'runDataLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
-                str_ = json.dumps(datas,
-                                  indent=4, sort_keys=True,
-                                  #separators=(',', ': '), 
-                                  ensure_ascii=False
-                                  )
-                outfile.write(to_unicode(str_))
+            # with io.open(os.path.join(scenario["scenarioCorePathDataAlgoName"], f'runDataLRI_t={t}.json'), 'w', encoding='utf8') as outfile:
+            #     str_ = json.dumps(datas,
+            #                       indent=4, sort_keys=True,
+            #                       #separators=(',', ': '), 
+            #                       ensure_ascii=False, 
+            #                       cls=NpEncoder
+            #                       )
+            #     outfile.write(to_unicode(str_))
             ## ---> end : save execution to JSON file by data over period
             
             ## ---> start : save execution to CSV file by data over period
             # merge list of dataframes of K steps to one dataframe 
             df_t_K = pd.concat(df_t_K, axis=0)
             runLRI_sumUp_K_txt = f"runLRI_df_t_{t}.csv"
-            df_t_K.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_sumUp_K_txt))
+            df_t_K.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_sumUp_K_txt))
             
             df_t_kmax = df_t_K[df_t_K['step']==df_t_K['step'].max()].copy(deep=True)
             df_T_Kmax.append(df_t_kmax)
@@ -527,7 +538,7 @@ class App:
         ## ---> start : save execution to CSV file Over periods with the k max steps
         df_T_Kmax = pd.concat(df_T_Kmax, axis=0)
         runLRI_sumUp_K_txt = f"run_{algoName}_DF_T_Kmax.csv"
-        df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathData"], runLRI_sumUp_K_txt))
+        df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_sumUp_K_txt))
         ## ---> end : save execution to CSV file Over periods with the k max steps
             
          
@@ -693,7 +704,7 @@ class App:
         # merge list of dataframes to one dataframe
         df = pd.concat(df_ts, axis=0)
         runAlgo_SumUp_txt = "runSyA_MergeDF.csv"
-        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
+        df.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runAlgo_SumUp_txt))
                 
                 
     ######### -------------------  SyA END ------------------------------------
@@ -777,7 +788,7 @@ class App:
         # merge list of dataframes to one dataframe
         df = pd.concat(df_ts, axis=0)
         runAlgo_SumUp_txt = "runSSA_MergeDF.csv"
-        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
+        df.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runAlgo_SumUp_txt))
         
     ######### -------------------  SSA END ------------------------------------
 
@@ -859,7 +870,7 @@ class App:
         # merge list of dataframes to one dataframe
         df = pd.concat(df_ts, axis=0)
         runAlgo_SumUp_txt = "runCSA_MergeDF.csv"
-        df.to_csv(os.path.join(scenario["scenarioCorePathData"], runAlgo_SumUp_txt))
+        df.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runAlgo_SumUp_txt))
         
     ######### -------------------  CSA END ------------------------------------
     
