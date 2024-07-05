@@ -341,12 +341,19 @@ def Initialization_game(scenario):
 
 def create_repo_for_save_jobs(scenario:dict):
     scenarioCorePath = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
-    scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "data")
+    scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas")
+    scenarioCorePathDataAlgoName = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", scenario["algoName"])
+    scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
     scenario["scenarioCorePath"] = scenarioCorePath
     scenario["scenarioCorePathData"] = scenarioCorePathData
+    scenario["scenarioCorePathDataAlgoName"] = scenarioCorePathDataAlgoName
+    scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
+    
     
     # create a scenarioPath if not exists
     Path(scenarioCorePathData).mkdir(parents=True, exist_ok=True)
+    Path(scenarioCorePathDataAlgoName).mkdir(parents=True, exist_ok=True)
+    Path(scenarioCorePathDataViz).mkdir(parents=True, exist_ok=True)
     
     
     return scenario
@@ -371,6 +378,7 @@ def run_CSA(scenario, logfiletxt):
 
     """
     algoName = "CSA"
+    scenario["algoName"] = algoName
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
@@ -378,7 +386,7 @@ def run_CSA(scenario, logfiletxt):
     application = Initialization_game_TESTDBG(scenario)
 
     # Display for the run beginning 
-    logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
     file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
@@ -395,7 +403,7 @@ def run_CSA(scenario, logfiletxt):
     print("________RUN END CSA ",1,"_________ \n")
     
     # Save application to Pickle format
-    with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
         pickle.dump(application, f)
     f.close()
     
@@ -421,6 +429,7 @@ def run_SSA(scenario, logfiletxt):
 
     """
     algoName = "SSA"
+    scenario["algoName"] = algoName
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
@@ -432,7 +441,7 @@ def run_SSA(scenario, logfiletxt):
 
 
     # Display for the run beginning 
-    logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
     file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
@@ -449,7 +458,7 @@ def run_SSA(scenario, logfiletxt):
     print("________RUN END SSA ",1,"_________ \n")
     
     # Save application to Pickle format
-    with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
         pickle.dump(application, f)
     f.close()
     
@@ -476,6 +485,7 @@ def run_syA(scenario, logfiletxt):
 
     """
     algoName = "SyA"
+    scenario["algoName"] = algoName
     scenario = create_repo_for_save_jobs(scenario)
     
 
@@ -488,7 +498,7 @@ def run_syA(scenario, logfiletxt):
 
 
     # Display for the run beginning
-    logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
     file = io.open(logfile,"w")                                              # Logs file
     
     monitoring_before_algorithm(file, application)
@@ -504,7 +514,7 @@ def run_syA(scenario, logfiletxt):
     print("________RUN END SyA ",1,"_________ \n")
     
     # Save application to Pickle format
-    with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
         pickle.dump(application, f)
     f.close()
     
@@ -533,6 +543,7 @@ def run_LRI_REPART(scenario, logfiletxt):
 
     """
     algoName = "LRI_REPART"
+    scenario["algoName"] = algoName
     scenario = create_repo_for_save_jobs(scenario)
     
     
@@ -541,7 +552,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     application = Initialization_game_TESTDBG(scenario)
 
     # Display for the run beginning
-    logfile = os.path.join(scenario["scenarioCorePathData"], algoName+"_"+logfiletxt)
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
     file = io.open(logfile,"w")                                              # Logs file
     
     monitoring_before_algorithm(file, application)
@@ -560,7 +571,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     print("________RUN END LRI_REPART ",1,"_________ \n")
     
     # Save application to Pickle format
-    with open(os.path.join(scenario["scenarioCorePathData"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
         pickle.dump(application, f)
     f.close()
     
@@ -578,15 +589,15 @@ def run_LRI_REPART(scenario, logfiletxt):
 if __name__ == '__main__':
 
     logfiletxt = "traceApplication.txt"
-    scenarioPath = "./scenario1.json"
-    scenarioPath = "./data_scenario/scenario_test_LRI.json"
-    scenarioPath = "./data_scenario/scenario_SelfishDebug_LRI_N4_T3.json"
-    scenarioPath = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
+    scenarioFile = "./scenario1.json"
+    scenarioFile = "./data_scenario/scenario_test_LRI.json"
+    scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N4_T3.json"
+    scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
     
     
     import time
     start = time.time()
-    with open(scenarioPath) as file:
+    with open(scenarioFile) as file:
         scenario = json.load(file)
         
         if "SyA" in scenario["algo"]:
