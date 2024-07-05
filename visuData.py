@@ -734,6 +734,42 @@ def load_all_algos(scenario:dict):
     return app_pkls
     pass
 
+def load_all_algos_V1(scenario:dict, scenarioViz: dict):
+    """
+    load all algorithms saved in the pickle format
+
+    Parameters
+    ----------
+    scenario : dict
+        DESCRIPTION.
+
+    scenarioViz: dict)
+        DESCRIPTION.
+        exple : {"algoName": list(scenario["algo"].keys()), 
+                 "graphs":[["ValSG_ts", "ValNoSG_ts", "Bar"], 
+                           ["QttEPO", "line"], ["MaxPrMode", "line]"] ]
+                }
+    Returns
+    -------
+    None.
+
+    """
+    app_pkls = []
+    
+    for algoName in scenarioViz["algoName"]:
+        # load pickle file
+        try:
+            scenarioCorePathDataAlgoName = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", algoName)
+            with open(os.path.join(scenarioCorePathDataAlgoName, scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'rb') as f:
+                app_pkl = pickle.load(f) # deserialize using load()
+                app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
+        except FileNotFoundError:
+            print(f" {scenario['scenarioName']+'_'+algoName+'_APP.pkl'}  NOT EXIST")
+        pass
+
+    return app_pkls
+    pass
+
 def create_df_SG_V1(apps_pkls_algos:list, initial_period:int) -> pd.DataFrame:
     """
     merge of algorithm values in one dataframe
@@ -1372,25 +1408,59 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
 #                END : Plot with Pickle backup
 ###############################################################################
 
-
 if __name__ == '__main__':
-    scenarioPath = "./scenario1.json"
-    scenarioPath = "./data_scenario/scenario_test_LRI.json"
-    scenarioPath = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
+    scenarioFile = "./scenario1.json"
+    scenarioFile = "./data_scenario/scenario_test_LRI.json"
+    scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
     
-    
-    with open(scenarioPath) as file:
+    with open(scenarioFile) as file:
         scenario = json.load(file)
     
-    scenario = create_repo_for_save_jobs(scenario)
+    scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
+    scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
     
-    apps_pkls = load_all_algos(scenario)
     
-    initial_period = 2 #10
-    df_SG, df_APP, df_PROSUMERS = create_df_SG_V1_SelectPeriod(apps_pkls, initial_period)
+    ## test if scenarioName+"Viz".json exists ---> start
+    scenarioVizFile = os.path.join(scenario["scenarioCorePathDataViz"], scenario["scenarioName"]+'_VIZ.json')
+    checkfile = os.path.isfile(scenarioVizFile)
+    scenarioViz = dict()
+    if checkfile:
+        with open(scenarioVizFile) as file:
+            scenarioViz = json.load(file)
+        pass
+    else:
+        scenarioViz = {"algoName": list(scenario["algo"].keys()), 
+                     "graphs":[["ValSG_ts", "ValNoSG_ts", "Bar"], ["QttEPO", "line"], ["MaxPrMode", "line]"] ]
+                     }
+        pass
+
+    apps_pkls = load_all_algos(scenario, scenarioViz)
     
-    app_PerfMeas = plot_ManyApp_perfMeasure_V1(df_APP, df_SG, df_PROSUMERS)
+    
+    initial_period = 0 # 2, 10 
+
+    df_SG, df_APP, df_PROSUMERS \
+        = create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
+
+    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS)
     app_PerfMeas.run_server(debug=True)
+    
+    # -------------------------------------------------------------------------
+    # with open(scenarioPath) as file:
+    #     scenario = json.load(file)
+    
+    # scenario = create_repo_for_save_jobs(scenario)
+    
+    # apps_pkls = load_all_algos(scenario)
+    
+    # initial_period = 2 #10
+    # df_SG, df_APP, df_PROSUMERS = create_df_SG_V1_SelectPeriod(apps_pkls, initial_period)
+    
+    # app_PerfMeas = plot_ManyApp_perfMeasure_V1(df_APP, df_SG, df_PROSUMERS)
+    # app_PerfMeas.run_server(debug=True)
+    # -------------------------------------------------------------------------
+    
+    
     
     
     # df_SG, df_APP, df_PROSUMERS = create_df_SG_V1(apps_pkls_algos=apps_pkls)
@@ -1426,4 +1496,5 @@ if __name__ == '__main__':
     ## app_PerfMeas = plot_ManyApp_perfMeasure_DBG(df_APP, df_SG)
     ## app_PerfMeas.run_server(debug=True)
     ##pass
+
 
