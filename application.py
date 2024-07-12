@@ -301,21 +301,33 @@ class App:
         # for i in range(self.N_actors):
         #     self.SG.prosumers[i].computePC_CP_th(period=period, nbperiod=self.SG.nbperiod, rho=self.rho)
         
-        # calculate tau for all prosumers at a period t
-        self.SG.computeTau_actors(period, rho=self.rho)
+        # # calculate tau for all prosumers at a period t
+        # self.SG.computeTau_actors(period, rho=self.rho)
             
-        # calculate DispSG
-        for h in range(1, self.rho):
-            self.SG.computeDispSG(period, h=h)
+        # # calculate DispSG
+        # for h in range(1, self.rho):
+        #     self.SG.computeDispSG(period, h=h)
             
-        # calculate High_t, Low_t
-        self.SG.computeHighLow(period)
+        # # calculate High_t, Low_t
+        # self.SG.computeHighLow(period)
         
-        # calculate rs_{high,low}_{minus,plus}_t
-        self.SG.compute_RS_highPlus(period)
-        self.SG.compute_RS_highMinus(period)
-        self.SG.compute_RS_lowPlus(period)
-        self.SG.compute_RS_lowMinus(period)
+        # # calculate rs_{high,low}_{minus,plus}_t
+        # self.SG.compute_RS_highPlus(period)
+        # self.SG.compute_RS_highMinus(period)
+        # self.SG.compute_RS_lowPlus(period)
+        # self.SG.compute_RS_lowMinus(period)
+        
+        # calculate Taus
+        self.SG.computeTaus(period) 
+        
+        # calculate Needs
+        self.SG.computeNeeds(period)
+        
+        # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+        self.SG.computeProvsforRho(period) 
+        
+        # calculate QTStock
+        self.SG.ComputeQTStock(period)
         
         # calculate ValStock
         self.SG.computeValStock(period)
