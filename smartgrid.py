@@ -32,6 +32,7 @@ class Smartgrid :
     Cost = None
     DispSG = None
     TauS = None # contains the tau array for all players at period t 
+    Nds = None
     
     
     # TODO to delete
@@ -93,6 +94,8 @@ class Smartgrid :
         self.strategy_profile = np.ndarray(shape=(N, nbperiod), dtype=dt)
         self.Cost = np.zeros(nbperiod)
         self.DispSG = np.zeros(rho+1)
+        self.Nds = np.zeros(rho+1)
+        self.Prv = np.zeros(rho+1)
         
     ###########################################################################
     #                   compute smartgrid variables :: start
@@ -237,11 +240,30 @@ class Smartgrid :
             self.prosumers[i].price[period] \
                 = self.prosumers[i].valNoSG[period] \
                     - self.prosumers[i].Repart[period]
-            
-            
-    def computeDispSG(self, period:int, h:int) -> float:
+                    
+    def computeNeeds(self, period:int, h:int) -> float:
         """
-        
+        Compute needs for all prosumers 
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+        h : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            return float on array variable Needs
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeNeeds4OneProsumer(period=period, nbperiod=self.nbperiod)
+            
+    def computeNds(self, period:int, h:int) -> float:
+        """
+        sum of the Needs for all players
 
         Parameters
         ----------
@@ -253,217 +275,95 @@ class Smartgrid :
 
         Returns
         -------
-        None.
+        float
+            DESCRIPTION.
 
         """
-        """
-        nextperiod = period if period == self.maxperiod-1 else period+1
-        sumDisp_th = 0
         for i in range(self.prosumers.size):
-            Stplus1 = self.prosumers[i].storage[nextperiod]
-            sumPC_th = 0
-            for j in range(1, h):
-                Citj, Pitj = None, None
-                if period+j <= self.maxperiod:
-                    Citj = self.prosumers[i].consumption[period+j]
-                    Pitj = self.prosumers[i].production[period+j]
-                else:
-                    Citj = self.prosumers[i].consumption[self.maxperiod]
-                    Pitj = self.prosumers[i].production[self.maxperiod]
-                sumPC_th += Pitj - Citj
-            sumDisp_th += Stplus1 + sumPC_th
+            self.Nds[h] += self.prosumers[i].Needs[h]
             
-        self.DispSG[period] = sumDisp_th
+    def computeProvsAtH(self, period:int, h:int) -> float:
         """
-        
-        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
-        sumDisp_th = 0
-        for i in range(self.prosumers.size):
-            Stplus1 = self.prosumers[i].storage[nextperiod]
-            sumDisp_th += Stplus1 + np.sum(self.prosumers[i].PC_th[:h+1])
-            
-        self.DispSG[h] = sumDisp_th
-    
-    def computeTau_actors(self, period:int, rho:int):
-        """
-        compute tau_i for all actors
+        Calculate Provs for one h with 1 <= h <= rho
 
         Parameters
         ----------
         period : int
-            an instance of time t
-            
-        rho : int
-            number of periods to select for predition 
-            rho << nbperiod ie rho=3 < nbperiod=5
-
-        Returns
-        -------
-        TauS array of shape (N, rho+1).
-
-        """
-        
-        for i in range(self.prosumers.size):
-            self.prosumers[i].computePC_CP_th(period=period, nbperiod=self.nbperiod, rho=rho)
-            self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=rho)
-            self.TauS[i] = self.prosumers[i].tau
-            self.TauS[i][self.TauS[i] < 0] = 0
-            # select ai
-            a_ = self.prosumers[i].tau
-            if a_[a_<0].size == 0:
-                self.prosumers[i].alphai = rho +1
-            else:
-                self.prosumers[i].alphai = np.argmin( a_[a_<0] )#min(a_[a_<0])
-            
-        
-    # def computeHighLow_OLD(self, period:int) -> float:
-    #     """
-    #     compute High, Low variables at period t for each actor
-        
-    #     Parameters
-    #     ----------
-    #     period : int
-    #         an instance of time t
-
-    #     Returns
-    #     -------
-    #     float
-        
-    #     """
-    #     high_itj, low_itj = 0, 0
-    #     self.computeTau_actors(period, self.rho)
-    #     for i in range(self.prosumers.size):
-    #         for j in range(1, self.rho+1):
-    #             sumTauSAis = np.sum(self.TauS[:,j])
-    #             # if self.DispSG[j] < sumTauSAis:
-    #             if self.DispSG[j] < sumTauSAis:
-    #                 high_itj += aux.apv(self.prosumers[i].tau[j])
-    #             else:
-    #                 low_itj += aux.apv(self.prosumers[i].tau[j])
-                    
-    #         self.prosumers[i].High[period] = high_itj
-    #         self.prosumers[i].Low[period] = low_itj
-            
-    def computeHighLow(self, period:int) -> float:
-        """
-        compute High, Low variables at period t for each actor
-        
-        Parameters
-        ----------
-        period : int
-            an instance of time t
+            DESCRIPTION.
+        h : int
+            DESCRIPTION.
 
         Returns
         -------
         float
-        
+            DESCRIPTION.
+
         """
-        high_itj, low_itj = 0, 0
-        # self.computeTau_actors(period, self.rho)
+    
         for i in range(self.prosumers.size):
-            for j in range(1, self.rho+1):
-                # TODO DEBUG                                                    =====> TODELETE
-                sumTauSForRhos = np.sum(self.TauS, axis=0)
-                # print(f"sumTauSAis: shape = {sumTauSForRhos.shape}, TauS: shape = {self.TauS.shape}") =====> TODELETE
-                # if self.DispSG[j] < sumTauSAis:
-                if self.DispSG[j] < sumTauSForRhos[j]:
-                    high_itj += aux.apv(self.prosumers[i].tau[j])
-                else:
-                    low_itj += aux.apv(self.prosumers[i].tau[j])
-                    
-            self.prosumers[i].High[period] = high_itj
-            self.prosumers[i].Low[period] = low_itj
+            self.Prv[h-1] += self.prosumers[i].Provs[h-1]
             
-    def compute_RS_highPlus(self, period:int) -> float:
-        """
-        compute rs_{i, High}^{plus} for all actors
-
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
-
-        Returns
-        -------
-        float.
-
-        """
-        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
         
         for i in range(self.prosumers.size):
-            self.prosumers[i].rs_high_plus[period] = \
-                min(aux.apv(self.prosumers[i].storage[nextperiod] - self.prosumers[i].storage[period]), 
-                    aux.apv( self.prosumers[i].High[period] - self.prosumers[i].storage[period])
-                    )
-        
-    def compute_RS_highMinus(self, period:int) -> float:
-        """
-        compute rs_{i, High}^{minus} for all actors
-
-        Parameters
-        ----------
-        Period : int
-            an instance of time t.
-
-        Returns
-        -------
-        float.
-
-        """
-        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
-        
-        for i in range(self.prosumers.size):
-            self.prosumers[i].rs_high_minus[period] = \
-                min(aux.apv(self.prosumers[i].storage[period] - self.prosumers[i].storage[nextperiod]),
-                    aux.apv(self.prosumers[i].High[period] - self.prosumers[i].storage[nextperiod])
-                    )
-        
-    def compute_RS_lowPlus(self, period:int) -> float:
-        """
-        compute rs_{i, Low}^{plus} for all actors
-
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
+            tmp = self.prosumers[i].Needs[h:]
+            if tmp[tmp>0].size > 0:
+                self.prosumers[i].Provs[h] = 0
+            else:
+                nds_hminus1 = 0 if h <= 1 else self.Nds[h-1]
+                tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, nds_hminus1/self.Prv[h-1]))
+                self.prosumers[i].Provs[h] = tmp_h
+                
+            self.Prv[h] += self.prosumers[i].Provs[h]
             
-        Returns
-        -------
-        float.
+            self.prosumers[i].i_tense[h] = 1 if self.Nds[h] > self.Prv[h] else -1
 
+                
+    def computeProvsforRho(self, period:int) -> float:
         """
-        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
-        
-        for i in range(self.prosumers.size):
-            self.prosumers[i].rs_low_plus[period] = \
-                min(aux.apv(self.prosumers[i].storage[nextperiod] - self.prosumers[i].storage[period] - self.prosumers[i].rs_high_plus[period]),
-                    aux.apv(self.prosumers[i].High[period] + self.prosumers[i].Low[period] - self.prosumers[i].storage[period]),
-                    self.prosumers[i].Low[period]
-                    )
-        
-    def compute_RS_lowMinus(self, period:int) -> float:
-        """
-        compute rs_{i, Low}^{minus} for all actors
+        Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
 
         Parameters
         ----------
         period : int
-            an instance of time t.
+            DESCRIPTION.
 
         Returns
         -------
-        float.
+        float
+            DESCRIPTION.
 
         """
-        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1
-        
         for i in range(self.prosumers.size):
-            self.prosumers[i].rs_low_plus[period] = \
-                min(aux.apv(self.prosumers[i].storage[period] - self.prosumers[i].storage[nextperiod] - self.prosumers[i].rs_high_plus[period]),
-                    aux.apv(self.prosumers[i].High[period] + self.prosumers[i].Low[period] - self.prosumers[i].storage[nextperiod]),
-                    self.prosumers[i].Low[period]
-                    )
+            self.prosumers[i].computeProvsAtH0(period=period, nbperiod=self.nbperiod)
+            self.Prv[0] += self.prosumers[i].Provs[0]
         
+        for h in range(1, self.rho):
+            self.computeProvsAtH(period=period, h=h)
+           
+    
+    def ComputeQTStock(self, period:int) -> float:
+        """
+        Calculate the quantity of stocks with 
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):  
+            itense_arr = (self.prosumers[i].i_tense == 1).nonzero()[0]
+            qtstock_i = 0
+            for h in itense_arr:
+                qtstock_i += self.prosumers[i].Needs[h] * (1 - self.Prv[h] / self.Nds[h])
+            self.prosumers[i].QTStock[period] = qtstock_i
+                
+    
     def computeValStock(self, period:int) -> float:
         """
         calculate the prosumer stock impact during a strategy profile SP^t=strat_{1,s}^t,...,strat_{N,s}^t
@@ -478,23 +378,18 @@ class Smartgrid :
         None.
 
         """
+        
+        nextperiod = period if period == self.nbperiod+self.rho-1 else period+1 
+        
         for i in range(self.prosumers.size):
-            alphai = self.prosumers[i].alphai
-            part3 = (self.rho+1-alphai) / self.rho
-            part2 = self.ValEgoc[period] / self.ValNoSG[period]
-            part1 = aux.phiepominus(self.prosumers[i].rs_high_plus[period]) \
-                    + aux.phiepoplus(self.prosumers[i].rs_low_plus[period]) \
-                    - (aux.phiepominus(self.prosumers[i].rs_high_minus[period]) \
-                       + aux.phiepoplus(self.prosumers[i].rs_low_minus[period]))
-                        
-            # TODO =====> TODELETE
-            # print(f"t={period},Ai={i} => part1 : {round(part1, 2)}, part2 : {round(part2, 5)}, part3 : {round(part3, 2)} ")
-            # print(f"        =>  rs_high+: {self.prosumers[i].rs_high_plus[period]},")  
-            # print(f"        =>  rs_low+: {self.prosumers[i].rs_low_plus[period]},") 
-            # print(f"        =>  rs_high-: {self.prosumers[i].rs_high_minus[period]},") 
-            # print(f"        =>  rs_low-: {self.prosumers[i].rs_low_minus[period]} ")
-
-            self.prosumers[i].valStock[period] = part1 * part2 * part3
+            Si = self.prosumers[i].storage[period]
+            Si_tplus1 = self.prosumers[i].storage[nextperiod]
+            QTstock_i = self.prosumers[i].QTStock[period]
+            
+            self.prosumers[i].valStock[period] \
+                = aux.phiepominus(min( aux.apv(Si - Si_tplus1), QTstock_i )) \
+                    - aux.phiepoplus(min( aux.apv(Si_tplus1 - Si), QTstock_i ))
+    
             
     def computeLCost_LCostMinMax(self, period:int):
         """
