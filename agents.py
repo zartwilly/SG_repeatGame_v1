@@ -52,6 +52,10 @@ class Prosumer:
     rho = None # the next periods to add at nbperiod periods. This parameter enables the prediction of values from nbperiod+1 to nbperiod+rho periods with rho << nbperiod
     alphai = None       # the min value of tau_i^j such that tau_i < 0 and  1<=j<=rho 
     tau = None # the stock demand of each actor for h next periods
+    Needs = None # the energy needs
+    Provs = None # 
+    i_tense = None # contains h value for which Nds_h > Prv_h
+    QTStock = None
     CP_th = None # the difference between consumption and production at t+h with h in [1,rho]
     PC_th = None # the difference between production and consumption at t+h with h in [1,rho]
     Xi = None #
@@ -121,6 +125,9 @@ class Prosumer:
         self.rho = rho
         self.alphai = 0
         self.tau = np.zeros(rho+1)
+        self.Needs = np.zeros(rho+1)
+        self.Provs = np.zeros(rho+1)
+        self.i_tense = np.zeros(rho+1)
         self.CP_th = np.zeros(rho+1)
         self.PC_th = np.zeros(rho+1)
         self.Xi = np.zeros(nbperiod+rho)
@@ -131,6 +138,7 @@ class Prosumer:
         self.rs_high_minus = np.zeros(nbperiod)
         self.rs_low_minus = np.zeros(nbperiod)
         
+        self.QTStock = np.zeros(nbperiod)
         self.ObjValue = 0 #np.zeros(maxperiod)
         self.price = np.zeros(nbperiod)
         self.valOne = np.zeros(nbperiod)
@@ -198,6 +206,7 @@ class Prosumer:
         
     def computePC_CP_th(self, period:int, nbperiod:int, rho:int):
         """
+        TODO : TODELETE because USELESS
         compute a difference between consumption and production at t+h with h \in [1, rho] 
 
         Parameters
@@ -217,8 +226,12 @@ class Prosumer:
         """        
         rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
         for h in range(1, rho_max+1):
-            self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
-            self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
+            if h == 1:
+                self.CP_th[h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
+                self.PC_th[h] = (self.production[period+h] + self.storage[period]) - self.consumption[period+h]
+            else:
+                self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
+                self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
             
     def computeTau(self, period:int, nbperiod:int, rho:int) -> float:
         """
@@ -241,15 +254,22 @@ class Prosumer:
         float.
 
         """
-        nextperiod = period if period == nbperiod+rho-1 else period+1
-        
-        Si_tplus1 = self.storage[nextperiod]
+        #nextperiod = period if period == nbperiod+rho-1 else period+1
         
         rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho  
         
-        # TODO A tester : 1er version
+        # New version to compute tau
         for h in range(1, rho_max+1):
-           self.tau[h] = np.sum(self.CP_th[:h+1]) - Si_tplus1
+            if h == 1:
+                self.tau[h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
+            else:
+                self.tau[h] = self.consumption[period+h] - self.production[period+h]
+                
+        
+        
+        # TODO A tester : 1er version
+        # for h in range(1, rho_max+1):
+        #    self.tau[h] = np.sum(self.CP_th[:h+1])
         
         # print(f" tau = {self.tau[h]}")                                        =====> TODELETE
         # TODO A tester : 2e version
@@ -260,7 +280,52 @@ class Prosumer:
                 
         #     self.tau[h] = CP_thj - Si_tplus1
            
+    def computeNeeds4OneProsumer(self, period:int, nbperiod:int)-> float:
+        """
+        Compute the need of each actor on rho periods
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+        rho : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        rho_max = self.rho if period < nbperiod else nbperiod-self.rho
         
+        for h in range(1, rho_max):
+            tmp = self.tau[:h]
+            tmp = tmp[tmp > 0]
+            self.Needs[h] = np.sum(tmp)
+    
+    def computeProvsAtH0(self, period:int, nbperiod:int) -> float():
+        """
+        Calculate Prov at h=0
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        
+        # rho_max = self.rho if period < nbperiod else nbperiod-self.rho
+        
+        self.Provs[0] = self.storage[period]
+        
+            
+                
         
     def computeX(self, period:int, nbperiod:int, rho:int)-> float:
         """
