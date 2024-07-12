@@ -241,7 +241,26 @@ class Smartgrid :
                 = self.prosumers[i].valNoSG[period] \
                     - self.prosumers[i].Repart[period]
                     
-    def computeNeeds(self, period:int, h:int) -> float:
+    def computeTaus(self, period:int) -> float:
+        """
+        
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """   
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=self.rho)
+             
+                    
+    def computeNeeds(self, period:int) -> float:
         """
         Compute needs for all prosumers 
 
@@ -338,6 +357,7 @@ class Smartgrid :
             self.Prv[0] += self.prosumers[i].Provs[0]
         
         for h in range(1, self.rho):
+            self.computeNds(period=period, h=h) 
             self.computeProvsAtH(period=period, h=h)
            
     
