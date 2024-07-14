@@ -152,22 +152,22 @@ class App:
         LCostmax = self.SG.LCostmax[period]
         LCostmin = self.SG.LCostmin[period]
         Cost = self.SG.Cost[period]
-        dispSG = dict()
-        for h, elt in enumerate(self.SG.DispSG):
-            dispSG["rho="+str(h+1)] = elt
+        Nds = dict()
+        for h, elt in enumerate(self.SG.Nds):
+            Nds["Nds_h="+str(h)] = elt
+        Prv = dict()
+        for h, elt in enumerate(self.SG.Prv):
+            Prv["Prv_h="+str(h)] = elt
+        
         tauS = dict()
-        for h, elt in enumerate(self.SG.TauS):
-            tauS["rho="+str(h+1)] = elt
+        for i, elt in enumerate(self.SG.TauS):
+            tauS["Prosum="+str(i)] = elt
         
         #dicoLRI_onePeriod_oneStep = dict()
         for i in range(N):
             production = self.SG.prosumers[i].production[period]
             consumption = self.SG.prosumers[i].consumption[period]
             storage = self.SG.prosumers[i].storage[period]
-            rs_highplus = self.SG.prosumers[i].rs_high_plus[period]
-            rs_highminus = self.SG.prosumers[i].rs_high_minus[period]
-            rs_lowplus = self.SG.prosumers[i].rs_low_plus[period]
-            rs_lowminus = self.SG.prosumers[i].rs_low_minus[period]
             prodit = self.SG.prosumers[i].prodit[period]
             consit = self.SG.prosumers[i].consit[period]
             mode = self.SG.prosumers[i].mode[period]
@@ -177,8 +177,6 @@ class App:
             utility = self.SG.prosumers[i].utility[period]
             price = self.SG.prosumers[i].price[period]
             valOne_i = self.SG.prosumers[i].valOne[period]
-            high_i = self.SG.prosumers[i].High[period]
-            low_i = self.SG.prosumers[i].Low[period]
             valNoSG_i = self.SG.prosumers[i].valNoSG[period]
             valStock_i = self.SG.prosumers[i].valStock[period]
             Repart_i = self.SG.prosumers[i].Repart[period]
@@ -190,6 +188,19 @@ class App:
             tau = self.SG.prosumers[i].tau
             
             storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
+            
+            
+            Needs = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].Needs):
+                Needs["Needs_h="+str(h)] = elt
+                
+            Provs = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].Provs):
+                Provs["Provs_h="+str(h)] = elt
+                
+            i_tense = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].i_tense):
+                i_tense["itense_h="+str(h)] = elt
             
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
                 "prosumers": "prosumer"+str(i),
@@ -225,16 +236,20 @@ class App:
                 "Lcostmin": self.SG.prosumers[i].Lcostmin[period], 
                 "Cost": Cost,
                 
-                "dispSG": str(dispSG),
                 "tau": str(tau),
-                "tauS": str(tauS),
-                "high_i": high_i,
-                "low_i": low_i,
-                "rs_high+": rs_highplus,
-                "rs_high-": rs_highminus,
-                "rs_low+": rs_lowplus,
-                "rs_low-": rs_lowminus,
-                "alpha_i": self.SG.prosumers[i].alphai,
+                #"tauS": str(tauS),
+                
+                "Nds": str(Nds),
+                "Prv": str(Prv),
+                
+                "Needs": str(Needs),
+                "Provs": str(Provs),
+                
+                
+                "i-tense": str(i_tense),
+                "QTStock": self.SG.prosumers[i].QTStock[period], 
+                
+    
                 "valStock_i":valStock_i,
                 
                 "algoName": algoName, 
