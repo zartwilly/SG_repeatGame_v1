@@ -96,141 +96,15 @@ def monitoring_before_algorithm(file, application):
 #------------------------------------------------------------------------------
     
 #------------------------------------------------------------------------------
-#                START : TEST DBG
-#------------------------------------------------------------------------------
-def generer_data_from_scenario_TESTDBG(scenario:dict,
-                                   N_actors:int, nbperiod:int, rho:int,
-                                    transitionprobabilities:list,
-                                   repartition:list,
-                                   values:list, 
-                                   probabilities:list):
-    # scenarioPath : "data_scenario"
-    # scenarioName : "data_NAME_DAY-MM-YY-HH-MM.pkl"
-    
-    # path_name = os.path.join(scenarioPath, scenarioName+".pkl") ===> TODELETE
-    path_name = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], scenario["scenarioName"]+".pkl")
-    
-    g = None
-    # Is there the data file on repository?
-    checkfile = os.path.isfile(path_name)
-    if checkfile:
-        # file exists in which form?
-        # return g which contains data load
-        
-        print("**** Load pickle data: START ****")
-        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'rb') as f:  # open a text file ===> TODELETE
-        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'rb') as f:  # open a text file
-            g = pickle.load(f)
-        f.close()
-        
-        print("**** Load pickle data : END ****")
-        
-    else:
-        print("**** Create pickle data : START ****")
-        # file not exists
-        g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
-        
-        g.generate_TESTDBG(transitionprobabilities,repartition,values,probabilities)
-        
-        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'wb') as f:  # open a text file ===> TODELETE
-        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'wb') as f:  # open a text file
-            pickle.dump(g, f)
-        f.close()
-        
-        print("**** Create pickle data : END ****")
-        
-    return g
-
-def Initialization_game_TESTDBG(scenario):
-    """
-    initialization of variables of an object application  for DEBUGGING
-    
-    Returns
-    -----
-    App
-    """
-    # Load all scenario parameters
-    scenarioPath = scenario["scenarioPath"]
-    scenarioName = scenario["scenarioName"]
-    N_actors = scenario["instance"]["N_actors"]
-    nbPeriod = scenario["simul"]["nbPeriod"]
-    maxstep = scenario["algo"]["LRI_REPART"]["maxstep"]
-    maxstep_init = scenario["algo"]["LRI_REPART"]["maxstep_init"]
-    mu = scenario["algo"]["LRI_REPART"]["mu"]
-    threshold = scenario["algo"]["LRI_REPART"]["threshold"]
-    slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
-    rho = scenario["simul"]["rho"]
-    h = scenario["algo"]["LRI_REPART"]["h"]
-    initialprob = scenario["algo"]["LRI_REPART"]["initialprob"]
-    transitionprobabilities = scenario["simul"]["transitionprobabilities"]
-    repartition = scenario["simul"]["repartition"]
-    values = scenario["simul"]["values"]
-    probabilities = scenario["simul"]["probabilities"]
-    # = scenario[""]
-    # = scenario[""]
-    
-    scenario["scenarioCorePath"] = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
-    
-    
-    # for var, val in scenario["algo"]["LRIRepart"].items():
-    #     globals()[var] = val
-    
-    # for var, val in scenario["instance"].items():
-    #     globals()[var] = val
-        
-    # for var, val in scenario["simul"].items():
-    #     globals()[var] = val
-
-    
-    # Initialisation of the apps
-    application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
-                           b=slowdownfactor, rho=rho, h=h, 
-                           maxstep_init=maxstep_init, threshold=threshold)
-    application.SG = sg.Smartgrid(N=N_actors, nbperiod=nbPeriod, 
-                                  initialprob=initialprob, rho=rho)
-    
-    # Configuration of the instance generator
-    g = generer_data_from_scenario_TESTDBG(scenario=scenario,
-                                       N_actors=N_actors, nbperiod=nbPeriod, 
-                                       rho=rho,
-                                       transitionprobabilities=transitionprobabilities,
-                                       repartition=repartition,
-                                       values=values, 
-                                       probabilities=probabilities)
-    
-    # Initialisation of production, consumption and storage using the instance generator
-    N = application.SG.prosumers.size
-    T = application.SG.nbperiod
-    
-    for i in range(N):
-        for t in range(T):
-            application.SG.prosumers[i].production[t] = g.production[i][t]
-            application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
-            
-            if i < 10 :
-                application.SG.prosumers[i].smax = 5
-            else:
-                application.SG.prosumers[i].smax = 2
-            
-        # put initial storage variable 
-        application.SG.prosumers[i].storage[0] = 0
-        
-    return application
-
-#------------------------------------------------------------------------------
-#                END : TEST DBG
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 #                DEBUT : Generer des donnees selon scenarios
 #------------------------------------------------------------------------------
-
 def generer_data_from_scenario(scenario:dict,
                                    N_actors:int, nbperiod:int, rho:int,
                                     transitionprobabilities:list,
                                    repartition:list,
                                    values:list, 
-                                   probabilities:list):
+                                   probabilities:list, 
+                                   dbg_generateData:bool=True):
     # scenarioPath : "data_scenario"
     # scenarioName : "data_NAME_DAY-MM-YY-HH-MM.pkl"
     
@@ -240,7 +114,7 @@ def generer_data_from_scenario(scenario:dict,
     g = None
     # Is there the data file on repository?
     checkfile = os.path.isfile(path_name)
-    if checkfile:
+    if (checkfile == True and dbg_generateData == True) or (checkfile == True and dbg_generateData == False):
         # file exists in which form?
         # return g which contains data load
         
@@ -253,11 +127,15 @@ def generer_data_from_scenario(scenario:dict,
         print("**** Load pickle data : END ****")
         
     else:
+        # checkfile == False and dbg_generateData == False or  =(checkfile == False and dbg_generateData == True) :
         print("**** Create pickle data : START ****")
         # file not exists
         g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
         
-        g.generate(transitionprobabilities,repartition,values,probabilities)
+        if dbg_generateData:
+            g.generate_TESTDBG(transitionprobabilities,repartition,values,probabilities)
+        else:
+            g.generate(transitionprobabilities,repartition,values,probabilities)
         
         # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'wb') as f:  # open a text file ===> TODELETE
         with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'wb') as f:  # open a text file
@@ -267,7 +145,8 @@ def generer_data_from_scenario(scenario:dict,
         print("**** Create pickle data : END ****")
         
     return g
-    
+
+
 def Initialization_game(scenario):
     """
     initialization of variables of an object application  for DEBUGGING
@@ -293,21 +172,11 @@ def Initialization_game(scenario):
     repartition = scenario["simul"]["repartition"]
     values = scenario["simul"]["values"]
     probabilities = scenario["simul"]["probabilities"]
-    # = scenario[""]
+    dbg_generateData = scenario["dbg_generateData"]
     # = scenario[""]
     
     scenario["scenarioCorePath"] = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
     
-    
-    # for var, val in scenario["algo"]["LRIRepart"].items():
-    #     globals()[var] = val
-    
-    # for var, val in scenario["instance"].items():
-    #     globals()[var] = val
-        
-    # for var, val in scenario["simul"].items():
-    #     globals()[var] = val
-
     
     # Initialisation of the apps
     application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
@@ -323,7 +192,8 @@ def Initialization_game(scenario):
                                        transitionprobabilities=transitionprobabilities,
                                        repartition=repartition,
                                        values=values, 
-                                       probabilities=probabilities)
+                                       probabilities=probabilities, 
+                                       dbg_generateData=dbg_generateData)
     
     # Initialisation of production, consumption and storage using the instance generator
     N = application.SG.prosumers.size
@@ -333,9 +203,20 @@ def Initialization_game(scenario):
         for t in range(T):
             application.SG.prosumers[i].production[t] = g.production[i][t]
             application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
+            
+            if dbg_generateData:
+                application.SG.prosumers[i].smax = 5 if i < 10 else 2
+                # if i < 10 :
+                #     application.SG.prosumers[i].smax = 5
+                # else:
+                #     application.SG.prosumers[i].smax = 2
+            else:
+                # put initial storage variable 
+                application.SG.prosumers[i].storage[0] = 0
+                application.SG.prosumers[i].smax = 15 #20
+            
         # put initial storage variable 
         application.SG.prosumers[i].storage[0] = 0
-        application.SG.prosumers[i].smax = 15 #20
         
     return application
 
@@ -357,6 +238,7 @@ def create_repo_for_save_jobs(scenario:dict):
     
     
     return scenario
+
 #------------------------------------------------------------------------------
 #                FIN : Generer des donnees selon scenarios
 #------------------------------------------------------------------------------
@@ -383,7 +265,7 @@ def run_CSA(scenario, logfiletxt):
     
     # Initialisation of the apps
     # application = Initialization_game(scenario)
-    application = Initialization_game_TESTDBG(scenario)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning 
     logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
@@ -434,7 +316,7 @@ def run_SSA(scenario, logfiletxt):
     
     # Initialisation of the apps
     # application = Initialization_game(scenario)
-    application = Initialization_game_TESTDBG(scenario)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -491,7 +373,7 @@ def run_syA(scenario, logfiletxt):
 
     # Initialisation of the apps
     # application = Initialization_game(scenario)
-    application = Initialization_game_TESTDBG(scenario)
+    application = Initialization_game(scenario)
     
     # ignore last period to exclude overflow: I do not know the importance to exclude last period
     # application.SG.maxperiod = application.SG.maxperiod - 1
@@ -549,11 +431,11 @@ def run_LRI_REPART(scenario, logfiletxt):
     
     # Initialisation of the apps
     # application = Initialization_game(scenario)
-    application = Initialization_game_TESTDBG(scenario)
+    application = Initialization_game(scenario)
 
     # Display for the run beginning
     logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
-    file = io.open(logfile,"w")                                              # Logs file
+    file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
     
