@@ -130,6 +130,8 @@ class Prosumer:
         self.i_tense = np.zeros(rho+1)
         self.CP_th = np.zeros(rho+1)
         self.PC_th = np.zeros(rho+1)
+        
+        # TODELETE: start
         self.Xi = np.zeros(nbperiod+rho)
         self.High = np.zeros(nbperiod+rho)
         self.Low = np.zeros(nbperiod+rho)
@@ -137,6 +139,7 @@ class Prosumer:
         self.rs_low_plus = np.zeros(nbperiod)
         self.rs_high_minus = np.zeros(nbperiod)
         self.rs_low_minus = np.zeros(nbperiod)
+        # TODELETE : END
         
         self.QTStock = np.zeros(nbperiod)
         self.ObjValue = 0 #np.zeros(maxperiod)
