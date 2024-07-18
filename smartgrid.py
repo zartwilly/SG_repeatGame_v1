@@ -32,7 +32,7 @@ class Smartgrid :
     Cost = None
     DispSG = None
     TauS = None # contains the tau array for all players at period t 
-    Nds = None
+    GNeeds = None
     
     
     # TODO to delete
@@ -94,8 +94,8 @@ class Smartgrid :
         self.strategy_profile = np.ndarray(shape=(N, nbperiod), dtype=dt)
         self.Cost = np.zeros(nbperiod)
         self.DispSG = np.zeros(rho+1)
-        self.Nds = np.zeros(rho+1)
-        self.Prv = np.zeros(rho+1)
+        self.GNeeds = np.zeros(rho+1)
+        self.GProv = np.zeros(rho+1)
         
     ###########################################################################
     #                   compute smartgrid variables :: start
@@ -280,7 +280,7 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].computeNeeds4OneProsumer(period=period, nbperiod=self.nbperiod)
             
-    def computeNds(self, period:int, h:int) -> float:
+    def ComputeGNeeds(self, period:int, h:int) -> float:
         """
         sum of the Needs for all players
 
@@ -299,7 +299,7 @@ class Smartgrid :
 
         """
         for i in range(self.prosumers.size):
-            self.Nds[h] += self.prosumers[i].Needs[h]
+            self.GNeeds[h] += self.prosumers[i].Needs[h]
             
     def computeProvsAtH(self, period:int, h:int) -> float:
         """
@@ -320,7 +320,7 @@ class Smartgrid :
         """
     
         for i in range(self.prosumers.size):
-            self.Prv[h-1] += self.prosumers[i].Provs[h-1]
+            self.GProv[h-1] += self.prosumers[i].Provs[h-1]
             
         
         for i in range(self.prosumers.size):
@@ -328,13 +328,37 @@ class Smartgrid :
             if tmp[tmp>0].size > 0:
                 self.prosumers[i].Provs[h] = 0
             else:
-                nds_hminus1 = 0 if h <= 1 else self.Nds[h-1]
-                tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, nds_hminus1/self.Prv[h-1]))
-                self.prosumers[i].Provs[h] = tmp_h
+                # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+                # #print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GProv[h-1]= {self.GProv[h-1]}")
+                # tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GProv[h-1]))
+                # self.prosumers[i].Provs[h] = tmp_h
                 
-            self.Prv[h] += self.prosumers[i].Provs[h]
+                
+                # ######################   DBG   ######################
+                # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+                # if self.GProv[h-1]:
+                #     tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GProv[h-1]))
+                #     self.prosumers[i].Provs[h] = tmp_h
+                # else:
+                #     # print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GProv[h-1]= {self.GProv[h-1]}")
+                #     self.prosumers[i].Provs[h] = 0
+                
+                # ######################   DBG   ######################
+                
+                ######################   DBG: NEW   ######################
+                GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+                Contrib = 0
+                if self.GProv[h-1] == 0:
+                    Contrib = 0
+                else:
+                    Contrib = self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GProv[h-1] ))
+                self.prosumers[i].Provs[h] = min(self.prosumers[i].smax, 
+                                                 -self.prosumers[i].tau[h] + Contrib)
+                ######################   DBG: NEW   ######################
+                
+            self.GProv[h] += self.prosumers[i].Provs[h]
             
-            self.prosumers[i].i_tense[h] = 1 if self.Nds[h] > self.Prv[h] else -1
+            self.prosumers[i].i_tense[h] = 1 if self.GNeeds[h] > self.GProv[h] else -1
 
                 
     def computeProvsforRho(self, period:int) -> float:
@@ -354,10 +378,10 @@ class Smartgrid :
         """
         for i in range(self.prosumers.size):
             self.prosumers[i].computeProvsAtH0(period=period, nbperiod=self.nbperiod)
-            self.Prv[0] += self.prosumers[i].Provs[0]
+            self.GProv[0] += self.prosumers[i].Provs[0]
         
-        for h in range(1, self.rho):
-            self.computeNds(period=period, h=h) 
+        for h in range(1, self.rho+1):
+            self.ComputeGNeeds(period=period, h=h) 
             self.computeProvsAtH(period=period, h=h)
            
     
@@ -380,7 +404,7 @@ class Smartgrid :
             itense_arr = (self.prosumers[i].i_tense == 1).nonzero()[0]
             qtstock_i = 0
             for h in itense_arr:
-                qtstock_i += self.prosumers[i].Needs[h] * (1 - self.Prv[h] / self.Nds[h])
+                qtstock_i += self.prosumers[i].Needs[h] * (1 - self.GProv[h] / self.GNeeds[h])
             self.prosumers[i].QTStock[period] = qtstock_i
                 
     
