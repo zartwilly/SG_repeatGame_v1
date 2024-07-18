@@ -153,11 +153,11 @@ class App:
         LCostmin = self.SG.LCostmin[period]
         Cost = self.SG.Cost[period]
         GNeeds = dict()
-        for h, elt in enumerate(self.SG.GNeeds):
+        for h, elt in enumerate(self.SG.GNeeds[period]):
             GNeeds["GNeeds_h="+str(h)] = elt
-        GProv = dict()
-        for h, elt in enumerate(self.SG.GProv):
-            GProv["GProv_h="+str(h)] = elt
+        GPd = dict()
+        for h, elt in enumerate(self.SG.GPd[period]):
+            GPd["GPd_h="+str(h)] = elt
         
         tauS = dict()
         for i, elt in enumerate(self.SG.TauS):
@@ -191,15 +191,15 @@ class App:
             
             
             Needs = dict()
-            for h, elt in enumerate(self.SG.prosumers[i].Needs):
+            for h, elt in enumerate(self.SG.prosumers[i].Needs[period]):
                 Needs["Needs_h="+str(h)] = elt
                 
             Provs = dict()
-            for h, elt in enumerate(self.SG.prosumers[i].Provs):
+            for h, elt in enumerate(self.SG.prosumers[i].Provs[period]):
                 Provs["Provs_h="+str(h)] = elt
                 
             i_tense = dict()
-            for h, elt in enumerate(self.SG.prosumers[i].i_tense):
+            for h, elt in enumerate(self.SG.prosumers[i].i_tense[period]):
                 i_tense["itense_h="+str(h)] = elt
             
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
@@ -236,16 +236,16 @@ class App:
                 "Lcostmin": self.SG.prosumers[i].Lcostmin[period], 
                 "Cost": Cost,
                 
-                "tau": str(tau),
+                "tau": str(tau[period]),
                 #"tauS": str(tauS),
                 
-                "GNeeds": str(GNeeds),
-                "GProv": str(GProv),
-                
                 "Needs": str(Needs),
+                "GNeeds": str(GNeeds),
+                
+                "GPd": str(GPd),
                 "Provs": str(Provs),
                 
-                
+                "Min_K": str(self.SG.prosumers[i].Min_K[period]),
                 "i-tense": str(i_tense),
                 "QTStock": self.SG.prosumers[i].QTStock[period], 
                 
