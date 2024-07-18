@@ -54,6 +54,7 @@ class Prosumer:
     tau = None # the stock demand of each actor for h next periods
     Needs = None # the energy needs
     Provs = None # 
+    Min_K = None #
     i_tense = None # contains h value for which Nds_h > Prv_h
     QTStock = None
     CP_th = None # the difference between consumption and production at t+h with h in [1,rho]
@@ -124,12 +125,13 @@ class Prosumer:
         self.rho_prod = 0
         self.rho = rho
         self.alphai = 0
-        self.tau = np.zeros(rho+1)
-        self.Needs = np.zeros(rho+1)
-        self.Provs = np.zeros(rho+1)
-        self.i_tense = np.zeros(rho+1)
-        self.CP_th = np.zeros(rho+1)
-        self.PC_th = np.zeros(rho+1)
+        self.tau = np.zeros(shape=(nbperiod, rho+1))
+        self.Needs = np.zeros(shape=(nbperiod, rho+1))
+        self.Provs = np.zeros(shape=(nbperiod, rho+1))
+        self.Min_K = np.zeros(shape=(nbperiod, rho+1))
+        self.i_tense = np.zeros(shape=(nbperiod, rho+1))
+        self.CP_th = np.zeros(shape=(nbperiod, rho+1))
+        self.PC_th = np.zeros(shape=(nbperiod, rho+1))
         
         # TODELETE: start
         self.Xi = np.zeros(nbperiod+rho)
@@ -230,11 +232,11 @@ class Prosumer:
         rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
         for h in range(1, rho_max+1):
             if h == 1:
-                self.CP_th[h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
-                self.PC_th[h] = (self.production[period+h] + self.storage[period]) - self.consumption[period+h]
+                self.CP_th[period,h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
+                self.PC_th[period,h] = (self.production[period+h] + self.storage[period]) - self.consumption[period+h]
             else:
-                self.CP_th[h] = self.consumption[period+h] - self.production[period+h]
-                self.PC_th[h] = self.production[period+h] - self.consumption[period+h]
+                self.CP_th[period,h] = self.consumption[period+h] - self.production[period+h]
+                self.PC_th[period,h] = self.production[period+h] - self.consumption[period+h]
             
     def computeTau(self, period:int, nbperiod:int, rho:int) -> float:
         """
@@ -264,9 +266,9 @@ class Prosumer:
         # New version to compute tau
         for h in range(1, rho_max+1):
             if h == 1:
-                self.tau[h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
+                self.tau[period,h] = self.consumption[period+h] - (self.production[period+h] + self.storage[period])
             else:
-                self.tau[h] = self.consumption[period+h] - self.production[period+h]
+                self.tau[period,h] = self.consumption[period+h] - self.production[period+h]
                 
         
         
@@ -303,29 +305,29 @@ class Prosumer:
         rho_max = self.rho if period < nbperiod else nbperiod-self.rho
         
         for h in range(1, rho_max+1):
-            tmp = self.tau[:h]
+            tmp = self.tau[period,:h+1]
             tmp = tmp[tmp > 0]
-            self.Needs[h] = np.sum(tmp)
+            self.Needs[period, h] = np.sum(tmp)
     
-    def computeProvsAtH0(self, period:int, nbperiod:int) -> float():
-        """
-        Calculate Prov at h=0
+    # def computeProvsAtH0(self, period:int, nbperiod:int) -> float():
+    #     """
+    #     Calculate Prov at h=0
 
-        Parameters
-        ----------
-        period : int
-            DESCRIPTION.
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
 
-        Returns
-        -------
-        float
-            DESCRIPTION.
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
 
-        """
+    #     """
         
-        # rho_max = self.rho if period < nbperiod else nbperiod-self.rho
+    #     # rho_max = self.rho if period < nbperiod else nbperiod-self.rho
         
-        self.Provs[0] = self.storage[period]
+    #     self.Provs[0] = self.storage[period]
         
             
                 
@@ -356,7 +358,7 @@ class Prosumer:
         
         sum_X = 0
         for h in range(1, rho_max+1):
-            sum_X += aux.apv(self.tau[h])
+            sum_X += aux.apv(self.tau[period,h])
             
         self.Xi[period] = sum_X
         
