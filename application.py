@@ -152,12 +152,12 @@ class App:
         LCostmax = self.SG.LCostmax[period]
         LCostmin = self.SG.LCostmin[period]
         Cost = self.SG.Cost[period]
-        Nds = dict()
-        for h, elt in enumerate(self.SG.Nds):
-            Nds["Nds_h="+str(h)] = elt
-        Prv = dict()
-        for h, elt in enumerate(self.SG.Prv):
-            Prv["Prv_h="+str(h)] = elt
+        GNeeds = dict()
+        for h, elt in enumerate(self.SG.GNeeds):
+            GNeeds["GNeeds_h="+str(h)] = elt
+        GProv = dict()
+        for h, elt in enumerate(self.SG.GProv):
+            GProv["GProv_h="+str(h)] = elt
         
         tauS = dict()
         for i, elt in enumerate(self.SG.TauS):
@@ -239,8 +239,8 @@ class App:
                 "tau": str(tau),
                 #"tauS": str(tauS),
                 
-                "Nds": str(Nds),
-                "Prv": str(Prv),
+                "GNeeds": str(GNeeds),
+                "GProv": str(GProv),
                 
                 "Needs": str(Needs),
                 "Provs": str(Provs),
