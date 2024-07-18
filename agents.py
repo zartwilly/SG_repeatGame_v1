@@ -302,7 +302,7 @@ class Prosumer:
         """
         rho_max = self.rho if period < nbperiod else nbperiod-self.rho
         
-        for h in range(1, rho_max):
+        for h in range(1, rho_max+1):
             tmp = self.tau[:h]
             tmp = tmp[tmp > 0]
             self.Needs[h] = np.sum(tmp)
