@@ -305,9 +305,10 @@ class Prosumer:
         rho_max = self.rho if period < nbperiod else nbperiod-self.rho
         
         for h in range(1, rho_max+1):
-            tmp = self.tau[period,:h+1]
-            tmp = tmp[tmp > 0]
-            self.Needs[period, h] = np.sum(tmp)
+            #tmp = self.tau[period,:h+1]
+            #tmp = tmp[tmp > 0]
+            #self.Needs[period, h] = np.sum(tmp)
+            self.Needs[period, h] = aux.apv(self.tau[period,h])
     
     # def computeProvsAtH0(self, period:int, nbperiod:int) -> float():
     #     """
