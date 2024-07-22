@@ -243,13 +243,16 @@ class App:
                 "GNeeds": str(GNeeds),
                 
                 "GPd": str(GPd),
+                "Smax": self.SG.prosumers[i].smax,
                 "Provs": str(Provs),
                 
                 "Min_K": str(self.SG.prosumers[i].Min_K[period]),
                 "i-tense": str(i_tense),
                 "QTStock": self.SG.prosumers[i].QTStock[period], 
                 
-    
+                
+                "Si": storage,
+                "S_t+1": storage_t_plus_1,
                 "valStock_i":valStock_i,
                 
                 "algoName": algoName, 
