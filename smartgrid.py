@@ -454,7 +454,7 @@ class Smartgrid :
             for h in range(1, Stpi+1):
                 # print('h = ', h, " i_tense= ", self.prosumers[i].i_tense[h])
                 if self.prosumers[i].i_tense[period,h] == 1:
-                    qtstock_i += min(self.prosumers[i].smax, self.prosumers[i].Needs[period,h]) - self.prosumers[i].Provs[period,h-1]
+                    qtstock_i += aux.apv(min(self.prosumers[i].smax, self.prosumers[i].Needs[period,h]) - self.prosumers[i].Provs[period,h-1])
                     #print('h = ', h, ' qtstock_i = ', qtstock_i)
             
             self.prosumers[i].QTStock[period] = qtstock_i
