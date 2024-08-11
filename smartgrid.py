@@ -482,8 +482,8 @@ class Smartgrid :
             QTstock_i = self.prosumers[i].QTStock[period]
             
             self.prosumers[i].valStock[period] \
-                = aux.phiepominus(min( aux.apv(Si - Si_tplus1), QTstock_i )) \
-                    - aux.phiepominus(min( aux.apv(Si_tplus1 - Si), QTstock_i ))
+                = aux.phiepominus(min( aux.apv(Si_tplus1 - Si), QTstock_i )) \
+                    - aux.phiepominus(min( aux.apv(Si - Si_tplus1), QTstock_i ))
     
             
     def computeLCost_LCostMinMax(self, period:int):
