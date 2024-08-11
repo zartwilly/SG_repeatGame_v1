@@ -705,7 +705,7 @@ def create_repo_for_save_jobs(scenario:dict):
     return scenario
 
     
-def load_all_algos(scenario:dict):
+def load_all_algos(scenario:dict, scenarioViz:dict):
     """
     load all algorithms saved in the pickle format
 
@@ -713,6 +713,9 @@ def load_all_algos(scenario:dict):
     ----------
     scenario : dict
         DESCRIPTION.
+        
+    scenarioViz : dict
+        DESCRIPTION
 
     Returns
     -------
@@ -762,7 +765,20 @@ def load_all_algos_V1(scenario:dict, scenarioViz: dict):
             scenarioCorePathDataAlgoName = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", algoName)
             with open(os.path.join(scenarioCorePathDataAlgoName, scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'rb') as f:
                 app_pkl = pickle.load(f) # deserialize using load()
-                app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
+                #app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
+                dfs = list()
+                if algoName == "LRI_REPART" and scenario["PlotDataVStockQTsock"]:
+                    # load .csv into list of dataframe
+                    ## look for dataframes beginning to 'runLRI_df_'
+                    prefix = "runLRI_df_"
+                    prefixed = [filename for filename in os.listdir(scenarioCorePathDataAlgoName) if filename.startswith(prefix)]
+                    for pref in prefixed:
+                        df_tmp = pd.read_csv(os.path.join(scenarioCorePathDataAlgoName, pref), skiprows=0)
+                        print(f" *** {pref } terminé")
+                        dfs.append(df_tmp)
+                
+                app_pkls.append((app_pkl, algoName, scenario["scenarioName"], dfs))       
+                
         except FileNotFoundError:
             print(f" {scenario['scenarioName']+'_'+algoName+'_APP.pkl'}  NOT EXIST")
         pass
@@ -950,8 +966,10 @@ def create_df_SG_V2_SelectPeriod(apps_pkls_algos:list, initial_period:int) -> pd
     df_APPs = list()
     df_PROSUMERS = list()
     df_prosumers_algos =list() 
+    dfs_VStock = list()
+    dfs_QTStock = list()
     for tu_app_algo in apps_pkls_algos:
-        app_al, algoName, nameScenario = tu_app_algo
+        app_al, algoName, nameScenario, dfs = tu_app_algo
         valEgoc_ts = app_al.SG.ValEgoc[initial_period:]
         ValNoSG_ts = app_al.SG.ValNoSG[initial_period:]
         ValSG_ts = app_al.SG.ValSG[initial_period:]
@@ -1004,6 +1022,22 @@ def create_df_SG_V2_SelectPeriod(apps_pkls_algos:list, initial_period:int) -> pd
             
         df_algos.append(df_algo)
         df_APPs.append(df_APP)
+        
+        # dataset for LRI containing VStock, QTstock by period
+        dfs_VStock, dfs_QTStock = [], []
+        if algoName == "LRI_REPART" and len(dfs) != 0:
+            for df_tmp in dfs:
+                df_tmp_ts = df_tmp[['valStock_i','QTStock', 'period']].aggregate('mean')
+                dfs_VStock.append(df_tmp_ts)
+                
+                # looking for the lastest step for each period
+                df_QTStock_t = df_tmp[df_tmp.step == df_tmp.step.max()][["period","prosumers","QTStock"]]
+                dfs_QTStock.append(df_QTStock_t)
+                
+        
+            dfs_VStock = pd.concat(dfs_VStock, axis=1).T
+            dfs_QTStock = pd.concat(dfs_QTStock, axis=0)
+            
     
     df_SG = pd.concat(df_algos, axis=0, ignore_index=True)
     
@@ -1019,7 +1053,16 @@ def create_df_SG_V2_SelectPeriod(apps_pkls_algos:list, initial_period:int) -> pd
     df_dbg = df_PROSUMERS.groupby(['algoName','T']).agg({'maxPrMode':'mean'}).reset_index()
     df_SG = pd.merge(df_SG, df_dbg, on=['algoName','T'])
     
-    return df_SG, df_APP, df_PROSUMERS
+    dfs_QTStock = dfs_QTStock.reset_index(drop=True)
+    dfs_QTStock_R = dfs_QTStock.groupby('period').QTStock.apply(lambda x: pd.Series([(x<=0).sum(), (x>0).sum()])).unstack().reset_index()
+    dfs_QTStock_R.rename(columns={0: "R_t_minus", 1: "R_t_plus"}, inplace=True)
+    dfs_QTStock_som = dfs_QTStock.groupby("period")["QTStock"].agg(sum)
+    
+    dfs_QTStock_R = pd.merge(dfs_QTStock_R, dfs_QTStock_som, on="period")
+    
+    dfs_QTStock_R["MoyQTStock"] = (dfs_QTStock_R["QTStock"] / dfs_QTStock_R["R_t_plus"]).fillna(0)
+    
+    return df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R
 
 
 
@@ -1209,7 +1252,7 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     return app_PerfMeas
     
 
-def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame):
+def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame, dfs_VStock: pd.DataFrame, dfs_QTStock_R: pd.DataFrame):
     """
     plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
 
@@ -1221,6 +1264,12 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     df_SG : pd.DataFrame
         a dataframe that the columns are : 'algoName', 'Cost_ts', 'T', '
         valEgoc_ts', 'ValSG_ts', 'ValNoSG_ts', 'Reduct_ts'
+        
+    dfs_VStock: pd.DataFrame
+        a dataframe that the columns are : 'valStock_i', 'QTStock', 'period'
+        
+    dfs_QTStock_R: pd.DataFrame
+        a dataframe that the columns are : period, R_t_minus, R_t_plus, QTStock, MoyQTStock
 
     Returns
     -------
@@ -1383,7 +1432,93 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
             
     #####################  1er version DF_PROSUMERS: END    ###################
     
+    #####################  1er version dfs_VStock: START    ###################
+    name_cols = dfs_VStock.columns.tolist()
+    dfs_VStock = dfs_VStock.sort_values(by=['period'], ascending=True)
+    for num_col, name_col in enumerate(name_cols):
+        fig_VStock_col = go.Figure()
+        cpt += 1
+        
+        fig_VStock_col.add_trace(go.Scatter(x=dfs_VStock['period'], 
+                                            y=dfs_VStock[name_col], 
+                                            name= "LRI_REPART_VSTOCK",
+                                            mode='lines+markers', 
+                                            marker = dict(color = COLORS[num_col])
+                                      )
+                                 )
+        
+        fig_VStock_col.update_layout(xaxis_title='period', yaxis_title='values', 
+                                 title={'text':f''' {nameScenario}: show {name_col} ''',
+                                         #'xanchor': 'center',
+                                         'yanchor': 'bottom', 
+                                         }, 
+                                 legend_title_text='left'
+                                )
+        htmlDiv = html.Div([html.H1(children=name_col), 
+                            html.Div(children=f''' {nameScenario}: show {name_col} VSTOCK '''), 
+                            dcc.Graph(id='graph'+str(cpt), figure=fig_VStock_col),
+                            ])
+        
+        htmlDivs.append(htmlDiv)
     
+    #####################  1er version dfs_VStock: END      ###################
+    
+    #####################  1er version dfs_QTStock: START    ##################
+    name_cols = dfs_QTStock_R.columns[-3:]
+    fig_QTStock_col = go.Figure()
+    for num_col, name_col in enumerate(name_cols):
+        cpt += 1
+        fig_QTStock_col.add_trace(go.Bar(x=dfs_QTStock_R['period'], 
+                                            y=dfs_QTStock_R[name_col],
+                                            name=name_col,
+                                            base = 0.0, width = 0.2, offset = 0.2*num_col, 
+                                            marker = dict(color = COLORS[num_col])
+                                      )
+                                 )
+        
+    fig_QTStock_col.update_layout(barmode='stack', # "stack" | "group" | "overlay" | "relative"
+                          #boxmode='group', 
+                        xaxis={'categoryorder':'array', 'categoryarray':df_APP.algoName.tolist()},  
+                        xaxis_title="Understanding Variables QTStock, R and MoyQTStock", yaxis_title="values", 
+                        title_text="Understanding Variables QTStock, R and MoyQTStock")
+        
+    htmlDiv = html.Div([html.H1(children=name_col), 
+                        html.Div(children=f''' {nameScenario}: show {name_col} QTSTOCK, R_t and MoyQTStock'''), 
+                        dcc.Graph(id='graphQTStock_Rt', figure=fig_QTStock_col),
+                        ])
+    
+    htmlDivs.append(htmlDiv)
+        
+    #  Version With lines containing many variables ###########################
+    fig_PCS = go.Figure()
+    fig_PCS.add_trace(go.Scatter(x=dfs_QTStock_R["period"], y=dfs_QTStock_R[name_cols[0]], 
+                                 name= name_cols[0],
+                                 mode='lines+markers', 
+                                 marker = dict(color = COLORS[0])
+                                 )
+                      )
+    fig_PCS.add_trace(go.Scatter(x=dfs_QTStock_R["period"], y=dfs_QTStock_R[name_cols[1]], 
+                                 name= name_cols[1],
+                                 mode='lines+markers', 
+                                 marker = dict(color = COLORS[1])
+                                 )
+                      )
+    fig_PCS.add_trace(go.Scatter(x=dfs_QTStock_R["period"], y=dfs_QTStock_R[name_cols[2]], 
+                                 name= name_cols[2],
+                                 mode='lines+markers', 
+                                 marker = dict(color = COLORS[2])
+                                 )
+                      )
+    
+    htmlDiv = html.Div([html.H1(children="Show Variables"+" QTstock, R_t, MoyQTStock"), 
+                        html.Div(children=f''' {nameScenario}: show {algoName} sum of prosumers QTStock, R_t '''), 
+                        dcc.Graph(id='graph_QTSRt'+algoName, figure=fig_PCS),
+                        ])
+    
+    htmlDivs.append(htmlDiv)
+    
+    
+    #####################  1er version dfs_QTStock: END      ##################
     
     # run app 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -1412,12 +1547,20 @@ if __name__ == '__main__':
     scenarioFile = "./scenario1.json"
     scenarioFile = "./data_scenario/scenario_test_LRI.json"
     scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
+    scenarioFile = "./data_scenario/scenario_SelfishDB_LRI_N20_T100_K5000_B2_Rho5.json"
+    scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N20_T100_K5000_B2_Rho5_newFormula_QSTOCK.json"
+    
+    PlotDataVStockQTsock = True
     
     with open(scenarioFile) as file:
         scenario = json.load(file)
     
     scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
+    scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas")
     scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
+    scenario["scenarioCorePathData"] = scenarioCorePathData
+    
+    scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
     
     
     ## test if scenarioName+"Viz".json exists ---> start
@@ -1434,15 +1577,14 @@ if __name__ == '__main__':
                      }
         pass
 
-    apps_pkls = load_all_algos(scenario, scenarioViz)
-    
+    apps_pkls = load_all_algos_V1(scenario, scenarioViz)
     
     initial_period = 0 # 2, 10 
 
-    df_SG, df_APP, df_PROSUMERS \
+    df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
         = create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
 
-    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS)
+    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS, dfs_VStock, dfs_QTStock_R)
     app_PerfMeas.run_server(debug=True)
     
     # -------------------------------------------------------------------------
