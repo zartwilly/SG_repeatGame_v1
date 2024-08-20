@@ -1252,7 +1252,7 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     return app_PerfMeas
     
 
-def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame, dfs_VStock: pd.DataFrame, dfs_QTStock_R: pd.DataFrame):
+def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame, dfs_VStock: pd.DataFrame, dfs_QTStock_R: pd.DataFrame, df_shapleys: pd.DataFrame):
     """
     plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
 
@@ -1520,6 +1520,37 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     
     #####################  1er version dfs_QTStock: END      ##################
     
+    #####################  1er version df_shapleys: START      ##################
+    if not df_shapleys.empty:
+        fig_shapley = go.Figure()
+        df_shapleys = df_shapleys.set_index("Prosumers")
+        index = df_shapleys.index.tolist();
+        for num_app, algoName in enumerate(df_shapleys.columns):
+            fig_shapley.add_trace(go.Bar(x=index, 
+                                  y=df_shapleys.iloc[:,num_app].tolist(), name=df_shapleys.columns.tolist()[num_app],
+                                  base = 0.0, width = 0.2, offset = 0.2*num_app,
+                                  marker = dict(color = COLORS[num_app])
+                                  )
+                          )
+        
+        fig_shapley.update_layout(barmode='stack', # "stack" | "group" | "overlay" | "relative"
+                          #boxmode='group', 
+                          xaxis={'categoryorder':'array', 'categoryarray':df_shapleys.columns.tolist()},  
+                          xaxis_title="Prosumers", yaxis_title="Shapley Values", 
+                          title_text="Shapley Values between LRI and others algorithms")
+        
+        htmlDiv_df_shapley = html.Div([
+                    html.H1(children="Shapley Values between LRI and others algorithms",
+                            style={'textAlign': 'center'}
+                            ),
+                    html.Div(children=f"scenario <{df_APP_T.loc['nameScenario',:].unique()[0]}>: plot shapley values for all algorithms.", 
+                             style={'textAlign': 'center'}),
+                    dcc.Graph(id='shapleyValue-graph', figure=fig_shapley),
+                ])
+        htmlDivs.append(htmlDiv_df_shapley)
+    #####################  1er version df_shapleys: END      ##################
+    
+    
     # run app 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     app_PerfMeas = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -1584,7 +1615,9 @@ if __name__ == '__main__':
     df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
         = create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
 
-    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS, dfs_VStock, dfs_QTStock_R)
+    df_shapleys = pd.DataFrame()
+
+    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS, dfs_VStock, dfs_QTStock_R, df_shapleys)
     app_PerfMeas.run_server(debug=True)
     
     # -------------------------------------------------------------------------
