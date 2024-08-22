@@ -15,7 +15,7 @@ import math
 #import io
 #import pickle
 #from enum import Enum
-#import time
+import time
 #
 #import Instancegenerator as ig
 #import Instancegeneratorversion2 as ig2
@@ -36,7 +36,7 @@ class configuration:
     size = None # Size of the big coalition
     
     def __init__(self,N):
-        self.identifier = np.zeros(2**(N), dtype=np.int64)
+        self.identifier = np.zeros(2**(N), dtype=object)
         self.sumprod_LRI = np.zeros(2**(N))
         self.sumprod_NoS = np.zeros(2**(N))
         self.sumcons_LRI = np.zeros(2**(N))
@@ -84,8 +84,6 @@ class redistribution:
         self.configuration = configuration(N)
         
         for i in range(2**N,2**(N+1)):
-            # print(f"i = {i}")
-            # print(f" i = {format(i,'b')}")
             self.configuration.identifier[i-2**N] = format(i,"b")
             
         self.value = np.zeros(N)
@@ -98,12 +96,12 @@ class redistribution:
         """
         Compute caracteristic function of the game
         """
-    
+        
         for i in range(2**N):
             
             for j in range(N):
                 # Testing the value of the j-th bit of the configuration identifier 0 meaning using LRI and 1 usinf NoSmart
-                if ((self.configuration.identifier[i]//(10**j)))%2 == 0:
+                if ((int(self.configuration.identifier[i])//(10**j)))%2 == 0:
                     self.configuration.sumprod_LRI[i] += self.prod_LRI[j]
                     self.configuration.sumcons_LRI[i] += self.cons_LRI[j]
                 else:
@@ -121,13 +119,14 @@ class redistribution:
                        - betaminus_LRI * self.configuration.sumcons_LRI[i] \
                        + betaplus_NoS * self.configuration.sumprod_NoS[i] \
                        - betaminus_NoS * self.configuration.sumcons_NoS[i] )
+                        
         
     def shapley(self, N):
         
         for i in range(2**N):
             for j in range(N):
                 # Testing the value of the j-th bit of the configuration identifier 0 meaning using LRI 1 for NoSmart
-                if (self.configuration.identifier[i]//(10**j))%2 == 0:
+                if (int(self.configuration.identifier[i])//(10**j))%2 == 0:
                     if N - self.configuration.size[i] - 1 > -1:
                         self.value[j] +=  max(((math.factorial(int(self.configuration.size[i]))*math.factorial((N - int(self.configuration.size[i]) - 1)))\
                             /math.factorial(N)),1/math.factorial(N))*self.configuration.value[i]
@@ -179,10 +178,12 @@ class redistribution:
       
 if __name__ == '__main__':
 
+    start = time.time()
+    
     # Test code
     rng = np.random.default_rng()
     
-    N = 3 #3, 20: PROBLEM
+    N = 20 #3, 20: PROBLEM
     prod_LRI = np.ones(N)
     cons_LRI = np.zeros(N)
     prod_NoS = np.zeros(N)
@@ -202,7 +203,9 @@ if __name__ == '__main__':
                           cons_LRI=cons_LRI, cons_NoS=cons_NoS, 
                           basevalue=basevalue)
 
-    shapleyValues = redi.computeShapleyValue(N)    
+    shapleyValues = redi.computeShapleyValue(N)
+    
+    print(f"Runtime = {time.time() - start}")
     
     # print("identifier = "+ str(redi.configuration.identifier))
     
