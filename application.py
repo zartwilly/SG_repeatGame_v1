@@ -7,6 +7,8 @@ Created on Mon May 13 20:48:57 2024
 
 application is the environment of the repeted game
 """
+import typing
+import copy
 import numpy as np
 import pandas as pd
 import agents as ag
@@ -564,6 +566,10 @@ class App:
             
             # --- END Game with learning steps
             print(f"t={t} termine")
+            
+            # ---> start : is nash equilibrium got in the period 
+            self.isNashEquilibrium(period=t, file=file)
+            # ---> end : is nash equilibrium got in the period 
          
         ## ---> start : save execution to CSV file Over periods with the k max steps
         df_T_Kmax = pd.concat(df_T_Kmax, axis=0)
@@ -904,3 +910,221 @@ class App:
         
     ######### -------------------  CSA END ------------------------------------
     
+    
+    
+    ###########################################################################
+    #                       identify nash equilibruim at one period:: start
+    ###########################################################################
+    def execute_SG_for_NashEquilibrium(self, period, sg1):
+        """
+        compute all variables with new parameters modified in the isNashEquilibrium function
+        
+        """
+        # Update prodit, consit and period + 1 storage values
+        sg1.updateSmartgrid(period)
+        
+        # Calculate inSG and outSG
+        sg1.computeSumInput(period)
+        sg1.computeSumOutput(period)
+    
+        ## compute what each actor has to paid/gain at period t 
+        ## Calculate ValNoSGCost, ValEgo, ValNoSG, ValSG, Reduct, Repart
+        ##### ------ start ------
+        
+        # calculate valNoSGCost_t
+        sg1.computeValNoSGCost(period)
+        
+        # calculate valEgoc_t
+        sg1.computeValEgoc(period)
+        
+        # calculate valNoSG_t
+        sg1.computeValNoSG(period)
+        
+        # calculate ValSG_t
+        sg1.computeValSG(period)
+        
+        # calculate Reduct_t
+        sg1.computeReduct(period)
+        
+        # calculate repart_t
+        sg1.computeRepart(period, mu=self.mu)
+        
+        # calculate price_t
+        sg1.computePrice(period)
+    
+        # calculate Taus
+        sg1.computeTaus(period) 
+        
+        # calculate Needs
+        sg1.computeNeeds(period)
+        
+        # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+        sg1.computeProvsforRho(period) 
+        
+        # calculate QTStock
+        sg1.ComputeQTStock(period)
+        
+        # calculate ValStock
+        sg1.computeValStock(period)
+        
+        ##### ------ end ------
+        
+        # Compute(Update) min/max Learning cost (LearningCost) for prosumers
+        sg1.computeLCost_LCostMinMax(period)
+        
+        # we update probabilities (prmod) of prosumers strategies
+        # Calculate utility
+        sg1.computeUtility(period)
+        
+        # Update probabilities for choosing modes
+        sg1.updateProbaLRI(period, self.b)
+        
+        return sg1
+    
+    def admitNashequilibrium(self, period:int,file:typing.TextIO):
+        """
+        Output in the selected file  for each period if one of all possible strategy is a Nash equilibrium
+        
+        This method work the same way as isNashequilibrium except it will test all possible stategy and stop if one is a Nash equilibrium
+        This can be quite long if none exist so consider not using it for huge instances
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+        file : typing.TextIO
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        N = self.SG.prosumers.size
+        
+        for l in range(N * 2):
+            if l%2 == 0:
+                app1 = copy.deepcopy(self)
+            
+            if app1.SG.prosumers[l//2].state[period] == ag.State.DEFICIT :
+                if app1.SG.prosumers[l//2].mode[period] == ag.Mode.CONSMINUS :
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.CONSPLUS
+                else :
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.CONSMINUS
+            elif app1.SG.prosumers[l//2].state[period] == ag.State.SELF :
+                if app1.SG.prosumers[l//2].mode[period] == ag.Mode.CONSMINUS :
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.DIS
+                else:
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.CONSMINUS
+            else:
+                if app1.SG.prosumers[l//2].mode[period] == ag.Mode.DIS :
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.PROD
+                else:
+                    app1.SG.prosumers[l//2].mode[period] = ag.Mode.DIS
+                    
+            sg1 = self.execute_SG_for_NashEquilibrium(period=period, sg1=app1.SG)
+            
+            ValSG_old = sg1.ValSG[period]
+            
+            fail = 0
+            nash = 0
+            
+            for i in range(N):
+                sg2 = copy.deepcopy(sg1)
+                if sg2.prosumers[i].state[period] == ag.State.DEFICIT :
+                    if sg2.prosumers[i].mode[period] == ag.Mode.CONSMINUS :
+                        sg2.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                    else :
+                        sg2.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+                elif sg2.prosumers[i].state[period] == ag.State.SELF :
+                    if sg2.prosumers[i].mode[period] == ag.Mode.CONSMINUS :
+                        sg2.prosumers[i].mode[period] = ag.Mode.DIS
+                    else:
+                        sg2.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+                else:
+                    if sg2.prosumers[i].mode[period] == ag.Mode.DIS :
+                        sg2.prosumers[i].mode[period] = ag.Mode.PROD
+                    else:
+                        sg2.prosumers[i].mode[period] = ag.Mode.DIS
+                
+                ### ---- Execute the copy sg2 with new parameters  ----
+                sg2 = self.execute_SG_for_NashEquilibrium(period=period, sg1=sg2)
+                
+                ValSG_tmp = sg2.ValSG[period]
+                
+                if ValSG_old < ValSG_tmp:
+                    fail = 1
+                    break
+            
+            if fail == 0:
+                file.write("SG admit a nash equilibrium on period " + str(period) + "\n\n")
+                for m in range(N):
+                    file.write("Prosumer " + str(m) + "\n")
+                    file.write("Found    : " + str(self.SG.prosumers[m].mode[period]) + "\n")
+                    file.write("Expected : " + str(sg1.SG.prosumers[m].mode[period]) + "\n")
+                    file.write("--------------------------- \n")
+                sg1.SG.computeValSG(period=period)
+                file.write("ValSG : " + str(sg1.SG.ValSG[period]) + "\n")
+                nash = 1
+                break
+            
+        if nash == 0:
+            file.write("SG does not admit a nash equilibrium on period " + str(period) + "\n")
+                
+        
+    def isNashEquilibrium(self, period:int, file:typing.TextIO): 
+        """
+        Output in selected file for one period if the strategy is a Nash equilibrium
+        
+        
+        """
+        print(f"NE: period={period}")
+        N = self.SG.prosumers.size
+        
+        fail = 0
+        
+        ValSG_old = self.SG.ValSG[period]
+        ValNoSG_old = self.SG.ValNoSG[period]
+        
+        for i in range(N):
+            #Create a deepcopy of the smartgrid
+            sg1 = copy.deepcopy(self.SG)
+            
+            #Change prosumer i mode for the other mode possible for his state
+            if sg1.prosumers[i].state[period] == ag.State.DEFICIT :
+                if sg1.prosumers[i].mode[period] == ag.Mode.CONSMINUS :
+                    sg1.prosumers[i].mode[period] = ag.Mode.CONSPLUS
+                else :
+                    sg1.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+            elif sg1.prosumers[i].state[period] == ag.State.SELF :
+                if sg1.prosumers[i].mode[period] == ag.Mode.CONSMINUS :
+                    sg1.prosumers[i].mode[period] = ag.Mode.DIS
+                else:
+                    sg1.prosumers[i].mode[period] = ag.Mode.CONSMINUS
+            else:
+                if sg1.prosumers[i].mode[period] == ag.Mode.DIS :
+                    sg1.prosumers[i].mode[period] = ag.Mode.PROD
+                else:
+                    sg1.prosumers[i].mode[period] = ag.Mode.DIS
+        
+        ### ---- Execute the copy sg1 with new parameters  ----
+        sg1 = self.execute_SG_for_NashEquilibrium(period=period, sg1=sg1)
+        
+        
+        # Test if the new benefit is higher than the one of the first smartgrid
+        ValSG_tmp = sg1.ValSG[period]
+        ValNoSG_tmp = sg1.ValNoSG[period]
+        
+        fail = 1 if ValSG_old < ValSG_tmp  else 0
+        
+        # Test if a Nash equilibrium exist for this period
+        if fail == 0 : 
+            file.write("SG is in a Nash equilibrium for period " + str(period) + "\n")
+        else :
+            file.write("SG is not in Nash equilibrium on period " + str(period) + "\n")
+            self.admitNashequilibrium(period=period, file=file)
+        pass
+    
+    ###########################################################################
+    #                       identify nash equilibruim at one period:: end
+    ###########################################################################
