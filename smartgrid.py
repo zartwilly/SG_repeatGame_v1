@@ -30,9 +30,14 @@ class Smartgrid :
     Reduct = None
     strategy_profile = None 
     Cost = None
-    DispSG = None
-    TauS = None # contains the tau array for all players at period t 
-    GNeeds = None
+    
+    Nds = None
+    calG = None
+    
+    # TODELETE
+    # DispSG = None
+    # TauS = None # contains the tau array for all players at period t 
+    # GNeeds = None
     
     
     # TODO to delete
@@ -72,7 +77,6 @@ class Smartgrid :
         
         """
         self.rho = rho
-        self.TauS = np.ndarray(shape=(N, rho+1))
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.nbperiod = nbperiod
         for i in range(N):
@@ -93,9 +97,12 @@ class Smartgrid :
         dt = np.dtype([('agent', int), ('strategy', ag.Mode)])
         self.strategy_profile = np.ndarray(shape=(N, nbperiod), dtype=dt)
         self.Cost = np.zeros(nbperiod)
-        self.DispSG = np.zeros(rho+1)
-        self.GNeeds = np.zeros(shape=(nbperiod,rho+1))
-        self.GPd = np.zeros(shape=(nbperiod, rho+1))
+        self.Nds = np.zeros(shape=(nbperiod,rho+1))
+        self.calG = np.zeros(shape=(nbperiod,rho+1))
+        # self.TauS = np.ndarray(shape=(N, rho+1))
+        # self.DispSG = np.zeros(rho+1)
+        # self.GNeeds = np.zeros(shape=(nbperiod,rho+1))
+        # self.GPd = np.zeros(shape=(nbperiod, rho+1))
         
     ###########################################################################
     #                   compute smartgrid variables :: start
@@ -241,9 +248,9 @@ class Smartgrid :
                 = self.prosumers[i].valNoSG[period] \
                     - self.prosumers[i].Repart[period]
                     
-    def computeTaus(self, period:int) -> float:
+    def computeTauMinusPlus4Prosumers(self, period:int) -> float:
         """
-        
+        compute Tau_minus, tau_plus for all prosumers
 
         Parameters
         ----------
@@ -255,151 +262,13 @@ class Smartgrid :
         float
             DESCRIPTION.
 
-        """   
+        """
         for i in range(self.prosumers.size):
-            self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=self.rho)
-             
+            self.prosumers[i].computeTauMinusPlus(period=period, rho=self.rho)
                     
-    def computeNeeds(self, period:int) -> float:
+    def computeSP4Prosumers(self, period:int) -> float:
         """
-        Compute needs for all prosumers 
-
-        Parameters
-        ----------
-        period : int
-            DESCRIPTION.
-        h : int
-            DESCRIPTION.
-
-        Returns
-        -------
-        float
-            return float on array variable Needs
-
-        """
-        for i in range(self.prosumers.size):
-            self.prosumers[i].computeNeeds4OneProsumer(period=period, nbperiod=self.nbperiod)
-            
-    def computeGNeeds(self, period:int, h:int) -> float:
-        """
-        sum of the Needs for all players
-
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
-        h : int
-            the next h periods to predict the stock at the period "period" .
-            1 <= h <= rho
-
-        Returns
-        -------
-        float
-            DESCRIPTION.
-
-        """
-        tmp = 0
-        for i in range(self.prosumers.size):
-            tmp += self.prosumers[i].Needs[period, h]
-        self.GNeeds[period, h] = tmp
-            
-    def computeGPd(self, period:int, h:int) -> float:
-        """
-        sum of the absolute tau for the h value
-
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
-        h : int
-            the next h periods to predict the stock at the period "period" .
-            1 <= h <= rho
-
-        Returns
-        -------
-        float
-            DESCRIPTION.
-
-        """
-        tmp = 0
-        for i in range(self.prosumers.size):
-            tmp += aux.apv( - self.prosumers[i].tau[period,h] )
-        self.GPd[period, h] = tmp
-            
-    def computeProvsAtH(self, period:int, h:int) -> float:
-        """
-        Calculate Provs for one h with 1 <= h <= rho
-
-        Parameters
-        ----------
-        period : int
-            DESCRIPTION.
-        h : int
-            DESCRIPTION.
-
-        Returns
-        -------
-        float
-            DESCRIPTION.
-
-        """
-        for i in range(self.prosumers.size):
-            if self.prosumers[i].Needs[period,h] > 0:
-                self.prosumers[i].Provs[period,h] \
-                    = max(0, self.prosumers[i].Provs[period,h-1] - self.prosumers[i].Needs[period,h])
-            else:
-                # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
-                # #print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GPd[h-1]= {self.GPd[h-1]}")
-                # tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1]))
-                # self.prosumers[i].Provs[h] = tmp_h
-                
-                
-                # ######################   DBG   ######################
-                # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
-                # if self.GPd[h-1]:
-                #     tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1]))
-                #     self.prosumers[i].Provs[h] = tmp_h
-                # else:
-                #     # print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GPd[h-1]= {self.GPd[h-1]}")
-                #     self.prosumers[i].Provs[h] = 0
-                
-                # ######################   DBG   ######################
-                
-                ######################   DBG: NEW   ######################
-                # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
-                # Contrib = 0
-                # if self.GPd[h-1] == 0:
-                #     Contrib = 0
-                # else:
-                #     Contrib = self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1] ))
-                # self.prosumers[i].Provs[h] = min(self.prosumers[i].smax, 
-                #                                  -self.prosumers[i].tau[h] + Contrib)
-                ######################   DBG: NEW   ######################
-                
-                ######################   DBG: NEW NEW  ######################
-                frac = 0
-                if self.GPd[period, h] != 0:
-                    frac = self.GNeeds[period, h] / self.GPd[period, h]
-                else:
-                    frac = self.GNeeds[period, h]
-                contrib = self.prosumers[i].Provs[period,h-1] + (-self.prosumers[i].tau[period,h]) * min(1, frac) 
-                    
-                self.prosumers[i].Provs[period,h] = min(self.prosumers[i].smax, contrib)
-                
-                ######################   DBG: NEW NEW  ######################
-                
-                
-            #self.GPd[h] += self.prosumers[i].Provs[h]
-                        
-            self.prosumers[i].i_tense[period,h] = 1 if self.prosumers[i].Needs[period,h] > self.prosumers[i].Provs[period,h-1] else -1
-            
-            self.prosumers[i].Min_K[period,h] = h if self.prosumers[i].Provs[period,h] == self.prosumers[i].smax else np.inf
-            
-
-                
-    def computeProvsforRho(self, period:int) -> float:
-        """
-        Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+        compute SP for all prosumers
 
         Parameters
         ----------
@@ -413,16 +282,78 @@ class Smartgrid :
 
         """
         for i in range(self.prosumers.size):
-            # self.prosumers[i].computeProvsAtH0(period=period, nbperiod=self.nbperiod)
-            self.prosumers[i].Provs[period,0] = self.prosumers[i].storage[period]
-        
-        for h in range(1, self.rho+1):
-            self.computeGNeeds(period=period, h=h) 
-            self.computeGPd(period=period, h=h)
-            self.computeProvsAtH(period=period, h=h)
-           
+            self.prosumers[i].computeSP(period=period, rho=self.rho)
     
-    def ComputeQTStock(self, period:int) -> float:
+    def computeNds4Prosumers(self, period:int) -> float:
+        """
+        compute Nds for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeNeeds4OneProsumer(period=period)
+            
+        for h in range(0, self.rho):
+            for i in range(self.prosumers.size):
+                self.Nds[period, h] += self.prosumers[i].Needs[period, h]
+            
+    def computeCalG4Prosumers(self, period:int) -> float:
+        """
+        compute WHAT....
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for h in range(0, self.rho):
+            Gh = 0
+            for i in range(self.prosumers.size):
+               Gh += aux.apv(self.prosumers[i].production[period+h] \
+                - self.prosumers[i].production[period+h] \
+                - (self.prosumers[i].smax - self.prosumers[i].SP[period,h]))
+    
+            self.calG[period, h] = Gh
+            
+    def computeHelp4Prosumers(self, period:int) -> float:
+        """
+        compute Help for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            for h in range(0, self.rho):
+                self.prosumers[i].Help[period, h] \
+                    = min(
+                        self.prosumers[i].Needs[period, h]*self.calG[period, h]/self.Nds[period, h],
+                        self.prosumers[i].Needs[period, h]
+                        )
+    
+    def computeQTStock(self, period:int) -> float:
         """
         Calculate the quantity of stocks with 
 
@@ -437,28 +368,14 @@ class Smartgrid :
             DESCRIPTION.
 
         """
-        # for i in range(self.prosumers.size):  
-        #     itense_arr = (self.prosumers[i].i_tense == 1).nonzero()[0]
-        #     min_k = min(self.prosumers[i].Min_K)
-        #     qtstock_i = 0
-        #     for h in itense_arr:
-        #         qtstock_i += self.prosumers[i].Needs[h] * (1 - self.GPd[h] / self.GNeeds[h])
-        #     self.prosumers[i].QTStock[period] = qtstock_i
-            
+        
         for i in range(self.prosumers.size):
-            min_k = min(self.prosumers[i].Min_K[period,1:])
-            min_k = 1 if min_k == np.inf else int(min_k)
-            # print("min_k = ", min_k, "--> Min_K:", self.prosumers[i].Min_K[period,1:] )
-            qtstock_i = 0
-            Stpi = min(self.rho, min_k)
-            for h in range(1, Stpi+1):
-                # print('h = ', h, " i_tense= ", self.prosumers[i].i_tense[h])
-                if self.prosumers[i].i_tense[period,h] == 1:
-                    qtstock_i += aux.apv(min(self.prosumers[i].smax, self.prosumers[i].Needs[period,h]) - self.prosumers[i].Provs[period,h-1])
-                    #print('h = ', h, ' qtstock_i = ', qtstock_i)
+            somme = 0
+            for h in range(0, self.prosumers[i].gamma[period]):
+                somme += self.prosumers[i].Needs[period, h] - self.prosumers[i].Help[period, h]
+                
+            self.prosumers[i].QTStock[period] = min(somme, self.prosumers[i].mu[period])
             
-            self.prosumers[i].QTStock[period] = qtstock_i
-    
     def computeValStock(self, period:int) -> float:
         """
         calculate the prosumer stock impact during a strategy profile SP^t=strat_{1,s}^t,...,strat_{N,s}^t
@@ -473,7 +390,6 @@ class Smartgrid :
         None.
 
         """
-        
         nextperiod = period if period == self.nbperiod+self.rho-1 else period+1 
         
         for i in range(self.prosumers.size):
@@ -482,8 +398,256 @@ class Smartgrid :
             QTstock_i = self.prosumers[i].QTStock[period]
             
             self.prosumers[i].valStock[period] \
-                = aux.phiepominus(min( aux.apv(Si_tplus1 - Si), QTstock_i )) \
-                    - aux.phiepominus(min( aux.apv(Si - Si_tplus1), QTstock_i ))
+                = aux.phiepominus(min(aux.apv(Si_tplus1 - Si), 
+                                      aux.apv(QTstock_i - Si))) \
+                    - aux.phiepominus(min( aux.apv(Si - Si_tplus1), 
+                                           aux.apv(QTstock_i - Si_tplus1)))
+    
+        
+    
+    # def computeTaus(self, period:int) -> float:
+    #     """
+        
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """   
+    #     for i in range(self.prosumers.size):
+    #         self.prosumers[i].computeTau(period=period, nbperiod=self.nbperiod, rho=self.rho)
+             
+                    
+    # def computeNeeds(self, period:int) -> float:
+    #     """
+    #     Compute needs for all prosumers 
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
+    #     h : int
+    #         DESCRIPTION.
+
+    #     Returns
+    #     -------
+    #     float
+    #         return float on array variable Needs
+
+    #     """
+    #     for i in range(self.prosumers.size):
+    #         self.prosumers[i].computeNeeds4OneProsumer(period=period, nbperiod=self.nbperiod)
+            
+    # def computeGNeeds(self, period:int, h:int) -> float:
+    #     """
+    #     sum of the Needs for all players
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         an instance of time t.
+    #     h : int
+    #         the next h periods to predict the stock at the period "period" .
+    #         1 <= h <= rho
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """
+    #     tmp = 0
+    #     for i in range(self.prosumers.size):
+    #         tmp += self.prosumers[i].Needs[period, h]
+    #     self.GNeeds[period, h] = tmp
+            
+    # def computeGPd(self, period:int, h:int) -> float:
+    #     """
+    #     sum of the absolute tau for the h value
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         an instance of time t.
+    #     h : int
+    #         the next h periods to predict the stock at the period "period" .
+    #         1 <= h <= rho
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """
+    #     tmp = 0
+    #     for i in range(self.prosumers.size):
+    #         tmp += aux.apv( - self.prosumers[i].tau[period,h] )
+    #     self.GPd[period, h] = tmp
+            
+    # def computeProvsAtH(self, period:int, h:int) -> float:
+    #     """
+    #     Calculate Provs for one h with 1 <= h <= rho
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
+    #     h : int
+    #         DESCRIPTION.
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """
+    #     for i in range(self.prosumers.size):
+    #         if self.prosumers[i].Needs[period,h] > 0:
+    #             self.prosumers[i].Provs[period,h] \
+    #                 = max(0, self.prosumers[i].Provs[period,h-1] - self.prosumers[i].Needs[period,h])
+    #         else:
+    #             # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+    #             # #print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GPd[h-1]= {self.GPd[h-1]}")
+    #             # tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1]))
+    #             # self.prosumers[i].Provs[h] = tmp_h
+                
+                
+    #             # ######################   DBG   ######################
+    #             # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+    #             # if self.GPd[h-1]:
+    #             #     tmp_h = -self.prosumers[i].tau[h] + self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1]))
+    #             #     self.prosumers[i].Provs[h] = tmp_h
+    #             # else:
+    #             #     # print(f"period={period}, GNeeds_hminus1={GNeeds_hminus1}, h={h}, GPd[h-1]= {self.GPd[h-1]}")
+    #             #     self.prosumers[i].Provs[h] = 0
+                
+    #             # ######################   DBG   ######################
+                
+    #             ######################   DBG: NEW   ######################
+    #             # GNeeds_hminus1 = 0 if h <= 1 else self.GNeeds[h-1]
+    #             # Contrib = 0
+    #             # if self.GPd[h-1] == 0:
+    #             #     Contrib = 0
+    #             # else:
+    #             #     Contrib = self.prosumers[i].Provs[h-1] * (1 - min(1, GNeeds_hminus1/self.GPd[h-1] ))
+    #             # self.prosumers[i].Provs[h] = min(self.prosumers[i].smax, 
+    #             #                                  -self.prosumers[i].tau[h] + Contrib)
+    #             ######################   DBG: NEW   ######################
+                
+    #             ######################   DBG: NEW NEW  ######################
+    #             frac = 0
+    #             if self.GPd[period, h] != 0:
+    #                 frac = self.GNeeds[period, h] / self.GPd[period, h]
+    #             else:
+    #                 frac = self.GNeeds[period, h]
+    #             contrib = self.prosumers[i].Provs[period,h-1] + (-self.prosumers[i].tau[period,h]) * min(1, frac) 
+                    
+    #             self.prosumers[i].Provs[period,h] = min(self.prosumers[i].smax, contrib)
+                
+    #             ######################   DBG: NEW NEW  ######################
+                
+                
+    #         #self.GPd[h] += self.prosumers[i].Provs[h]
+                        
+    #         self.prosumers[i].i_tense[period,h] = 1 if self.prosumers[i].Needs[period,h] > self.prosumers[i].Provs[period,h-1] else -1
+            
+    #         self.prosumers[i].Min_K[period,h] = h if self.prosumers[i].Provs[period,h] == self.prosumers[i].smax else np.inf
+            
+
+                
+    # def computeProvsforRho(self, period:int) -> float:
+    #     """
+    #     Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """
+    #     for i in range(self.prosumers.size):
+    #         # self.prosumers[i].computeProvsAtH0(period=period, nbperiod=self.nbperiod)
+    #         self.prosumers[i].Provs[period,0] = self.prosumers[i].storage[period]
+        
+    #     for h in range(1, self.rho+1):
+    #         self.computeGNeeds(period=period, h=h) 
+    #         self.computeGPd(period=period, h=h)
+    #         self.computeProvsAtH(period=period, h=h)
+           
+    
+    # def ComputeQTStock(self, period:int) -> float:
+    #     """
+    #     Calculate the quantity of stocks with 
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
+
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
+
+    #     """
+    #     # for i in range(self.prosumers.size):  
+    #     #     itense_arr = (self.prosumers[i].i_tense == 1).nonzero()[0]
+    #     #     min_k = min(self.prosumers[i].Min_K)
+    #     #     qtstock_i = 0
+    #     #     for h in itense_arr:
+    #     #         qtstock_i += self.prosumers[i].Needs[h] * (1 - self.GPd[h] / self.GNeeds[h])
+    #     #     self.prosumers[i].QTStock[period] = qtstock_i
+            
+    #     for i in range(self.prosumers.size):
+    #         min_k = min(self.prosumers[i].Min_K[period,1:])
+    #         min_k = 1 if min_k == np.inf else int(min_k)
+    #         # print("min_k = ", min_k, "--> Min_K:", self.prosumers[i].Min_K[period,1:] )
+    #         qtstock_i = 0
+    #         Stpi = min(self.rho, min_k)
+    #         for h in range(1, Stpi+1):
+    #             # print('h = ', h, " i_tense= ", self.prosumers[i].i_tense[h])
+    #             if self.prosumers[i].i_tense[period,h] == 1:
+    #                 qtstock_i += aux.apv(min(self.prosumers[i].smax, self.prosumers[i].Needs[period,h]) - self.prosumers[i].Provs[period,h-1])
+    #                 #print('h = ', h, ' qtstock_i = ', qtstock_i)
+            
+    #         self.prosumers[i].QTStock[period] = qtstock_i
+    
+    # def computeValStock(self, period:int) -> float:
+    #     """
+    #     calculate the prosumer stock impact during a strategy profile SP^t=strat_{1,s}^t,...,strat_{N,s}^t
+
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         an instance of time t.
+
+    #     Returns
+    #     -------
+    #     None.
+
+    #     """
+        
+    #     nextperiod = period if period == self.nbperiod+self.rho-1 else period+1 
+        
+    #     for i in range(self.prosumers.size):
+    #         Si = self.prosumers[i].storage[period]
+    #         Si_tplus1 = self.prosumers[i].storage[nextperiod]
+    #         QTstock_i = self.prosumers[i].QTStock[period]
+            
+    #         self.prosumers[i].valStock[period] \
+    #             = aux.phiepominus(min( aux.apv(Si_tplus1 - Si), QTstock_i )) \
+    #                 - aux.phiepominus(min( aux.apv(Si - Si_tplus1), QTstock_i ))
     
             
     def computeLCost_LCostMinMax(self, period:int):
