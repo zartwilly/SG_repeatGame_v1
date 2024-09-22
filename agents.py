@@ -337,7 +337,7 @@ class Prosumer:
         for h in range(0, self.rho):
             self.Needs[period, h] = aux.apv(self.tau_minus[period, h] - self.SP[period, h])
      
-    def computeMi4OneProsumer(self, period:int) -> float:
+    def computeMu4OneProsumer(self, period:int) -> float:
         """
         compute mu for each actor
 
