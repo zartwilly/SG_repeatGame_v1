@@ -484,34 +484,40 @@ class Prosumer:
             
                 
         
-    # def computeX(self, period:int, nbperiod:int, rho:int)-> float:
-    #     """
-    #     the difference beteween tau and X is the absolute value
+    def computeX(self, period:int, nbperiod:int, rho:int)-> float:
+        """
+        the difference beteween tau and X is the absolute value
 
-    #     Parameters
-    #     ----------
-    #     period : int
-    #         an instance of time t
+        Parameters
+        ----------
+        period : int
+            an instance of time t
         
-    #     maxperiod: int
-    #         max period
+        maxperiod: int
+            max period
             
-    #     rho: int
-    #         number of periods to select for predition from t+1 to t+rho 
-    #         rho << nbperiod ie rho=3 < nbperiod=5
+        rho: int
+            number of periods to select for predition from t+1 to t+rho 
+            rho << nbperiod ie rho=3 < nbperiod=5
 
-    #     Returns
-    #     -------
-    #     float.
+        Returns
+        -------
+        float.
 
-    #     """
+        """
         
-    #     rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
+        # rho_max = rho if period < nbperiod else nbperiod-rho                   # max prediction slots rho_max ; rho_max = rho if t < T else T-rho 
         
-    #     sum_X = 0
-    #     for h in range(1, rho_max+1):
-    #         sum_X += aux.apv(self.tau[period,h])
+        # sum_X = 0
+        # for h in range(1, rho_max+1):
+        #     sum_X += aux.apv(self.tau[period,h])
             
-    #     self.Xi[period] = sum_X
+        # self.Xi[period] = sum_X
+        
+        sum_X = 0
+        for h in range(0, self.rho):
+            sum_X += aux.apv(self.tau_minus[period, h])
+            
+        self.Xi[period] = sum_X
         
         
