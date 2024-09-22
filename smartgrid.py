@@ -255,7 +255,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
@@ -273,7 +273,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
@@ -284,6 +284,24 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].computeSP(period=period, rho=self.rho)
     
+    def computeGamma4prosumers(self, period:int) -> float:
+        """
+        compute Gamma for all prosumers
+        
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+            
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeGamma(period=period)
+    
     def computeNds4Prosumers(self, period:int) -> float:
         """
         compute Nds for all prosumers
@@ -291,7 +309,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
@@ -313,7 +331,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
@@ -337,7 +355,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
@@ -360,7 +378,7 @@ class Smartgrid :
         Parameters
         ----------
         period : int
-            DESCRIPTION.
+            an instance of time t.
 
         Returns
         -------
