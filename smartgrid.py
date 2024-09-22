@@ -370,6 +370,24 @@ class Smartgrid :
                         self.prosumers[i].Needs[period, h]*self.calG[period, h]/self.Nds[period, h],
                         self.prosumers[i].Needs[period, h]
                         )
+                    
+    def computeMu4Prosummers(self, period:int) -> float:
+        """
+        compute Mu for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeMu4OneProsumer(period=period)
     
     def computeQTStock(self, period:int) -> float:
         """
