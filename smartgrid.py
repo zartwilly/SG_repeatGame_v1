@@ -703,7 +703,7 @@ class Smartgrid :
         """
         for i in range(self.prosumers.size):
             self.prosumers[i].Lcost[period] \
-                = self.prosumers[i].price[period] - self.prosumers[i].valStock[period]
+                = aux.apv(self.prosumers[i].price[period] - self.prosumers[i].valStock[period])
                 
             if self.prosumers[i].LCostmin["Lcost"] == None \
                 or self.prosumers[i].LCostmin["Lcost"] > self.prosumers[i].Lcost[period] :
