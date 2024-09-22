@@ -484,7 +484,7 @@ class Prosumer:
             
                 
         
-    def computeX(self, period:int, nbperiod:int, rho:int)-> float:
+    def computeX(self, period:int)-> float:
         """
         the difference beteween tau and X is the absolute value
 
