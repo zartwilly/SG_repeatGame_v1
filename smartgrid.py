@@ -266,6 +266,24 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].computeTauMinusPlus(period=period, rho=self.rho)
                     
+    def computeXi4Prosumers(self, period:int) -> float:
+        """
+        compute Xi for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            self.prosumers[i].computeX(period=period)
+            
     def computeSP4Prosumers(self, period:int) -> float:
         """
         compute SP for all prosumers
