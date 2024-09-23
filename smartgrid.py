@@ -1048,7 +1048,6 @@ class Smartgrid :
         """
         for i in range(self.prosumers.size):
             
-            self.prosumers[i].computeX(period=period, nbperiod=self.nbperiod, rho=self.rho)
             QTStock_i = self.prosumers[i].QTStock[period]
             if self.prosumers[i].state[period] == ag.State.DEFICIT :
                 self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
