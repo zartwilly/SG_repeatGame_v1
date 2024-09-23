@@ -338,9 +338,11 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].computeNeeds4OneProsumer(period=period)
             
-        for h in range(0, self.rho):
+        for h in range(1, self.rho+1):
+            self.Nds[period, h] = 0
             for i in range(self.prosumers.size):
                 self.Nds[period, h] += self.prosumers[i].Needs[period, h]
+            print(f"h={h}, Nds={self.Nds[period, h]}")
             
     def computeCalG4Prosumers(self, period:int) -> float:
         """
@@ -382,7 +384,7 @@ class Smartgrid :
 
         """
         for i in range(self.prosumers.size):
-            for h in range(0, self.rho):
+            for h in range(1, self.rho+1):
                 self.prosumers[i].Help[period, h] \
                     = min(
                         self.prosumers[i].Needs[period, h]*self.calG[period, h]/self.Nds[period, h],
@@ -425,7 +427,7 @@ class Smartgrid :
         
         for i in range(self.prosumers.size):
             somme = 0
-            for h in range(0, self.prosumers[i].gamma[period]):
+            for h in range(1, int(self.prosumers[i].gamma[period])+1):
                 somme += self.prosumers[i].Needs[period, h] - self.prosumers[i].Help[period, h]
                 
             self.prosumers[i].QTStock[period] = min(somme, self.prosumers[i].mu[period])
@@ -1047,14 +1049,14 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             
             self.prosumers[i].computeX(period=period, nbperiod=self.nbperiod, rho=self.rho)
-            Xi = self.prosumers[i].Xi[period]
+            QTStock_i = self.prosumers[i].QTStock[period]
             if self.prosumers[i].state[period] == ag.State.DEFICIT :
                 self.prosumers[i].mode[period] = ag.Mode.CONSPLUS
                 
             elif self.prosumers[i].state[period] == ag.State.SELF :
                 self.prosumers[i].mode[period] = ag.Mode.DIS
                 
-            elif self.prosumers[i].storage[period] >= Xi:
+            elif self.prosumers[i].storage[period] >= QTStock_i:
                 self.prosumers[i].mode[period] = ag.Mode.PROD
             else:
                 self.prosumers[i].mode[period] = ag.Mode.DIS
