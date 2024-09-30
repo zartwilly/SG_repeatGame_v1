@@ -198,9 +198,10 @@ def Initialization_game(scenario):
     # Initialisation of production, consumption and storage using the instance generator
     N = application.SG.prosumers.size
     T = application.SG.nbperiod
+    rho = application.SG.rho
     
     for i in range(N):
-        for t in range(T):
+        for t in range(T+rho):
             application.SG.prosumers[i].production[t] = g.production[i][t]
             application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
             
