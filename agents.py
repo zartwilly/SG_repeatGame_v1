@@ -220,7 +220,7 @@ class Prosumer:
         
         self.valOne[period] = phiminus - phiplus
         
-    def computeValNoSG(self, period:int) -> float:
+    def computeValNoSG(self, period:int, coef_phiepominus:int, coef_phiepoplus:int) -> float:
         """
         compute the value of one actor a_i at one period
 
@@ -234,8 +234,8 @@ class Prosumer:
         float.
 
         """
-        self.valNoSG[period] = aux.phiepominus(self.consit[period]) \
-                                - aux.phiepoplus(self.prodit[period])
+        self.valNoSG[period] = aux.phiepominus(self.consit[period], coef_phiepominus) \
+                                - aux.phiepoplus(self.prodit[period], coef_phiepoplus)
         
     def computeTauMinusPlus(self, period:int, rho:int) -> float:
         """
@@ -286,7 +286,7 @@ class Prosumer:
                     = min(self.SP[period, h-1]+self.tau_plus[period, h-1], self.smax)
             if self.tau_minus[period, h-1] > 0:
                 self.SP[period, h] \
-                    = max(self.SP[period, h-1]+self.tau_minus[period, h-1], 0)
+                    = max(self.SP[period, h-1]-self.tau_minus[period, h-1], 0)
             
                 
     def computeGamma(self, period:int) -> float:
