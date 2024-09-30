@@ -11,9 +11,17 @@ auxiliary_functions file contains all functions that are used to all project fil
 def apv(x): # Return absolute positive value 
     return max(0,x)  
     
-def phiepoplus(x): # Parameter :  benefit function of selling energy to EPO
-    return x * 15
+def phiepoplus(x, coef=15): 
+    """
+    x :  benefit function of selling energy to EPO
+    coef : parameter of instance
+    """
+    return x * coef
 
-def phiepominus(x): # Parameter :  cost function of buying energy from EPO 
-    return x * 90
+def phiepominus(x, coef=90): 
+    """
+    x :  cost function of buying energy from EPO 
+    coef : parameter of instance
+    """
+    return x * coef
 
