@@ -54,7 +54,8 @@ class Smartgrid :
     # realstate = None # Real state of each prosumers when using real production value (can be the same as the one determined with predicted production)
     
     
-    def __init__(self, N: int, nbperiod:int, initialprob: float, rho:int):
+    def __init__(self, N:int, nbperiod:int, initialprob: float, rho:int, 
+                 coef_phiepoplus:int, coef_phiepominus:int):
         """
         
         Parameters
@@ -77,6 +78,8 @@ class Smartgrid :
         
         """
         self.rho = rho
+        self.coef_phiepominus = coef_phiepominus
+        self.coef_phiepominus = coef_phiepominus
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.nbperiod = nbperiod
         for i in range(N):
@@ -172,7 +175,9 @@ class Smartgrid :
         """
         sumValNoSG = 0
         for i in range(self.prosumers.size):
-            self.prosumers[i].computeValNoSG(period=period)
+            self.prosumers[i].computeValNoSG(period=period, 
+                                             coef_phiepominus=self.coef_phiepominus,
+                                             coef_phiepoplus=self.coef_phiepoplus)
             sumValNoSG += self.prosumers[i].valNoSG[period]
             
         self.ValNoSG[period] = sumValNoSG
@@ -191,8 +196,8 @@ class Smartgrid :
         float.
 
         """
-        outinsg = aux.phiepominus( aux.apv(self.outsg[period] - self.insg[period] ))
-        inoutsg = aux.phiepoplus( aux.apv(self.insg[period] - self.outsg[period] ))
+        outinsg = aux.phiepominus( x=aux.apv(self.outsg[period] - self.insg[period]), coef=self.coef_phiepominus)
+        inoutsg = aux.phiepoplus( x=aux.apv(self.insg[period] - self.outsg[period]), coef=self.coef_phiepoplus)
         self.ValSG[period] = outinsg - inoutsg
     
     def computeValNoSGCost(self, period:int) -> float:
@@ -209,8 +214,8 @@ class Smartgrid :
         float.
 
         """
-        phiPlusInsg = aux.phiepoplus(self.insg[period])
-        phiMinusOutsg = aux.phiepominus(self.outsg[period])
+        phiPlusInsg = aux.phiepoplus(x=self.insg[period], coef=self.coef_phiepoplus)
+        phiMinusOutsg = aux.phiepominus(x=self.outsg[period], coef=self.coef_phiepominus)
         self.ValNoSGCost[period] = phiPlusInsg - phiMinusOutsg
         
     def computeReduct(self, period:int) -> float:
@@ -455,9 +460,11 @@ class Smartgrid :
             
             self.prosumers[i].valStock[period] \
                 = aux.phiepominus(min(aux.apv(Si_tplus1 - Si), 
-                                      aux.apv(QTstock_i - Si))) \
+                                      aux.apv(QTstock_i - Si)), 
+                                  self.coef_phiepominus) \
                     - aux.phiepominus(min( aux.apv(Si - Si_tplus1), 
-                                           aux.apv(QTstock_i - Si_tplus1)))
+                                           aux.apv(QTstock_i - Si_tplus1)),
+                                      self.coef_phiepominus)
     
         
     
