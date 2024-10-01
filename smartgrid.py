@@ -79,7 +79,7 @@ class Smartgrid :
         """
         self.rho = rho
         self.coef_phiepominus = coef_phiepominus
-        self.coef_phiepominus = coef_phiepominus
+        self.coef_phiepoplus = coef_phiepoplus
         self.prosumers = np.ndarray(shape=(N),dtype=ag.Prosumer)
         self.nbperiod = nbperiod
         for i in range(N):
