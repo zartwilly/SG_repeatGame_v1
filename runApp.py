@@ -104,9 +104,12 @@ def generer_data_from_scenario(scenario:dict,
                                    repartition:list,
                                    values:list, 
                                    probabilities:list, 
-                                   dbg_generateData:bool=True):
+                                   is_generateData:bool=True, 
+                                   is_generateData_version20092024:bool=True):
     # scenarioPath : "data_scenario"
     # scenarioName : "data_NAME_DAY-MM-YY-HH-MM.pkl"
+    # is_generateData == True then generateData_version20092024 == False
+    # is_generateData_version20092024 == True then is_generateData_version20092024 == False
     
     # path_name = os.path.join(scenarioPath, scenarioName+".pkl") ===> TODELETE
     path_name = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], scenario["scenarioName"]+".pkl")
@@ -114,7 +117,7 @@ def generer_data_from_scenario(scenario:dict,
     g = None
     # Is there the data file on repository?
     checkfile = os.path.isfile(path_name)
-    if (checkfile == True and dbg_generateData == True) or (checkfile == True and dbg_generateData == False):
+    if (checkfile == True and is_generateData == True) or (checkfile == True and is_generateData == False):
         # file exists in which form?
         # return g which contains data load
         
@@ -127,13 +130,15 @@ def generer_data_from_scenario(scenario:dict,
         print("**** Load pickle data : END ****")
         
     else:
-        # checkfile == False and dbg_generateData == False or  =(checkfile == False and dbg_generateData == True) :
+        # checkfile == False and is_generateData == False or  =(checkfile == False and is_generateData == True) :
         print("**** Create pickle data : START ****")
         # file not exists
         g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
         
-        if dbg_generateData:
+        if is_generateData and not is_generateData_version20092024:
             g.generate_TESTDBG(transitionprobabilities,repartition,values,probabilities)
+        elif not is_generateData and is_generateData_version20092024:
+            g.generate_dataset_version20092024(transitionprobabilities,repartition,values,probabilities)
         else:
             g.generate(transitionprobabilities,repartition,values,probabilities)
         
@@ -167,12 +172,15 @@ def Initialization_game(scenario):
     slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
     rho = scenario["simul"]["rho"]
     h = scenario["algo"]["LRI_REPART"]["h"]
+    coef_phiepoplus = scenario["simul"]["coef_phiepoplus"]
+    coef_phiepominus = scenario["simul"]["coef_phiepominus"]
     initialprob = scenario["algo"]["LRI_REPART"]["initialprob"]
     transitionprobabilities = scenario["simul"]["transitionprobabilities"]
     repartition = scenario["simul"]["repartition"]
     values = scenario["simul"]["values"]
     probabilities = scenario["simul"]["probabilities"]
-    dbg_generateData = scenario["dbg_generateData"]
+    is_generateData = scenario["is_generateData"]
+    is_generateData_version20092024 = scenario["is_generateData_version20092024"]
     # = scenario[""]
     
     scenario["scenarioCorePath"] = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
@@ -183,7 +191,9 @@ def Initialization_game(scenario):
                            b=slowdownfactor, rho=rho, h=h, 
                            maxstep_init=maxstep_init, threshold=threshold)
     application.SG = sg.Smartgrid(N=N_actors, nbperiod=nbPeriod, 
-                                  initialprob=initialprob, rho=rho)
+                                  initialprob=initialprob, rho=rho, 
+                                  coef_phiepoplus=coef_phiepoplus, 
+                                  coef_phiepominus=coef_phiepominus)
     
     # Configuration of the instance generator
     g = generer_data_from_scenario(scenario=scenario,
@@ -193,7 +203,8 @@ def Initialization_game(scenario):
                                        repartition=repartition,
                                        values=values, 
                                        probabilities=probabilities, 
-                                       dbg_generateData=dbg_generateData)
+                                       is_generateData=is_generateData,
+                                       is_generateData_version20092024=is_generateData_version20092024)
     
     # Initialisation of production, consumption and storage using the instance generator
     N = application.SG.prosumers.size
@@ -205,12 +216,14 @@ def Initialization_game(scenario):
             application.SG.prosumers[i].production[t] = g.production[i][t]
             application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
             
-            if dbg_generateData:
+            if is_generateData:
                 application.SG.prosumers[i].smax = 5 if i < 10 else 2
                 # if i < 10 :
                 #     application.SG.prosumers[i].smax = 5
                 # else:
                 #     application.SG.prosumers[i].smax = 2
+            elif is_generateData_version20092024:
+                application.SG.prosumers[i].smax = 6 if i < 4 else 2
             else:
                 # put initial storage variable 
                 application.SG.prosumers[i].storage[0] = 0
