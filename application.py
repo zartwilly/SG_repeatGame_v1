@@ -154,16 +154,28 @@ class App:
         LCostmax = self.SG.LCostmax[period]
         LCostmin = self.SG.LCostmin[period]
         Cost = self.SG.Cost[period]
-        GNeeds = dict()
-        for h, elt in enumerate(self.SG.GNeeds[period]):
-            GNeeds["GNeeds_h="+str(h)] = elt
-        GPd = dict()
-        for h, elt in enumerate(self.SG.GPd[period]):
-            GPd["GPd_h="+str(h)] = elt
         
-        tauS = dict()
-        for i, elt in enumerate(self.SG.TauS):
-            tauS["Prosum="+str(i)] = elt
+        # GNeeds = dict()
+        # for h, elt in enumerate(self.SG.GNeeds[period]):
+        #     GNeeds["GNeeds_h="+str(h)] = elt
+        # GPd = dict()
+        # for h, elt in enumerate(self.SG.GPd[period]):
+        #     GPd["GPd_h="+str(h)] = elt
+        
+        # tauS = dict()
+        # for i, elt in enumerate(self.SG.TauS):
+        #     tauS["Prosum="+str(i)] = elt
+            
+        Nds = dict()
+        for h, elt in enumerate(self.SG.Nds[period]):
+            Nds["Nds_h="+str(h)] = elt
+            
+        calG = dict()
+        for h, elt in enumerate(self.SG.calG[period]):
+            calG["calG_h="+str(h)] = elt
+            
+        coef_phiepoplus = self.SG.coef_phiepoplus
+        coef_phiepominus = self.SG.coef_phiepominus
         
         #dicoLRI_onePeriod_oneStep = dict()
         for i in range(N):
@@ -187,7 +199,8 @@ class App:
             LCostmax = self.SG.prosumers[i].LCostmax["Lcost"]
             LCostmin = self.SG.prosumers[i].LCostmin["Lcost"]
             
-            tau = self.SG.prosumers[i].tau
+            
+            #tau = self.SG.prosumers[i].tau
             
             storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
             
@@ -196,13 +209,30 @@ class App:
             for h, elt in enumerate(self.SG.prosumers[i].Needs[period]):
                 Needs["Needs_h="+str(h)] = elt
                 
-            Provs = dict()
-            for h, elt in enumerate(self.SG.prosumers[i].Provs[period]):
-                Provs["Provs_h="+str(h)] = elt
+            # Provs = dict()
+            # for h, elt in enumerate(self.SG.prosumers[i].Provs[period]):
+            #     Provs["Provs_h="+str(h)] = elt
                 
-            i_tense = dict()
-            for h, elt in enumerate(self.SG.prosumers[i].i_tense[period]):
-                i_tense["itense_h="+str(h)] = elt
+            # i_tense = dict()
+            # for h, elt in enumerate(self.SG.prosumers[i].i_tense[period]):
+            #     i_tense["itense_h="+str(h)] = elt
+            
+            Help = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].Help[period]):
+                Help["Help_h="+str(h)] = elt
+                
+            tau_plus = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].tau_plus[period]):
+                tau_plus["tau_plus_h="+str(h)] = elt
+             
+            tau_minus = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].tau_minus[period]):
+                tau_minus["tau_minus_h="+str(h)] = elt
+            
+            SP = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].SP[period]):
+                SP["SP_h="+str(h)] = elt
+            
             
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
                 "prosumers": "prosumer"+str(i),
@@ -238,18 +268,27 @@ class App:
                 "Lcostmin": self.SG.prosumers[i].Lcostmin[period], 
                 "Cost": Cost,
                 
-                "tau": str(tau[period]),
+                #"tau": str(tau[period]),
                 #"tauS": str(tauS),
+                "tau_plus": str(tau_plus),
+                "tau_minus": str(tau_minus),
                 
+                "SP": str(SP),
                 "Needs": str(Needs),
-                "GNeeds": str(GNeeds),
+                "Nds": str(Nds),
+                "calG": str(calG),
+                "Help": str(Help),
                 
-                "GPd": str(GPd),
+                "gamma": self.SG.prosumers[i].gamma[period],
+                "mu": self.SG.prosumers[i].mu[period],
+                #"GNeeds": str(GNeeds),
+                
+                #"GPd": str(GPd),
                 "Smax": self.SG.prosumers[i].smax,
-                "Provs": str(Provs),
+                #"Provs": str(Provs),
                 
-                "Min_K": str(self.SG.prosumers[i].Min_K[period]),
-                "i-tense": str(i_tense),
+                #"Min_K": str(self.SG.prosumers[i].Min_K[period]),
+                #"i-tense": str(i_tense),
                 "QTStock": self.SG.prosumers[i].QTStock[period], 
                 
                 
@@ -258,7 +297,9 @@ class App:
                 "valStock_i":valStock_i,
                 
                 "algoName": algoName, 
-                "scenarioName": scenarioName
+                "scenarioName": scenarioName,
+                "coef_phiepoplus": coef_phiepoplus,
+                "coef_phiepominus": coef_phiepominus
                 }
         pass
     
@@ -337,20 +378,49 @@ class App:
         # self.SG.compute_RS_lowPlus(period)
         # self.SG.compute_RS_lowMinus(period)
         
-        # calculate Taus
-        self.SG.computeTaus(period) 
+        # # calculate Taus
+        # self.SG.computeTaus(period) 
         
-        # calculate Needs
-        self.SG.computeNeeds(period)
+        # # calculate Needs
+        # self.SG.computeNeeds(period)
         
-        # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
-        self.SG.computeProvsforRho(period) 
+        # # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+        # self.SG.computeProvsforRho(period) 
+        
+        # # calculate QTStock
+        # self.SG.ComputeQTStock(period)
+        
+        # # calculate ValStock
+        # self.SG.computeValStock(period)
+        
+        # calculate tau_minus_plus
+        self.SG.computeTauMinusPlus4Prosumers(period)
+        
+        # calculate SP
+        self.SG.computeSP4Prosumers(period)
+        
+        # calculate Gamma
+        self.SG.computeGamma4prosumers(period)
+        
+        # calculate Needs and Nds
+        self.SG.computeNds4Prosumers(period)
+        
+        # calculate CalG
+        self.SG.computeCalG4Prosumers(period)
+        
+        # calculate Help
+        self.SG.computeHelp4Prosumers(period)
+        
+        # calculate Mu
+        self.SG.computeMu4Prosummers(period)
         
         # calculate QTStock
-        self.SG.ComputeQTStock(period)
+        self.SG.computeQTStock(period)
         
         # calculate ValStock
         self.SG.computeValStock(period)
+        
+        # calculate
         
         
         ## ------ end ------
@@ -639,6 +709,7 @@ class App:
                 "consumption": self.SG.prosumers[i].consumption[period],
                 "storage": self.SG.prosumers[i].storage[period],
                 "storaget+1": self.SG.prosumers[i].storage[period+1],
+                "Smax": self.SG.prosumers[i].smax,
                 "prodit": self.SG.prosumers[i].prodit[period],
                 "consit": self.SG.prosumers[i].consit[period],
                 "mode": str(self.SG.prosumers[i].mode[period]),
@@ -769,6 +840,41 @@ class App:
         for t in range(T_periods):
             # Update the state of each prosumer
             self.SG.updateState(period=t)
+            
+            # calculate tau_minus_plus for prosumers
+            #self.SG.computeTauMinusPlus4Prosumers(period=t)
+            
+            # calculate Xi for prosumers
+            #self.SG.computeXi4Prosumers(period=t)
+            
+            ### calculate QTStock  ###
+            # calculate tau_minus_plus
+            self.SG.computeTauMinusPlus4Prosumers(period=t)
+            
+            # calculate SP
+            self.SG.computeSP4Prosumers(period=t)
+            
+            # calculate Gamma
+            self.SG.computeGamma4prosumers(period=t)
+            
+            # calculate Needs and Nds
+            self.SG.computeNds4Prosumers(period=t)
+            
+            # calculate CalG
+            self.SG.computeCalG4Prosumers(period=t)
+            
+            # calculate Help
+            self.SG.computeHelp4Prosumers(period=t)
+            
+            # calculate Mu
+            self.SG.computeMu4Prosummers(period=t)
+            
+            # calculate QTStock
+            self.SG.computeQTStock(period=t)
+            
+            # calculate ValStock
+            self.SG.computeValStock(period=t)
+            ### calculate QTStock  ###
             
             # Update prosumers' modes following SyA mode selection
             self.SG.updateModeSSA(period=t)
@@ -952,17 +1058,41 @@ class App:
         # calculate price_t
         sg1.computePrice(period)
     
-        # calculate Taus
-        sg1.computeTaus(period) 
+        # # calculate Taus
+        # sg1.computeTaus(period) 
         
-        # calculate Needs
-        sg1.computeNeeds(period)
+        # # calculate Needs
+        # sg1.computeNeeds(period)
         
-        # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
-        sg1.computeProvsforRho(period) 
+        # # Calculate Provs for all h with 1 <= h <= rho and identifies h i-tense
+        # sg1.computeProvsforRho(period) 
+        ###################################################
+        # calculate tau_minus_plus
+        sg1.computeTauMinusPlus4Prosumers(period)
+        
+        # calculate SP
+        sg1.computeSP4Prosumers(period)
+        
+        # calculate Gamma
+        sg1.computeGamma4prosumers(period)
+        
+        # calculate Needs and Nds
+        sg1.computeNds4Prosumers(period)
+        
+        # calculate CalG
+        sg1.computeCalG4Prosumers(period)
+        
+        # calculate Help
+        sg1.computeHelp4Prosumers(period)
+        
+        # calculate Mu
+        sg1.computeMu4Prosummers(period)
+        ###################################################
+        
+        
         
         # calculate QTStock
-        sg1.ComputeQTStock(period)
+        sg1.computeQTStock(period)
         
         # calculate ValStock
         sg1.computeValStock(period)
