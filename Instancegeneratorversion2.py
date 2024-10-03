@@ -235,7 +235,7 @@ class Instancegenaratorv2:
                 if i<4 and t<10:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 10
-                elif i<4 and t>10:
+                elif i<4 and t>=10:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 1
                 elif i>=4 and t<5:
