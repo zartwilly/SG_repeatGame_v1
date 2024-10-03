@@ -364,11 +364,11 @@ class Smartgrid :
             DESCRIPTION.
 
         """
-        for h in range(0, self.rho):
+        for h in range(1, self.rho+1):
             Gh = 0
             for i in range(self.prosumers.size):
                Gh += aux.apv(self.prosumers[i].production[period+h] \
-                - self.prosumers[i].production[period+h] \
+                - self.prosumers[i].consumption[period+h] \
                 - (self.prosumers[i].smax - self.prosumers[i].SP[period,h]))
     
             self.calG[period, h] = Gh
