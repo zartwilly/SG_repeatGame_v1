@@ -43,7 +43,10 @@ scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N20_T100_K5000_B2_Rho5
 
 #scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N20_T5_SHAPLEY_DBG.json"
 scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5_SHAPLEY_DBG.json"
+# dataset instance particuliere
 scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_LRI_N8_T20_RHO5_SHAPLEY.json"
+# dataset aleatoire
+scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_datasetAleatoire_LRI_N10_T100_RHO5_SHAPLEY.json"
 
 is_generateData = False #True #False
 is_generateData_version20092024 = not is_generateData
