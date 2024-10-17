@@ -767,7 +767,7 @@ def load_all_algos_V1(scenario:dict, scenarioViz: dict):
                 app_pkl = pickle.load(f) # deserialize using load()
                 #app_pkls.append((app_pkl, algoName, scenario["scenarioName"]))
                 dfs = list()
-                if algoName == "LRI_REPART" and scenario["PlotDataVStockQTsock"]:
+                if algoName == "LRI_REPART" and scenario["simul"]["is_plotDataVStockQTsock"]:
                     # load .csv into list of dataframe
                     ## look for dataframes beginning to 'runLRI_df_'
                     prefix = "runLRI_df_"
@@ -1581,7 +1581,7 @@ if __name__ == '__main__':
     scenarioFile = "./data_scenario/scenario_SelfishDB_LRI_N20_T100_K5000_B2_Rho5.json"
     scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N20_T100_K5000_B2_Rho5_newFormula_QSTOCK.json"
     
-    PlotDataVStockQTsock = True
+    # is_plotDataVStockQTsock = True
     
     with open(scenarioFile) as file:
         scenario = json.load(file)
@@ -1591,7 +1591,7 @@ if __name__ == '__main__':
     scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
     scenario["scenarioCorePathData"] = scenarioCorePathData
     
-    scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
+    scenario["simul"]["is_plotDataVStockQTsock"] = True if scenario["simul"]["is_plotDataVStockQTsock"] == "True" else False
     
     
     ## test if scenarioName+"Viz".json exists ---> start
