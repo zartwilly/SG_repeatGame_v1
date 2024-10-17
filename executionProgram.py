@@ -48,10 +48,13 @@ scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_LRI_N8_T20_RHO5_
 # dataset aleatoire
 scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_datasetAleatoire_LRI_N10_T100_RHO5_SHAPLEY.json"
 
-is_generateData = False #True #False
-is_generateData_version20092024 = not is_generateData
-is_shapleyValueCalculate = False #True #False
-PlotDataVStockQTsock = True
+# scenario aleatoire DBG
+scenarioFile = "./data_scenario/DBG_version20092024_dataAleatoire_N10_T5_K5_B1_rho5_NotSHAPLEY.json"
+
+# is_generateData = False #True #False
+# is_generateData_version20092024 = not is_generateData
+# is_shapleyValueCalculate = False #True #False
+# PlotDataVStockQTsock = True
 
 
 
@@ -112,8 +115,12 @@ app_LRI = None
 start = time.time()
 with open(scenarioFile) as file:
     scenario = json.load(file)
-    scenario["is_generateData"] = is_generateData
-    scenario["is_generateData_version20092024"] = is_generateData_version20092024
+    scenario["simul"]["is_storage_zero"] = True if scenario["simul"]["is_storage_zero"] == "True" else False
+    scenario["simul"]["is_generateData"] = True if scenario["simul"]["is_generateData"] == "True" else False
+    scenario["simul"]["is_generateData_version20092024"] = not scenario["simul"]["is_generateData"]
+    scenario["simul"]["is_shapleyValueCalculate"] = True if scenario["simul"]["is_shapleyValueCalculate"] == "True" else False
+    scenario["simul"]["is_plotDataVStockQTsock"] = True if scenario["simul"]["is_plotDataVStockQTsock"] == "True" else False
+    
     
     if "SyA" in scenario["algo"]:
         # ra.run_syA(scenario, logfiletxt)
@@ -134,6 +141,7 @@ with open(scenarioFile) as file:
     pass
 
 ### ------- START : redistribution with shapley values between LRI and sysA -------
+is_shapleyValueCalculate = scenario["simul"]["is_shapleyValueCalculate"]
 df_shapleys = pd.DataFrame()
 if is_shapleyValueCalculate:
     print("__________ Compute Shapley Values _______________")
@@ -160,7 +168,7 @@ print("# --- VISU --- ")
 
 scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
 scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
-scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
+#scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
 
 scenarioVizFile = os.path.join(scenario["scenarioCorePathDataViz"], scenario["scenarioName"]+'_VIZ.json')
 checkfile = os.path.isfile(scenarioVizFile)
