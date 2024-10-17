@@ -19,6 +19,8 @@ import agents as ag
 
 from pathlib import Path
 
+import numpy as np
+
 
 
 ###############################################################################
@@ -99,8 +101,9 @@ def monitoring_before_algorithm(file, application):
 #                DEBUT : Generer des donnees selon scenarios
 #------------------------------------------------------------------------------
 def generer_data_from_scenario(scenario:dict,
-                                   N_actors:int, nbperiod:int, rho:int,
-                                    transitionprobabilities:list,
+                                   N_actors:int, nbperiod:int, rho:int,  
+                                   smax:int,
+                                   transitionprobabilities:list,
                                    repartition:list,
                                    values:list, 
                                    probabilities:list, 
@@ -171,6 +174,7 @@ def Initialization_game(scenario):
     threshold = scenario["algo"]["LRI_REPART"]["threshold"]
     slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
     rho = scenario["simul"]["rho"]
+    smax = scenario["instance"]["smax"]
     h = scenario["algo"]["LRI_REPART"]["h"]
     coef_phiepoplus = scenario["simul"]["coef_phiepoplus"]
     coef_phiepominus = scenario["simul"]["coef_phiepominus"]
@@ -179,8 +183,9 @@ def Initialization_game(scenario):
     repartition = scenario["simul"]["repartition"]
     values = scenario["simul"]["values"]
     probabilities = scenario["simul"]["probabilities"]
-    is_generateData = scenario["is_generateData"]
-    is_generateData_version20092024 = scenario["is_generateData_version20092024"]
+    is_generateData = scenario["simul"]["is_generateData"]
+    is_generateData_version20092024 = scenario["simul"]["is_generateData_version20092024"]
+    is_storage_zero = bool(scenario["simul"]["is_storage_zero"])
     # = scenario[""]
     
     scenario["scenarioCorePath"] = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
@@ -198,7 +203,8 @@ def Initialization_game(scenario):
     # Configuration of the instance generator
     g = generer_data_from_scenario(scenario=scenario,
                                        N_actors=N_actors, nbperiod=nbPeriod, 
-                                       rho=rho,
+                                       rho=rho, 
+                                       smax=smax,
                                        transitionprobabilities=transitionprobabilities,
                                        repartition=repartition,
                                        values=values, 
@@ -228,9 +234,16 @@ def Initialization_game(scenario):
                 # put initial storage variable 
                 application.SG.prosumers[i].storage[0] = 0
                 application.SG.prosumers[i].smax = 15 #20
+                
+            # put initial storage variable 
+            if t == 0 :
+                if is_storage_zero :
+                    application.SG.prosumers[i].storage[0] = 0
+                else:
+                    application.SG.prosumers[i].storage[0] = np.random.randint(low=0, high=smax)
             
         # put initial storage variable 
-        application.SG.prosumers[i].storage[0] = 0
+        # application.SG.prosumers[i].storage[0] = 0
         
     return application
 
