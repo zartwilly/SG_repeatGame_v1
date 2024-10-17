@@ -347,7 +347,7 @@ class Smartgrid :
             self.Nds[period, h] = 0
             for i in range(self.prosumers.size):
                 self.Nds[period, h] += self.prosumers[i].Needs[period, h]
-            print(f"h={h}, Nds={self.Nds[period, h]}")
+            # print(f"h={h}, Nds={self.Nds[period, h]}")
             
     def computeCalG4Prosumers(self, period:int) -> float:
         """
