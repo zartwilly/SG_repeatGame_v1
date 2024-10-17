@@ -279,7 +279,8 @@ class Prosumer:
             DESCRIPTION.
 
         """
-        self.SP[period, 0] = 0
+        self.SP[period, 0] = 0;
+        self.SP[period, 1] = 0;
         for h in range(2, rho+1):
             if self.tau_plus[period, h-1] >= 0:
                 self.SP[period, h] \
