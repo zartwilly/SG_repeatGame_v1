@@ -93,6 +93,8 @@ class Prosumer:
     SP = None # a storage profile of a player for the defined future rho
     gamma = None # a minimum future steps respecting conditions in the overleaf paper
     Help = None
+    Rq = None
+    Val = None
     mu = None
     
 
@@ -147,6 +149,8 @@ class Prosumer:
         self.tau_minus = np.zeros(shape=(nbperiod, rho+1))
         self.tau_plus = np.zeros(shape=(nbperiod, rho+1))
         self.Help = np.zeros(shape=(nbperiod, rho+1))
+        self.Rq = np.zeros(shape=(nbperiod, rho+1))
+        self.Val = np.zeros(shape=(nbperiod, rho+1))
         self.mu = np.zeros(nbperiod)
         
         ##### TODELETE : start new parameters variables for Repeated game ########
