@@ -396,6 +396,60 @@ class Smartgrid :
                         self.prosumers[i].Needs[period, h]
                         )
                     
+    def computeRq(self, period:int) -> float:
+        """
+        compute Rq for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            for h in range(1, self.rho+1):
+                self.prosumers[i].Rq[period, h] \
+                    = self.prosumers[i].Needs[period, h] - self.prosumers[i].Help[period, h]
+               
+    def computeVal(self, period:int) -> float:
+        """
+        compute Val for all prosumers
+
+        Parameters
+        ----------
+        period : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        for i in range(self.prosumers.size):
+            for h in range(1, self.rho+1):
+                min_1 = self.prosumers[i].Rq[period, h]
+                min_2 = self.prosumers[i].smax - self.prosumers[i].SP[period, h]
+                min_3 = np.inf
+                
+                for j in range(1, h):
+                    smax = self.prosumers[i].smax
+                    sp_h = self.prosumers[i].SP[period, h]
+                    som_Val = 0
+                    for k in range(j, h):
+                        som_Val += self.prosumers[i].Val[period, k]
+                    diff = aux.apv(smax - sp_h - som_Val)
+                    
+                    min_3 = diff if min_3 > diff else min_3
+                
+                self.prosumers[i].Val[period, h] \
+                    = min(min_1, min_2, min_3)
+    
     def computeMu4Prosummers(self, period:int) -> float:
         """
         compute Mu for all prosumers
@@ -430,13 +484,21 @@ class Smartgrid :
 
         """
         
+        # for i in range(self.prosumers.size):
+        #     somme = 0
+        #     for h in range(1, int(self.prosumers[i].gamma[period])+1):
+        #         somme += self.prosumers[i].Needs[period, h] - self.prosumers[i].Help[period, h]
+                
+        #     self.prosumers[i].QTStock[period] = min(somme, self.prosumers[i].mu[period])
+            
         for i in range(self.prosumers.size):
             somme = 0
             for h in range(1, int(self.prosumers[i].gamma[period])+1):
-                somme += self.prosumers[i].Needs[period, h] - self.prosumers[i].Help[period, h]
+                somme += self.prosumers[i].Val[period, h]
                 
-            self.prosumers[i].QTStock[period] = min(somme, self.prosumers[i].mu[period])
-            
+            self.prosumers[i].QTStock[period] = somme
+        
+        
     def computeValStock(self, period:int) -> float:
         """
         calculate the prosumer stock impact during a strategy profile SP^t=strat_{1,s}^t,...,strat_{N,s}^t
