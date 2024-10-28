@@ -51,10 +51,18 @@ scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_datasetAleatoire
 # scenario aleatoire DBG
 scenarioFile = "./data_scenario/DBG_version20092024_dataAleatoire_N10_T5_K5_B1_rho5_NotSHAPLEY.json"
 
-# is_generateData = False #True #False
-# is_generateData_version20092024 = not is_generateData
-# is_shapleyValueCalculate = False #True #False
-# PlotDataVStockQTsock = True
+# 4) scenario data donnee version20092024 avec Si!=0 pour t=0 pour tous prosumers
+scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
+
+# 3) scenario data donnee version20092024 avec Si=0 pour t=0 pour tous prosumers
+#scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
+
+# 2) scenario data aleatoire avec Si!=0 pour t=0 pour tous prosumers
+#scenarioFile = "./data_scenario/scenario_version20092024_dataAleatoire_N10_T100_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
+
+# 1) scenario data aleatoire avec Si=0 pour t=0 pour tous prosumers
+#scenarioFile = "./data_scenario/scenario_version20092024_dataAleatoire_N10_T100_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
+
 
 
 
@@ -124,18 +132,22 @@ with open(scenarioFile) as file:
     
     if "SyA" in scenario["algo"]:
         # ra.run_syA(scenario, logfiletxt)
+        scenario["algo_name"] = "SyA"
         app_syA = ra.run_syA(scenario, logfiletxt)
         pass
     if "SSA" in scenario["algo"]:
         # ra.run_SSA(scenario, logfiletxt)
+        scenario["algo_name"] = "SSA"
         app_SSA = ra.run_SSA(scenario, logfiletxt)
         pass
     if "CSA" in scenario["algo"]:
         # ra.run_CSA(scenario, logfiletxt)
+        scenario["algo_name"] = "CSA"
         app_CSA = ra.run_CSA(scenario, logfiletxt)
         pass
     if "LRI_REPART" in scenario["algo"]:
         # ra.run_LRI_REPART(scenario, logfiletxt)
+        scenario["algo_name"] = "LRI"
         app_LRI = ra.run_LRI_REPART(scenario, logfiletxt)
         pass
     pass
