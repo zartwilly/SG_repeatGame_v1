@@ -232,6 +232,15 @@ class App:
             SP = dict()
             for h, elt in enumerate(self.SG.prosumers[i].SP[period]):
                 SP["SP_h="+str(h)] = elt
+                
+            Rq = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].Rq[period]):
+                Rq["Rq_h="+str(h)] = elt
+                
+            Val = dict()
+            for h, elt in enumerate(self.SG.prosumers[i].Val[period]):
+                Val["Val_h="+str(h)] = elt
+            
             
             
             self.dicoLRI_onePeriod_oneStep["prosumer"+str(i)] = {
@@ -274,12 +283,15 @@ class App:
                 "tau_minus": str(tau_minus),
                 
                 "SP": str(SP),
+                "gamma": self.SG.prosumers[i].gamma[period],
+                
                 "Needs": str(Needs),
                 "Nds": str(Nds),
                 "calG": str(calG),
                 "Help": str(Help),
+                "Rq": str(Rq),
+                "Val": str(Val),
                 
-                "gamma": self.SG.prosumers[i].gamma[period],
                 "mu": self.SG.prosumers[i].mu[period],
                 #"GNeeds": str(GNeeds),
                 
@@ -413,6 +425,12 @@ class App:
         
         # calculate Mu
         self.SG.computeMu4Prosummers(period)
+        
+        # compute Rq
+        self.SG.computeRq(period)
+        
+        # compute Val
+        self.SG.computeVal(period)
         
         # calculate QTStock
         self.SG.computeQTStock(period)
@@ -686,7 +704,7 @@ class App:
             
                 
     ######### -------------------  SyA START ----------------------------------
-    def create_dico_for_onePeriod(self, period:int):
+    def create_dico_for_onePeriod(self, algo_name:str, period:int):
         """
         
 
@@ -701,8 +719,47 @@ class App:
             DESCRIPTION.
 
         """
+        
+        Nds = dict()
+        for h, elt in enumerate(self.SG.Nds[period]):
+            Nds["Nds_h="+str(h)] = elt
+            
+        calG = dict()
+        for h, elt in enumerate(self.SG.calG[period]):
+            calG["calG_h="+str(h)] = elt
+        
+        
         dico_onePeriod = dict()
         for i in range(self.N_actors):
+            
+            storage_t_plus_1 = self.SG.prosumers[i].storage[period+1]
+            
+            Needs, Help = dict(), dict()
+            tau_plus, tau_minus = dict(), dict()
+            SP, Rq, Val = dict(), dict(), dict()
+            
+            if algo_name == "SSA":
+                for h, elt in enumerate(self.SG.prosumers[i].Needs[period]):
+                    Needs["Needs_h="+str(h)] = elt
+                    
+                for h, elt in enumerate(self.SG.prosumers[i].Help[period]):
+                    Help["Help_h="+str(h)] = elt
+                    
+                for h, elt in enumerate(self.SG.prosumers[i].tau_plus[period]):
+                    tau_plus["tau_plus_h="+str(h)] = elt
+                 
+                for h, elt in enumerate(self.SG.prosumers[i].tau_minus[period]):
+                    tau_minus["tau_minus_h="+str(h)] = elt
+                
+                for h, elt in enumerate(self.SG.prosumers[i].SP[period]):
+                    SP["SP_h="+str(h)] = elt  
+                
+                for h, elt in enumerate(self.SG.prosumers[i].Rq[period]):
+                    Rq["Rq_h="+str(h)] = elt
+                    
+                for h, elt in enumerate(self.SG.prosumers[i].Val[period]):
+                    Val["Val_h="+str(h)] = elt
+            
             dico_onePeriod["prosumer"+str(i)] = {
                 "period": period,
                 "production": self.SG.prosumers[i].production[period],
@@ -729,6 +786,27 @@ class App:
                 "ValEgoc": self.SG.ValEgoc[period],
                 "ValNoSG": self.SG.ValNoSG[period],
                 "ValSG": self.SG.ValSG[period],
+                
+                "tau_plus": str(tau_plus),
+                "tau_minus": str(tau_minus),
+                
+                "SP": str(SP),
+                "gamma": self.SG.prosumers[i].gamma[period],
+                
+                "Needs": str(Needs),
+                "Nds": str(Nds),
+                "calG": str(calG),
+                "Help": str(Help),
+                "Rq": str(Rq),
+                "Val": str(Val),
+                
+                "QTStock": self.SG.prosumers[i].QTStock[period], 
+                
+                
+                "Si": self.SG.prosumers[i].storage[period],
+                "S_t+1": storage_t_plus_1,
+                "valStock_i": self.SG.prosumers[i].valStock[period]
+                
                 }
             
         return dico_onePeriod
@@ -791,7 +869,8 @@ class App:
             self.SG.computePrice(period=t)
             
             dico_onePeriod = dict()
-            dico_onePeriod = self.create_dico_for_onePeriod(period=t)
+            dico_onePeriod = self.create_dico_for_onePeriod(period=t, 
+                                                            algo_name=scenario["algo_name"])
                 
             df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
             df_ts.append(df_t)
@@ -833,7 +912,7 @@ class App:
         scenario: dict
             dictionnary of all parameters for a game
         
-        """
+        """        
         T_periods = self.SG.nbperiod
         
         df_ts = []
@@ -868,6 +947,12 @@ class App:
             
             # calculate Mu
             self.SG.computeMu4Prosummers(period=t)
+            
+            # compute Rq
+            self.SG.computeRq(period=t)
+            
+            # compute Val
+            self.SG.computeVal(period=t)
             
             # calculate QTStock
             self.SG.computeQTStock(period=t)
@@ -913,7 +998,8 @@ class App:
             ## ------ end -------
             
             dico_onePeriod = dict()
-            dico_onePeriod = self.create_dico_for_onePeriod(period=t)
+            dico_onePeriod = self.create_dico_for_onePeriod(period=t, 
+                                                            algo_name=scenario["algo_name"])
                 
             df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
             df_ts.append(df_t)
@@ -995,7 +1081,8 @@ class App:
             ## ------ end -------
             
             dico_onePeriod = dict()
-            dico_onePeriod = self.create_dico_for_onePeriod(period=t)
+            dico_onePeriod = self.create_dico_for_onePeriod(period=t, 
+                                                            algo_name=scenario["algo_name"])
                 
             df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
             df_ts.append(df_t)
@@ -1191,7 +1278,7 @@ class App:
                 for m in range(N):
                     file.write("Prosumer " + str(m) + "\n")
                     file.write("Found    : " + str(self.SG.prosumers[m].mode[period]) + "\n")
-                    file.write("Expected : " + str(sg1.SG.prosumers[m].mode[period]) + "\n")
+                    file.write("Expected : " + str(sg1.prosumers[m].mode[period]) + "\n")
                     file.write("--------------------------- \n")
                 sg1.SG.computeValSG(period=period)
                 file.write("ValSG : " + str(sg1.SG.ValSG[period]) + "\n")
