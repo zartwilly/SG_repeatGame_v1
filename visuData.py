@@ -1574,12 +1574,154 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
 #                END : Plot with Pickle backup
 ###############################################################################
 
+###############################################################################
+#                       START : Plot with Bokeh
+###############################################################################
+from bokeh.plotting import figure, save
+# Create Bokeh-Table with DataFrame:
+from bokeh.models import ColumnDataSource, FactorRange
+from bokeh.core.properties import value
+from bokeh.io import show, output_file
+from bokeh.transform import dodge
+
+from bokeh.models.tools import HoverTool, PanTool, BoxZoomTool, WheelZoomTool 
+from bokeh.models.tools import RedoTool, ResetTool, SaveTool, UndoTool
+TOOLS = [PanTool(), BoxZoomTool(), WheelZoomTool(), UndoTool(),
+         RedoTool(), ResetTool(), SaveTool(),
+         HoverTool(tooltips=[("Price", "$y"), ("Time", "$x")]) ]
+
+
+def plot_BOKEH_ManyApps(df_APP: pd.DataFrame, 
+                        df_SG: pd.DataFrame, 
+                        df_PROSUMERS: pd.DataFrame, 
+                        dfs_VStock: pd.DataFrame, 
+                        dfs_QTStock_R: pd.DataFrame, 
+                        df_shapleys: pd.DataFrame, 
+                        scenarioCorePathDataViz: str):
+    """
+    plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
+
+    Parameters
+    ----------
+    df_APP : pd.DataFrame
+        a dataframe that the columns are : algoName, ValNoSG_A, ValSG_A
+        
+    df_SG : pd.DataFrame
+        a dataframe that the columns are : 'algoName', 'Cost_ts', 'T', '
+        valEgoc_ts', 'ValSG_ts', 'ValNoSG_ts', 'Reduct_ts'
+        
+    dfs_VStock: pd.DataFrame
+        a dataframe that the columns are : 'valStock_i', 'QTStock', 'period'
+        
+    dfs_QTStock_R: pd.DataFrame
+        a dataframe that the columns are : period, R_t_minus, R_t_plus, QTStock, MoyQTStock
+
+    Returns
+    -------
+    None.
+
+    """
+    # set output to static HTML file
+    htmlfile = os.path.join(scenarioCorePathDataViz, "plot_game_variables.html")
+    output_file(filename=htmlfile, title="Static HTML file")
+    
+    
+    df_valSGNoSG = df_APP.copy()
+    df_valSGNoSG = df_valSGNoSG.set_index("algoName")
+    df_valSGNoSG = df_valSGNoSG.drop(columns=['nameScenario'], axis=1)
+    cols = df_valSGNoSG.columns.tolist()
+    
+    df_valSGNoSG = df_valSGNoSG.reset_index()
+    
+    data = df_valSGNoSG.to_dict(orient='list')
+    source = ColumnDataSource(data=data)
+    
+    
+    idx = df_valSGNoSG["algoName"].tolist()
+    p_bar = figure(x_range=idx, 
+                   y_range=(df_valSGNoSG[cols].values.min() - 10, df_valSGNoSG[cols].values.max() ), 
+                   height=350, title="Performance Measures",
+                   toolbar_location=None, tools=TOOLS)
+    
+    p_bar.vbar(x=dodge("algoName", -0.1, range=p_bar.x_range), 
+               top=cols[0], width=0.2, source=source,
+               color="#c9d9d3", legend_label=cols[0])
+    
+    p_bar.vbar(x=dodge("algoName", 0.1, range=p_bar.x_range), 
+               top=cols[1], width=0.2, source=source,
+               color="#e84d60", legend_label=cols[1])
+    
+    p_bar.x_range.range_padding = 0.2
+    p_bar.y_range.start = df_valSGNoSG[cols].values.min() -1 if df_valSGNoSG[cols].values.min() < 0 else 0
+    #p_bar.y_range.start = 0 if df_valSGNoSG[cols].values.min() < 0 else 0
+    p_bar.xgrid.grid_line_color = None
+    #p_bar.legend.location = "top_left"
+    #p_bar.legend.orientation = "horizontal"
+    #p_bar.add_layout(Legend(), 'right')
+    p_bar.add_layout(p_bar.legend[0], 'right')
+
+    show(p_bar)
+    
+    save(p_bar)
+    
+    
+def plot_bokeh_test_pivot(df_APP: pd.DataFrame, 
+                            df_SG: pd.DataFrame, 
+                            df_PROSUMERS: pd.DataFrame, 
+                            dfs_VStock: pd.DataFrame, 
+                            dfs_QTStock_R: pd.DataFrame, 
+                            df_shapleys: pd.DataFrame, 
+                            scenarioCorePathDataViz: str):
+    
+    # set output to static HTML file
+    htmlfile = os.path.join(scenarioCorePathDataViz, "plot_game_variables.html")
+    output_file(filename=htmlfile, title="Static HTML file")
+    
+    
+    df_valSGNoSG = df_APP.copy()
+    df_valSGNoSG = df_valSGNoSG.set_index("algoName")
+    df_valSGNoSG = df_valSGNoSG.drop(columns=['nameScenario'], axis=1)
+    cols = df_valSGNoSG.columns.tolist()
+    
+    df_valSGNoSG = df_valSGNoSG.reset_index()
+    df_valSGNoSG = df_valSGNoSG.melt(id_vars=["algoName"])
+    df_valSGNoSG = df_valSGNoSG.set_index(['variable', 'algoName'])
+    
+    factors = df_valSGNoSG.index.tolist()
+    data = df_valSGNoSG.to_dict(orient='list')
+    source = ColumnDataSource(data = dict(x=factors,
+                                          data=data['value']) )
+    
+    p_bar = figure(x_range=FactorRange(*factors), 
+                   height=250,
+                   toolbar_location=None, tools=TOOLS)
+    
+    p_bar.vbar(x="x", width=0.9, alpha=0.5, 
+               color=["blue", "red"], source=source,
+               )
+    
+    p_bar.x_range.range_padding = 0.2
+    p_bar.y_range.start = df_valSGNoSG[cols].values.min() -1 if df_valSGNoSG[cols].values.min() < 0 else 0
+    p_bar.xgrid.grid_line_color = None
+    p_bar.add_layout(p_bar.legend[0], 'right')
+
+    show(p_bar)
+    
+    save(p_bar)
+   
+###############################################################################
+#                       END : Plot with Bokeh
+###############################################################################
+
 if __name__ == '__main__':
     scenarioFile = "./scenario1.json"
     scenarioFile = "./data_scenario/scenario_test_LRI.json"
     scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N10_T5.json"
     scenarioFile = "./data_scenario/scenario_SelfishDB_LRI_N20_T100_K5000_B2_Rho5.json"
     scenarioFile = "./data_scenario/scenario_SelfishDebug_LRI_N20_T100_K5000_B2_Rho5_newFormula_QSTOCK.json"
+    
+    # TODO delete after test 
+    scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
     
     # is_plotDataVStockQTsock = True
     
@@ -1611,14 +1753,27 @@ if __name__ == '__main__':
     apps_pkls = load_all_algos_V1(scenario, scenarioViz)
     
     initial_period = 0 # 2, 10 
-
+    
     df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
         = create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
 
-    df_shapleys = pd.DataFrame()
+    
+    is_plot_BOKEH = True
 
-    app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS, dfs_VStock, dfs_QTStock_R, df_shapleys)
-    app_PerfMeas.run_server(debug=True)
+    if not is_plot_BOKEH :
+        df_shapleys = pd.DataFrame()
+    
+        app_PerfMeas = plot_ManyApp_perfMeasure_V2(df_APP, df_SG, df_PROSUMERS, dfs_VStock, dfs_QTStock_R, df_shapleys)
+        app_PerfMeas.run_server(debug=True)
+    else:
+        df_shapleys = pd.DataFrame()
+        # plot_BOKEH_ManyApps(df_APP, df_SG, df_PROSUMERS, 
+        #                     dfs_VStock, dfs_QTStock_R, df_shapleys,
+        #                     scenarioCorePathDataViz)
+        
+        plot_bokeh_test_pivot(df_APP, df_SG, df_PROSUMERS, 
+                              dfs_VStock, dfs_QTStock_R, df_shapleys,
+                              scenarioCorePathDataViz)
     
     # -------------------------------------------------------------------------
     # with open(scenarioPath) as file:
