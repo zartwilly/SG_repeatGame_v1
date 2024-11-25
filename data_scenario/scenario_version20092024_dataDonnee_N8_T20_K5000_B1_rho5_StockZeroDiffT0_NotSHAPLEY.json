@@ -1,0 +1,38 @@
+{
+    "name": "LRI versus egoistes version 20092024 N8 T20 RHO5 stockDiffZeroT0 Not ShapleyValues",
+    "scenarioName": "version20092024_dataDonnee_N8T20K5000B10-1_rho5_StockDiffZeroT0_NotSHAPLEY", 
+    "scenarioPath": "./data_scenario",
+    "instance": {
+        "N_actors": 8,
+        "smax": 20
+    },
+    "algo": {
+        "CSA": {},
+        "SSA": {},
+    	"SyA": {},
+        "LRI_REPART": {
+            "maxstep": 5000,
+            "maxstep_init": 5,
+            "slowdownfactor": 0.1,
+            "threshold": 0.8,
+            "initialprob": 0.5,
+            "mu": 0.1,
+            "rho": 5,
+            "h": 5
+        }
+    },
+    "simul": {
+        "nbPeriod": 20, 
+        "rho": 5, 
+        "coef_phiepoplus": 10,
+        "coef_phiepominus": 2,
+        "is_storage_zero": "False",
+        "is_generateData": "False",
+        "is_shapleyValueCalculate": "False",
+        "is_plotDataVStockQTsock":"True",
+        "transitionprobabilities": [0.4, 0.6, 0.5, 0.4],
+        "repartition": [4, 4],
+        "values": [[5,20],[5,15,25,35,24],[20,30,35,50,20,35,40,55]],
+        "probabilities": [[0.5,0.5],[0.7,0.6,0.6,0.5]]
+    }
+}
