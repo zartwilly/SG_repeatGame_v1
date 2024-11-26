@@ -605,8 +605,10 @@ class App:
                 self.run_LRI_4_onePeriodT_oneStepK(period=t, boolInitMinMax=False)
                 
                 self.save_LRI_2_json_onePeriod_oneStep(period=t, step=k, 
-                                                       algoName=algoName, 
-                                                       scenarioName=scenario["scenarioName"])
+                                                        algoName=algoName, 
+                                                        scenarioName=scenario["scenarioName"])
+                
+                
                 dicoLRI_onePeriod_KStep["step_"+str(k)] = self.dicoLRI_onePeriod_oneStep
                 
                 datas.append(self.dicoLRI_onePeriod_oneStep)
@@ -1280,7 +1282,7 @@ class App:
                     file.write("Found    : " + str(self.SG.prosumers[m].mode[period]) + "\n")
                     file.write("Expected : " + str(sg1.prosumers[m].mode[period]) + "\n")
                     file.write("--------------------------- \n")
-                sg1.SG.computeValSG(period=period)
+                sg1.computeValSG(period=period)
                 file.write("ValSG : " + str(sg1.SG.ValSG[period]) + "\n")
                 nash = 1
                 break
