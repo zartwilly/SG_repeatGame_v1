@@ -1283,7 +1283,7 @@ class App:
                     file.write("Expected : " + str(sg1.prosumers[m].mode[period]) + "\n")
                     file.write("--------------------------- \n")
                 sg1.computeValSG(period=period)
-                file.write("ValSG : " + str(sg1.SG.ValSG[period]) + "\n")
+                file.write("ValSG : " + str(sg1.ValSG[period]) + "\n")
                 nash = 1
                 break
             
