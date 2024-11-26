@@ -1065,7 +1065,130 @@ def create_df_SG_V2_SelectPeriod(apps_pkls_algos:list, initial_period:int) -> pd
     return df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R
 
 
+###############################################################################
+#                   Create df_SG_V3_SelectPeriod : Debut
+###############################################################################
+def create_df_SG_V3_SelectPeriod(apps_pkls_algos:list, initial_period:int) -> pd.DataFrame:
+    """
+    merge of algorithm values in one dataframe
+    
+    Parameters
+    ----------
+    apps_algos: tuple
+        list of application containing values
+        example:
+           apps_algos =  (app_SyA, "SyA", "LRI versus egoistes"), (app_SSA, "SSA", "LRI versus egoistes"), 
+                       (app_CSA, "CSA", "LRI versus egoistes"), (app_LRI_REPART,"LRI_REPART", "LRI versus egoistes")
+        
+    Returns
+    -------
+    df_SG:pd.DataFrame, df_APP:pd.DataFrame
+    """
+    df_algos = list()
+    df_APPs = list()
+    df_PROSUMERS = list()
+    df_prosumers_algos =list() 
+    dfs_VStock = list()
+    dfs_QTStock = list()
+    for tu_app_algo in apps_pkls_algos:
+        app_al, algoName, nameScenario, dfs = tu_app_algo
+        valEgoc_ts = app_al.SG.ValEgoc[initial_period:]
+        ValNoSG_ts = app_al.SG.ValNoSG[initial_period:]
+        ValSG_ts = app_al.SG.ValSG[initial_period:]
+        Reduct_ts = app_al.SG.Reduct[initial_period:]
+        Cost_ts = app_al.SG.Cost[initial_period:]
+        insg_ts = app_al.SG.insg[initial_period:]
+        outsg_ts = app_al.SG.outsg[initial_period:]
+        T = app_al.SG.nbperiod
+        Ts = np.arange(initial_period, T)
+        algos = np.repeat(algoName, repeats=len(Ts))
+        scenarios = np.repeat(nameScenario, repeats=len(Ts))
+        
+        df_algo = pd.DataFrame({"nameScenario": scenarios, "algoName": algos, 
+                                "Cost_ts": Cost_ts, "T":Ts,
+                              "ValEgoc_ts": valEgoc_ts, "ValSG_ts": ValSG_ts,
+                              "ValNoSG_ts": ValNoSG_ts, "Reduct_ts": Reduct_ts, 
+                              "In_SG_ts": insg_ts, "Out_SG_ts": outsg_ts,
+                               })
+        df_APP = pd.DataFrame({"algoName": [algoName],
+                               "valNoSG_A": [app_al.valNoSG_A], 
+                               "valSG_A": [app_al.valSG_A],
+                               "nameScenario": [nameScenario]})
+        
+        for i in range(app_al.SG.prosumers.size):
+            Pis = app_al.SG.prosumers[i].production[initial_period:T]
+            Cis = app_al.SG.prosumers[i].consumption[initial_period:T]
+            Sis = app_al.SG.prosumers[i].storage[initial_period:T]
+            prodits = app_al.SG.prosumers[i].prodit[initial_period:T]
+            consits = app_al.SG.prosumers[i].consit[initial_period:T]
+            utilities = app_al.SG.prosumers[i].utility[initial_period:T]
+            modes = app_al.SG.prosumers[i].mode[initial_period:T]
+            ValNoSGis = app_al.SG.prosumers[i].valNoSG[initial_period:T]
+            ValStocks = app_al.SG.prosumers[i].valStock[initial_period:T]
+            ValRepartis = app_al.SG.prosumers[i].Repart[initial_period:T]
+            PrMode0_is = app_al.SG.prosumers[i].prmode[initial_period:T][:,0]
+            PrMode1_is = app_al.SG.prosumers[i].prmode[initial_period:T][:,1]
+            #PrMode_is = app_al.SG.prosumers[i].prmode[initial_period:T]
+            
+            algos = np.repeat(algoName, repeats= len(Ts))
+            prosumers = np.repeat("prosumer"+str(i), repeats=len(Ts))
+            dico = {"algoName": algos, "T":Ts, "Prosumers": prosumers,
+                    "Pis": Pis, "Cis":Cis, "Sis":Sis, "Prodits":prodits, 
+                    "Consits":consits, "utility": utilities, "modes":modes, 
+                    "ValNoSGis":ValNoSGis, "ValStocks":ValStocks, 
+                    "ValRepartis":ValRepartis, 
+                    "PrMode0_is": PrMode0_is, "PrMode1_is":PrMode1_is}
+            df_prosumeri = pd.DataFrame(dico)
+            
+            df_prosumers_algos.append(df_prosumeri)
+            
+        df_algos.append(df_algo)
+        df_APPs.append(df_APP)
+        
+        # dataset for LRI containing VStock, QTstock by period
+        dfs_VStock, dfs_QTStock = [], []
+        if algoName == "LRI_REPART" and len(dfs) != 0:
+            for df_tmp in dfs:
+                df_tmp_ts = df_tmp[['valStock_i','QTStock', 'period']].aggregate('mean')
+                dfs_VStock.append(df_tmp_ts)
+                
+                # looking for the lastest step for each period
+                df_QTStock_t = df_tmp[df_tmp.step == df_tmp.step.max()][["period","prosumers","QTStock"]]
+                dfs_QTStock.append(df_QTStock_t)
+                
+        
+            dfs_VStock = pd.concat(dfs_VStock, axis=1).T
+            dfs_QTStock = pd.concat(dfs_QTStock, axis=0)
+            
+    
+    df_SG = pd.concat(df_algos, axis=0, ignore_index=True)
+    
+    df_APP = pd.concat(df_APPs, axis=0, ignore_index=True)
+    
+    df_PROSUMERS = pd.concat(df_prosumers_algos, axis=0, ignore_index=True)
+    
+    df_PROSUMERS['maxPrMode'] = df_PROSUMERS[['PrMode0_is', 'PrMode1_is']].values.max(axis=1)
+    
+    # df_dbg = df_PROSUMERS.groupby('T').agg({'maxPrMode':'mean'})
+    # df_SG = pd.merge(df_SG, df_dbg, on='T', how='outer')
+    
+    df_dbg = df_PROSUMERS.groupby(['algoName','T']).agg({'maxPrMode':'mean'}).reset_index()
+    df_SG = pd.merge(df_SG, df_dbg, on=['algoName','T'])
+    
+    dfs_QTStock = dfs_QTStock.reset_index(drop=True)
+    dfs_QTStock_R = dfs_QTStock.groupby('period').QTStock.apply(lambda x: pd.Series([(x<=0).sum(), (x>0).sum()])).unstack().reset_index()
+    dfs_QTStock_R.rename(columns={0: "R_t_minus", 1: "R_t_plus"}, inplace=True)
+    dfs_QTStock_som = dfs_QTStock.groupby("period")["QTStock"].agg(sum)
+    
+    dfs_QTStock_R = pd.merge(dfs_QTStock_R, dfs_QTStock_som, on="period")
+    
+    dfs_QTStock_R["MoyQTStock"] = (dfs_QTStock_R["QTStock"] / dfs_QTStock_R["R_t_plus"]).fillna(0)
+    
+    return df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R
 
+###############################################################################
+#               Create df_SG_V3_SelectPeriod : Fin
+###############################################################################
 
 def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame):
     """
@@ -1252,7 +1375,7 @@ def plot_ManyApp_perfMeasure_V1(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
     return app_PerfMeas
     
 
-def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame, dfs_VStock: pd.DataFrame, dfs_QTStock_R: pd.DataFrame, df_shapleys: pd.DataFrame):
+def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PROSUMERS: pd.DataFrame, dfs_VStock: pd.DataFrame, dfs_QTStock_R: pd.DataFrame, df_shapleys: pd.DataFrame, scenarioCorePathDataViz:str):
     """
     plot measure performances (ValNoSG_A, ValSG_A ) for all run algorithms
 
@@ -1299,6 +1422,8 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                       xaxis={'categoryorder':'array', 'categoryarray':df_APP.algoName.tolist()},  
                       xaxis_title="algorithms", yaxis_title="values", 
                       title_text="Performance Measures")
+    
+    fig.write_image( os.path.join(scenarioCorePathDataViz, "PerformanceMeasures.png" ) )
     
     htmlDiv_df_APP = html.Div([
                 html.H1(children='Performance Measures',
@@ -1369,12 +1494,15 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                                               )
                                          )
             fig_SG_col.update_layout(xaxis_title='periods', yaxis_title='values', 
-                                     title={'text':f''' {nameScenario}: show {name_col} KPI for all algorithms ''',
+                                     title={#'text':f''' {nameScenario}: show {name_col} KPI for all algorithms ''',
+                                            'text':f''' show {name_col} KPI for all algorithms ''',
                                              #'xanchor': 'center',
                                              'yanchor': 'bottom', 
                                              }, 
                                      legend_title_text='left'
                                     )
+            fig_SG_col.write_image( os.path.join(scenarioCorePathDataViz, f"{name_col}_{nameScenario}.png" ) )
+            
             htmlDiv = html.Div([html.H1(children=name_col), 
                                 html.Div(children=f''' {nameScenario}: show {name_col} KPI for all algorithms '''), 
                                 dcc.Graph(id='graph'+str(cpt), figure=fig_SG_col),
@@ -1416,12 +1544,17 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                               )
             
             fig_PCS.update_layout(xaxis_title='periods', yaxis_title='values', 
-                                     title={'text':f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage ''',
-                                             #'xanchor': 'center',
+                                     #title={'text':f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage ''',
+                                     title={'text':f''' show {algoName} sum of prosumers Production, Consumption and Storage ''',
+                                      
+                                            #'xanchor': 'center',
                                              'yanchor': 'bottom', 
                                              }, 
                                      legend_title_text='left'
                                     )
+            
+            fig_PCS.write_image( os.path.join(scenarioCorePathDataViz, f"{algoName}_PiCiSi_{nameScenario}.png" ) )
+            
             htmlDiv = html.Div([html.H1(children=algoName+" Pis, Cis, Sis"), 
                                 html.Div(children=f''' {nameScenario}: show {algoName} sum of prosumers Production, Consumption and Storage  '''), 
                                 dcc.Graph(id='graph_PCS_'+algoName, figure=fig_PCS),
@@ -1448,12 +1581,16 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                                  )
         
         fig_VStock_col.update_layout(xaxis_title='period', yaxis_title='values', 
-                                 title={'text':f''' {nameScenario}: show {name_col} ''',
+                                 title={#'text':f''' {nameScenario}: show {name_col} ''',
+                                        'text':f''' LRI_REPART: show {name_col} ''',
                                          #'xanchor': 'center',
                                          'yanchor': 'bottom', 
                                          }, 
                                  legend_title_text='left'
                                 )
+        
+        fig_VStock_col.write_image( os.path.join(scenarioCorePathDataViz, f"LRI_REPART_{name_col}_{nameScenario}.png" ) )
+        
         htmlDiv = html.Div([html.H1(children=name_col), 
                             html.Div(children=f''' {nameScenario}: show {name_col} VSTOCK '''), 
                             dcc.Graph(id='graph'+str(cpt), figure=fig_VStock_col),
@@ -1482,6 +1619,8 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                         xaxis_title="Understanding Variables QTStock, R and MoyQTStock", yaxis_title="values", 
                         title_text="Understanding Variables QTStock, R and MoyQTStock")
         
+    fig_QTStock_col.write_image( os.path.join(scenarioCorePathDataViz, f"LRI_REPART_QTStock_Rt_MoyQTStock_{nameScenario}.png" ) )
+    
     htmlDiv = html.Div([html.H1(children=name_col), 
                         html.Div(children=f''' {nameScenario}: show {name_col} QTSTOCK, R_t and MoyQTStock'''), 
                         dcc.Graph(id='graphQTStock_Rt', figure=fig_QTStock_col),
@@ -1758,7 +1897,7 @@ if __name__ == '__main__':
         = create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
 
     
-    is_plot_BOKEH = True
+    is_plot_BOKEH = False #True
 
     if not is_plot_BOKEH :
         df_shapleys = pd.DataFrame()
