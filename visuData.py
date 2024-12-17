@@ -1417,13 +1417,14 @@ def plot_ManyApp_perfMeasure_V2(df_APP: pd.DataFrame, df_SG: pd.DataFrame, df_PR
                               )
                       )
     
+    nameScenario = df_APP_T.loc['nameScenario',:].unique()[0]
     fig.update_layout(barmode='stack', # "stack" | "group" | "overlay" | "relative"
                       #boxmode='group', 
                       xaxis={'categoryorder':'array', 'categoryarray':df_APP.algoName.tolist()},  
                       xaxis_title="algorithms", yaxis_title="values", 
                       title_text="Performance Measures")
     
-    fig.write_image( os.path.join(scenarioCorePathDataViz, "PerformanceMeasures.png" ) )
+    fig.write_image( os.path.join(scenarioCorePathDataViz, f"PerformanceMeasures__{nameScenario}.png" ) )
     
     htmlDiv_df_APP = html.Div([
                 html.H1(children='Performance Measures',
