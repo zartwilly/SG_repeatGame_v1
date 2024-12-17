@@ -316,7 +316,7 @@ class Prosumer:
         self.gamma[period] = None
         min_h = np.inf
         for h in range(1, self.rho+1):
-            if self.SP[period, h] == self.smax or h == self.rho-1:
+            if self.SP[period, h] == self.smax or h == self.rho:
                 if min_h > h :
                     min_h = h
         self.gamma[period] = min_h -1
