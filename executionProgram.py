@@ -52,10 +52,10 @@ scenarioFile = "./data_scenario/scenario_SelfishVersion20092024_datasetAleatoire
 scenarioFile = "./data_scenario/DBG_version20092024_dataAleatoire_N10_T5_K5_B1_rho5_NotSHAPLEY.json"
 
 # 4) scenario data donnee version20092024 avec Si!=0 pour t=0 pour tous prosumers
-scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
+#scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
 
 # 3) scenario data donnee version20092024 avec Si=0 pour t=0 pour tous prosumers
-#scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
+scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
 
 # 2) scenario data aleatoire avec Si!=0 pour t=0 pour tous prosumers
 #scenarioFile = "./data_scenario/scenario_version20092024_dataAleatoire_N10_T100_K5000_B1_rho5_StockDiffT0_NotSHAPLEY.json"
@@ -63,7 +63,25 @@ scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000
 # 1) scenario data aleatoire avec Si=0 pour t=0 pour tous prosumers
 #scenarioFile = "./data_scenario/scenario_version20092024_dataAleatoire_N10_T100_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
 
+# 0) scenario data donnee version20092024 DBG avec Si!=0 pour t=0 pour tous prosumers
+#scenarioFile = "./data_scenario/scenario_version20092024_DBG_dataDonnee_N8_T20_K50_B1_rho5_StockDiffT0_NotSHAPLEY.json"
 
+# # test rho=1) scenario data donnee version20092024 avec Si=0 pour t=0 pour tous prosumers
+# scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho1_StockZeroT0_NotSHAPLEY.json"
+
+######## test various rho values from Dominique Game Scenario #################
+# 0) rho=1
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho1_StockZeroT0_NotSHAPLEY.json"
+# 1) rho=2
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho2_StockZeroT0_NotSHAPLEY.json"
+# 2) rho=3
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho3_StockZeroT0_NotSHAPLEY.json"
+# 3) rho=5
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
+# 4) rho=7
+scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho7_StockZeroT0_NotSHAPLEY.json"
+# 5) rho=10
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho10_StockZeroT0_NotSHAPLEY.json"
 
 
 def redistribution_bwt_lri_nosmart(app_LRI, app_NoS):
@@ -208,7 +226,8 @@ app_PerfMeas = visu.plot_ManyApp_perfMeasure_V2(df_APP,
                                                 df_PROSUMERS, 
                                                 dfs_VStock, 
                                                 dfs_QTStock_R, 
-                                                df_shapleys)
+                                                df_shapleys, 
+                                                scenario["scenarioCorePathDataViz"] )
 app_PerfMeas.run_server(debug=True)
 
 # -------- END : first run ---------------
