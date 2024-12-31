@@ -30,7 +30,7 @@ from plotly.subplots import make_subplots
 from pathlib import Path
 
 
-COLORS = ['gray', 'red', 'yellow', 'green']
+COLORS = ['gray', 'red', 'yellow', 'green', "blue"]
 
 def run_all_algos(scenarioPath):
     """
