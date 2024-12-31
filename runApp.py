@@ -12,6 +12,7 @@ import json
 import pickle
 import os.path
 import application as apps
+#import application_DBG as apps
 import Instancegeneratorversion2 as ig2
 import smartgrid as sg
 import auxiliary_functions as aux
@@ -100,7 +101,7 @@ def monitoring_before_algorithm(file, application):
 #------------------------------------------------------------------------------
 #                DEBUT : Generer des donnees selon scenarios
 #------------------------------------------------------------------------------
-def generer_data_from_scenario(scenario:dict,
+def generer_data_from_scenario_V0(scenario:dict,
                                    N_actors:int, nbperiod:int, rho:int,  
                                    smax:int,
                                    transitionprobabilities:list,
@@ -155,7 +156,7 @@ def generer_data_from_scenario(scenario:dict,
     return g
 
 
-def Initialization_game(scenario):
+def Initialization_game_V0(scenario):
     """
     initialization of variables of an object application  for DEBUGGING
     
@@ -230,6 +231,7 @@ def Initialization_game(scenario):
                 #     application.SG.prosumers[i].smax = 2
             elif is_generateData_version20092024:
                 application.SG.prosumers[i].smax = 6 if i < 4 else 2
+                #application.SG.prosumers[i].smax = 18
             else:
                 # put initial storage variable 
                 application.SG.prosumers[i].storage[0] = 0
@@ -246,6 +248,210 @@ def Initialization_game(scenario):
         # application.SG.prosumers[i].storage[0] = 0
         
     return application
+
+
+########################## DEBUG EVAL FUNCTION : debut ###########################
+def generer_data_from_scenario(scenario:dict,
+                                   N_actors:int, nbperiod:int, rho:int,  
+                                   smax:int,
+                                   transitionprobabilities:list,
+                                   repartition:list,
+                                   values:list, 
+                                   probabilities:list, 
+                                   is_generateData:bool=True, 
+                                   is_generateData_version20092024:bool=True):
+    # scenarioPath : "data_scenario"
+    # scenarioName : "data_NAME_DAY-MM-YY-HH-MM.pkl"
+    # is_generateData == True then generateData_version20092024 == False
+    # is_generateData_version20092024 == True then is_generateData_version20092024 == False
+    
+    # path_name = os.path.join(scenarioPath, scenarioName+".pkl") ===> TODELETE
+    path_name = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], scenario["scenarioName"]+".pkl")
+    
+    g = None
+    # Is there the data file on repository?
+    checkfile = os.path.isfile(path_name)
+    if (checkfile == True and is_generateData == True) or (checkfile == True and is_generateData == False):
+        # file exists in which form?
+        # return g which contains data load
+        
+        print("**** Load pickle data: START ****")
+        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'rb') as f:  # open a text file ===> TODELETE
+        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'rb') as f:  # open a text file
+            g = pickle.load(f)
+        f.close()
+        
+        print("**** Load pickle data : END ****")
+        
+    else:
+        # # checkfile == False and is_generateData == False or  =(checkfile == False and is_generateData == True) :
+        # print("**** Create pickle data : START ****")
+        # # file not exists
+        # g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+        
+        # if is_generateData and not is_generateData_version20092024:
+        #     g.generate_TESTDBG(transitionprobabilities,repartition,values,probabilities)
+        # elif not is_generateData and is_generateData_version20092024:
+        #     g.generate_dataset_version20092024(transitionprobabilities,repartition,values,probabilities)
+        # else:
+        #     g.generate(transitionprobabilities,repartition,values,probabilities)
+            
+        #############################  debug  #################################
+        
+        # checkfile == False and is_generateData == False or  =(checkfile == False and is_generateData == True) :
+        print("**** Create pickle data : START ****")
+        # file not exists
+        g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+        
+        if scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_dataset_version20092024":
+            g.generate_dataset_version20092024(transitionprobabilities, repartition, values, probabilities)
+            
+        elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_TESTDBG":
+            g.generate_TESTDBG(transitionprobabilities, repartition, values, probabilities)
+            
+        elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_data_GivenStrategies":
+            g.generate_data_GivenStrategies(scenario)
+            
+        else :
+            # scenario.get("simul").get("data") == "generate"
+            g.generate(transitionprobabilities, repartition, values, probabilities)
+            
+        
+        
+        #############################  debug ##################################
+        
+        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'wb') as f:  # open a text file ===> TODELETE
+        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'wb') as f:  # open a text file
+            pickle.dump(g, f)
+        f.close()
+        
+        print("**** Create pickle data : END ****")
+        
+    return g
+
+
+
+def Initialization_game(scenario):
+    """
+    initialization of variables of an object application  for DEBUGGING
+    
+    Returns
+    -----
+    App
+    """
+    # Load all scenario parameters
+    scenarioPath = scenario["scenarioPath"]
+    scenarioName = scenario["scenarioName"]
+    N_actors = scenario["instance"]["N_actors"]
+    nbPeriod = scenario["simul"]["nbPeriod"]
+    maxstep = scenario["algo"]["LRI_REPART"]["maxstep"]
+    maxstep_init = scenario["algo"]["LRI_REPART"]["maxstep_init"]
+    mu = scenario["algo"]["LRI_REPART"]["mu"]
+    threshold = scenario["algo"]["LRI_REPART"]["threshold"]
+    slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
+    rho = scenario["simul"]["rho"]
+    smax = scenario["instance"]["smax"]
+    h = scenario["algo"]["LRI_REPART"]["h"]
+    coef_phiepoplus = scenario["simul"]["coef_phiepoplus"]
+    coef_phiepominus = scenario["simul"]["coef_phiepominus"]
+    initialprob = scenario["algo"]["LRI_REPART"]["initialprob"]
+    transitionprobabilities = scenario["simul"]["transitionprobabilities"]
+    repartition = scenario["simul"]["repartition"]
+    values = scenario["simul"]["values"]
+    probabilities = scenario["simul"]["probabilities"]
+    is_generateData = scenario.get("simul").get("is_generateData")
+    is_generateData_version20092024 = scenario.get("simul").get("is_generateData_version20092024")
+    # = scenario[""]
+    
+    scenario["scenarioCorePath"] = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
+    
+    
+    # Initialisation of the apps
+    application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
+                           b=slowdownfactor, rho=rho, h=h, 
+                           maxstep_init=maxstep_init, threshold=threshold)
+    application.SG = sg.Smartgrid(N=N_actors, nbperiod=nbPeriod, 
+                                  initialprob=initialprob, rho=rho, 
+                                  coef_phiepoplus=coef_phiepoplus, 
+                                  coef_phiepominus=coef_phiepominus)
+    
+    # Configuration of the instance generator
+    g = generer_data_from_scenario(scenario=scenario,
+                                       N_actors=N_actors, nbperiod=nbPeriod, 
+                                       rho=rho, 
+                                       smax=smax,
+                                       transitionprobabilities=transitionprobabilities,
+                                       repartition=repartition,
+                                       values=values, 
+                                       probabilities=probabilities, 
+                                       is_generateData=is_generateData,
+                                       is_generateData_version20092024=is_generateData_version20092024)
+    
+    # Initialisation of production, consumption and storage using the instance generator
+    N = application.SG.prosumers.size
+    T = application.SG.nbperiod
+    rho = application.SG.rho
+    
+        
+    for i in range(N):
+        for t in range(T+rho):
+            application.SG.prosumers[i].production[t] = g.production[i][t]
+            application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
+            application.SG.prosumers[i].storage[t] = g.storage[i][t]
+            
+            
+            if scenario.get("simul").get("is_generateData") is not None :
+                if scenario.get("simul").get("is_generateData") == True:
+                    application.SG.prosumers[i].smax = 5 if i < 10 else 2
+                    
+            elif scenario.get("simul").get("is_generateData_version20092024") is not None:
+                if scenario.get("simul").get("is_generateData_version20092024") == True:
+                    application.SG.prosumers[i].smax = 6 if i < 4 else 2
+                    
+            elif scenario.get("simul").get("is_storage_zero") is not None:
+                application.SG.prosumers[i].smax = smax
+                if t == 0:
+                    if scenario.get("simul").get("is_storage_zero") == False:
+                        application.SG.prosumers[i].storage[0] = np.random.randint(low=0, high=smax)
+            
+            elif scenario.get("simul").get("debug_data") is not None:
+                application.SG.prosumers[i].smax = g.storage_max[i][t]
+                
+                state = None
+                if scenario.get("simul").get("debug_data").get("t_"+str(t))\
+                    .get("a_"+str(i)).get("state") == "Deficit":
+                        state = ag.State.DEFICIT
+                elif scenario.get("simul").get("debug_data").get("t_"+str(t))\
+                    .get("a_"+str(i)).get("state") == "Surplus":
+                        state = ag.State.SURPLUS
+                else:
+                    state = ag.State.SELF
+                    
+                mode = None
+                if scenario.get("simul").get("debug_data").get("t_"+str(t))\
+                    .get("a_"+str(i)).get("mode") == "CONS+":
+                        mode = ag.Mode.CONSPLUS
+                elif scenario.get("simul").get("debug_data").get("t_"+str(t))\
+                    .get("a_"+str(i)).get("mode") == "CONS-":
+                        mode = ag.Mode.CONSMINUS
+                elif scenario.get("simul").get("debug_data").get("t_"+str(t))\
+                    .get("a_"+str(i)).get("mode") == "DIS":
+                        mode = ag.Mode.DIS
+                else:
+                    mode = ag.Mode.PROD
+                
+                application.SG.prosumers[i].state[t] = state
+                application.SG.prosumers[i].mode[t] = mode   
+                
+            else:
+                # put initial storage variable 
+                application.SG.prosumers[i].smax = smax
+ 
+    return application
+
+
+
+############################ DEBUG EVAL FUNCTION : FIN ###############################
 
 def create_repo_for_save_jobs(scenario:dict):
     scenarioCorePath = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
@@ -268,6 +474,57 @@ def create_repo_for_save_jobs(scenario:dict):
 
 #------------------------------------------------------------------------------
 #                FIN : Generer des donnees selon scenarios
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+#                DEBUT : algo Bestie avec instance charge
+#------------------------------------------------------------------------------
+def run_Bestie(scenario, logfiletxt):
+    """
+    run Bestie algorithm. it is the algorithm used for debugging LRI Algorithm
+
+    Parameters
+    ----------
+    logfile : txt
+        path Logs file 
+    Returns
+    -------
+    None.
+
+    """
+    algoName = "Bestie"
+    scenario["algoName"] = algoName
+    scenario = create_repo_for_save_jobs(scenario)
+    
+    # Initialisation of the apps
+    # application = Initialization_game(scenario)
+    application = Initialization_game(scenario)
+
+    # Display for the run beginning 
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
+    file = io.open(logfile,"w")                                                # Logs file
+    
+    monitoring_before_algorithm(file, application)
+    
+    
+    # Execute CSA
+    file.write("\n_______Bestie_______"+ "\n")
+    application.runBestie(plot=False, file=file, scenario=scenario)
+    
+    monitoring_after_algorithm(algoName=algoName, file=file, application=application)
+    
+    
+    # End execute CSA
+    print("________RUN END Bestie ",1,"_________ \n")
+    
+    # Save application to Pickle format
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+        pickle.dump(application, f)
+    f.close()
+    
+    return application
+#------------------------------------------------------------------------------
+#                FIN : algo Bestie avec instance charge
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
