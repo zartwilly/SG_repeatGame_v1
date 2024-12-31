@@ -9,6 +9,7 @@ modified from 09/06/2024
 
 import numpy as np
 import random as rdm
+import json
 
 class Instancegenaratorv2:
     
@@ -16,6 +17,8 @@ class Instancegenaratorv2:
     
     production = None
     consumption = None
+    storage = None
+    storage_max = None
     situation = None
     laststate = None
 
@@ -43,6 +46,8 @@ class Instancegenaratorv2:
         
         self.production = np.zeros((N, T+rho))
         self.consumption = np.zeros((N,T+rho))
+        self.storage = np.zeros((N,T+rho))
+        self.storage_max = np.zeros((N,T+rho))
         self.situation = np.zeros((N, T+rho))
         self.laststate = np.ones((N,3))
         
@@ -245,7 +250,54 @@ class Instancegenaratorv2:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 0
                     
-            
+          
+    def generate_data_GivenStrategies(self, scenario):
+        """
+         generate data from a given strategies coming to a scenario file
+
+        Parameters
+        ----------
+        scenario : dict
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        # generate consumption and production for T+rho periods
+        if scenario.get("simul").get("debug_data") is None:
+            pass
+        else:
+            for i in range(self.production.shape[0]):
+                for t in range(self.production.shape[1]):
+                    print(f" i={i}, t={t}")
+                    self.consumption[i][t] = scenario.get("simul")\
+                                                .get("debug_data")\
+                                                .get("t_"+str(t))\
+                                                .get("a_"+str(i))\
+                                                .get("C")
+                    
+                    self.production[i][t] = scenario.get("simul")\
+                                                .get("debug_data")\
+                                                .get("t_"+str(t))\
+                                                .get("a_"+str(i))\
+                                                .get("P")
+                                                
+                    self.storage[i][t] = scenario.get("simul")\
+                                                .get("debug_data")\
+                                                .get("t_"+str(t))\
+                                                .get("a_"+str(i))\
+                                                .get("S")
+                    self.storage_max[i][t] = scenario.get("simul")\
+                                                .get("debug_data")\
+                                                .get("t_"+str(t))\
+                                                .get("a_"+str(i))\
+                                                .get("Smax")
+                    pass
+                
+                pass
+        
 
 if __name__ == "__main__":
     
@@ -269,6 +321,18 @@ if __name__ == "__main__":
     # print(g.production)
                             
     # print(g.consumption)
+    
+    
+    # test with scenariofile
+    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies.json"
+    scenario = None
+    with open(scenarioFile) as file:
+        scenario = json.load(file)
+        
+    g = Instancegenaratorv2(N=scenario["instance"]["N_actors"],
+                            T=scenario["simul"]["nbPeriod"], 
+                            rho=scenario["simul"]["rho"])
+    g.generate_data_GivenStrategies(scenario=scenario)  
                            
                         
                         
