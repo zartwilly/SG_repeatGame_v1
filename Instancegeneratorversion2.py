@@ -271,7 +271,6 @@ class Instancegenaratorv2:
         else:
             for i in range(self.production.shape[0]):
                 for t in range(self.production.shape[1]):
-                    print(f" i={i}, t={t}")
                     self.consumption[i][t] = scenario.get("simul")\
                                                 .get("debug_data")\
                                                 .get("t_"+str(t))\
