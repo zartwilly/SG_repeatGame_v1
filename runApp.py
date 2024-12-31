@@ -359,7 +359,7 @@ def Initialization_game(scenario):
     repartition = scenario["simul"]["repartition"]
     values = scenario["simul"]["values"]
     probabilities = scenario["simul"]["probabilities"]
-    is_generateData = scenario.get("simul").get("is_generateData")
+    is_generateData = eval(scenario.get("simul").get("is_generateData"))
     is_generateData_version20092024 = scenario.get("simul").get("is_generateData_version20092024")
     # = scenario[""]
     
