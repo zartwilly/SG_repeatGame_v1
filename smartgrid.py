@@ -930,7 +930,7 @@ class Smartgrid :
                 self.prosumers[i].state[period] = ag.State.SURPLUS
             
             elif self.prosumers[i].production[period] + self.prosumers[i].storage[period] >= self.prosumers[i].consumption[period] :
-                self.prosumers[i].state[period] = ag. State.SELF
+                self.prosumers[i].state[period] = ag.State.SELF
             
             else :
                 self.prosumers[i].state[period] = ag.State.DEFICIT
