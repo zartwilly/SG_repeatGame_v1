@@ -1105,6 +1105,89 @@ class App:
         
     ######### -------------------  CSA END ------------------------------------
     
+    ######### -------------------  Bestie START ----------------------------------
+    def runBestie(self, plot:bool, file:bool, scenario:dict): 
+        """
+        Run Bestie algorithm on the app: it tests the "best" algorithm in comparison to LRI, CSA and SSA
+        
+        Parameters
+        ----------
+        plot : Boolean
+            a boolean determining if the plots are edited or not
+        
+        file : Boolean
+            file used to output logs
+            
+        scenario: dict
+            dictionnary of all parameters for a game
+            
+        """
+        T_periods = self.SG.nbperiod
+        
+        df_ts = []
+        for t in range(T_periods):
+            # Update the state of each prosumer
+            #self.SG.updateState(period=t)
+            
+            # Update prosumers' modes following SyA mode selection
+            #self.SG.updateModeCSA(period=t)
+            
+            # Update prodit,consit and period + 1 storage values
+            self.SG.updateSmartgrid(period=t)
+            
+            ## compute what each actor has to paid/gain at period t 
+            ## (ValEgo, ValNoSG, ValSG, reduct, repart, price, ) 
+            ## ------ start -------
+            # Calculate inSG and outSG
+            self.SG.computeSumInput(period=t)
+            self.SG.computeSumOutput(period=t)
+            
+            # calculate valNoSGCost_t
+            self.SG.computeValNoSGCost(period=t)
+            
+            # calculate valEgoc_t
+            self.SG.computeValEgoc(period=t)
+            
+            # calculate valNoSG_t
+            self.SG.computeValNoSG(period=t)
+            
+            # calculate ValSG_t
+            self.SG.computeValSG(period=t)
+            
+            # calculate Reduct_t
+            self.SG.computeReduct(period=t)
+            
+            # calculate repart_t
+            self.SG.computeRepart(period=t, mu=self.mu)
+            
+            # calculate price_t
+            self.SG.computePrice(period=t)
+            
+            ## ------ end -------
+            
+            dico_onePeriod = dict()
+            dico_onePeriod = self.create_dico_for_onePeriod(period=t, 
+                                                            algo_name=scenario["algo_name"])
+                
+            df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
+            df_ts.append(df_t)
+            
+        # Compute metrics
+        self.computeValSG()
+        self.computeValNoSG()
+        self.computeObjValai()
+        self.computeObjSG()
+        self.computeValNoSGCost_A()
+        
+        # plot variables ValNoSG, ValSG
+    
+        # merge list of dataframes to one dataframe
+        df = pd.concat(df_ts, axis=0)
+        runAlgo_SumUp_txt = "runBestie_MergeDF.csv"
+        df.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runAlgo_SumUp_txt))
+        
+    ######### -------------------  Bestie END ------------------------------------
+    
     
     
     ###########################################################################
