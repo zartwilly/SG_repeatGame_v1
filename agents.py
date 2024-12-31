@@ -123,14 +123,14 @@ class Prosumer:
         """
         
         
-        self.state = np.zeros(nbperiod, dtype=State)
+        self.state = np.zeros(nbperiod+rho, dtype=State)
         self.production = np.zeros(nbperiod+rho) 
         self.consumption = np.zeros(nbperiod+rho)
         self.prodit = np.zeros(nbperiod)
         self.consit = np.zeros(nbperiod)
         self.storage = np.zeros(nbperiod+rho) 
         self.smax = 0
-        self.mode = np.zeros(nbperiod, dtype=Mode)
+        self.mode = np.zeros(nbperiod+rho, dtype=Mode)
         self.prmode = np.zeros((nbperiod,2))
         for i in range(nbperiod):
             self.prmode[i][0] = initialprob
