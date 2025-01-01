@@ -251,7 +251,7 @@ def Initialization_game_V0(scenario):
 
 
 ########################## DEBUG EVAL FUNCTION : debut ###########################
-def generer_data_from_scenario(scenario:dict,
+def OLD_generer_data_from_scenario(scenario:dict,
                                    N_actors:int, nbperiod:int, rho:int,  
                                    smax:int,
                                    transitionprobabilities:list,
@@ -272,16 +272,24 @@ def generer_data_from_scenario(scenario:dict,
     # Is there the data file on repository?
     checkfile = os.path.isfile(path_name)
     if (checkfile == True and is_generateData == True) or (checkfile == True and is_generateData == False):
-        # file exists in which form?
-        # return g which contains data load
         
-        print("**** Load pickle data: START ****")
-        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'rb') as f:  # open a text file ===> TODELETE
-        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'rb') as f:  # open a text file
-            g = pickle.load(f)
-        f.close()
-        
-        print("**** Load pickle data : END ****")
+        if scenario["algoName"] == "Bestie":
+            # generate data from function generate_data_GivenStrategies
+            print("**** Create pickle data Bestie : START ****")
+            g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+            g.generate_data_GivenStrategies(scenario)
+            print("**** Create pickle data Bestie : END ****")
+        else:
+            # file exists in which form?
+            # return g which contains data load
+            
+            print("**** Load pickle data: START ****")
+            # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'rb') as f:  # open a text file ===> TODELETE
+            with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'rb') as f:  # open a text file
+                g = pickle.load(f)
+            f.close()
+            
+            print("**** Load pickle data : END ****")
         
     else:
         # # checkfile == False and is_generateData == False or  =(checkfile == False and is_generateData == True) :
@@ -308,6 +316,96 @@ def generer_data_from_scenario(scenario:dict,
             
         elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_TESTDBG":
             g.generate_TESTDBG(transitionprobabilities, repartition, values, probabilities)
+            
+        elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_data_GivenStrategies":
+            g.generate_data_GivenStrategies(scenario)
+            
+        else :
+            # scenario.get("simul").get("data") == "generate"
+            g.generate(transitionprobabilities, repartition, values, probabilities)
+            
+        
+        
+        #############################  debug ##################################
+        
+        # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'wb') as f:  # open a text file ===> TODELETE
+        with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'wb') as f:  # open a text file
+            pickle.dump(g, f)
+        f.close()
+        
+        print("**** Create pickle data : END ****")
+        
+    return g
+
+
+def generer_data_from_scenario(scenario:dict,
+                                   N_actors:int, nbperiod:int, rho:int,  
+                                   smax:int,
+                                   transitionprobabilities:list,
+                                   repartition:list,
+                                   values:list, 
+                                   probabilities:list, 
+                                   is_generateData:bool=True, 
+                                   is_generateData_version20092024:bool=True):
+    # scenarioPath : "data_scenario"
+    # scenarioName : "data_NAME_DAY-MM-YY-HH-MM.pkl"
+    # is_generateData == True then generateData_version20092024 == False
+    # is_generateData_version20092024 == True then is_generateData_version20092024 == False
+    
+    # path_name = os.path.join(scenarioPath, scenarioName+".pkl") ===> TODELETE
+    path_name = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], scenario["scenarioName"]+".pkl")
+    
+    g = None
+    # Is there the data file on repository?
+    checkfile = os.path.isfile(path_name)
+    if (checkfile == True and (is_generateData == False or is_generateData is None) ):
+        
+        if scenario["algoName"] == "Bestie":
+            # generate data from function generate_data_GivenStrategies
+            print("**** Create pickle data Bestie : START ****")
+            g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+            g.generate_data_GivenStrategies(scenario)
+            print("**** Create pickle data Bestie : END ****")
+        else:
+            # file exists in which form?
+            # return g which contains data load
+            
+            print("**** Load pickle data: START ****")
+            # with open(os.path.join(scenarioPath, scenarioName+'.pkl'), 'rb') as f:  # open a text file ===> TODELETE
+            with open(os.path.join(scenario["scenarioCorePath"], scenario["scenarioName"]+'.pkl'), 'rb') as f:  # open a text file
+                g = pickle.load(f)
+            f.close()
+            
+            print("**** Load pickle data : END ****")
+        
+    else:
+        # # checkfile == {False or True} and is_generateData == True :
+        # print("**** Create pickle data : START ****")
+        # # file not exists
+        # g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+        
+        # if is_generateData and not is_generateData_version20092024:
+        #     g.generate_TESTDBG(transitionprobabilities,repartition,values,probabilities)
+        # elif not is_generateData and is_generateData_version20092024:
+        #     g.generate_dataset_version20092024(transitionprobabilities,repartition,values,probabilities)
+        # else:
+        #     g.generate(transitionprobabilities,repartition,values,probabilities)
+            
+        #############################  debug  #################################
+        
+        # checkfile == False and is_generateData == False or  =(checkfile == False and is_generateData == True) :
+        print("**** Create pickle data : START ****")
+        # file not exists
+        g = ig2.Instancegenaratorv2(N=N_actors, T=nbperiod, rho=rho)
+        
+        if scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_dataset_version20092024":
+            g.generate_dataset_version20092024(transitionprobabilities, repartition, values, probabilities)
+            
+        elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_TESTDBG":
+            g.generate_TESTDBG(transitionprobabilities, repartition, values, probabilities, scenario)
+            
+        elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_data":
+            g.generate_data(transitionprobabilities, repartition, values, probabilities, scenario)
             
         elif scenario.get("simul").get("data") is not None and scenario.get("simul").get("data") == "generate_data_GivenStrategies":
             g.generate_data_GivenStrategies(scenario)
@@ -392,31 +490,26 @@ def Initialization_game(scenario):
     T = application.SG.nbperiod
     rho = application.SG.rho
     
-        
+    print(f"**{scenario['algoName']} **")
+    print(f"** 0: {scenario['algoName']} : is_generateData={scenario.get('simul').get('is_generateData')},  **")
+    print(f"** 0: {scenario['algoName']} : is_storage_zero={scenario.get('simul').get('is_storage_zero')},  **")
+    print(f"** 0: {scenario['algoName']} : debug_data={scenario.get('simul').get('debug_data') is None},  **")
     for i in range(N):
         for t in range(T+rho):
             application.SG.prosumers[i].production[t] = g.production[i][t]
             application.SG.prosumers[i].consumption[t] = g.consumption[i][t]
             application.SG.prosumers[i].storage[t] = g.storage[i][t]
+            application.SG.prosumers[i].smax = g.storage_max[i][t]
             
-            
-            if scenario.get("simul").get("is_generateData") is not None :
-                if scenario.get("simul").get("is_generateData") == True:
-                    application.SG.prosumers[i].smax = 5 if i < 10 else 2
                     
-            elif scenario.get("simul").get("is_generateData_version20092024") is not None:
-                if scenario.get("simul").get("is_generateData_version20092024") == True:
-                    application.SG.prosumers[i].smax = 6 if i < 4 else 2
-                    
-            elif scenario.get("simul").get("is_storage_zero") is not None:
-                application.SG.prosumers[i].smax = smax
-                if t == 0:
-                    if scenario.get("simul").get("is_storage_zero") == False:
-                        application.SG.prosumers[i].storage[0] = np.random.randint(low=0, high=smax)
+            if scenario.get("simul").get("is_storage_zero") is not None \
+                and scenario.get("simul").get("is_storage_zero") == False \
+                and t == 0 :
+                print(f"** 3 **")
+                application.SG.prosumers[i].storage[0] = np.random.randint(low=0, high=smax)
             
-            elif scenario.get("simul").get("debug_data") is not None:
-                application.SG.prosumers[i].smax = g.storage_max[i][t]
-                
+            if scenario.get("simul").get("debug_data") is not None:
+                #print(f"** 4 **")
                 state = None
                 if scenario.get("simul").get("debug_data").get("t_"+str(t))\
                     .get("a_"+str(i)).get("state") == "Deficit":
@@ -446,6 +539,7 @@ def Initialization_game(scenario):
             else:
                 # put initial storage variable 
                 application.SG.prosumers[i].smax = smax
+                print(f"** 5 **")
  
     return application
 
