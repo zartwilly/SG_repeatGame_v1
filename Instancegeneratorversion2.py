@@ -51,7 +51,99 @@ class Instancegenaratorv2:
         self.situation = np.zeros((N, T+rho))
         self.laststate = np.ones((N,3))
         
-    def generate(self, transitionprobabilities, repartition, values, probabilities):
+        
+    def insert_random_PCvalues_4_prosumers(self, i, t, transitionprobabilities, repartition, values, probabilities):
+        """
+        allocate random values of production and consumption for prosumers according to 
+        transitionprobabilities, repartition, probabilities
+        """
+        if self.situation[i][t] == 1 :
+            
+            # Set production and consumption for the period j
+            self.production[i][t] = 0
+            self.consumption[i][t] = rdm.randint(values[0][0],values[0][1])
+            
+            # Define situation for next period
+            if t < self.production.shape[1]-1 :
+                roll = rdm.uniform(0,1)
+                if roll < 1 - transitionprobabilities[0] :
+                    self.situation[i][t+1] = 1
+                
+                else :
+                    self.situation[i][t+1] = 2
+                    self.laststate[i][0] = 1
+            
+        elif self.situation[i][t] == 2 :
+            
+            # Set consumption for period j
+            self.consumption[i][t] = values[1][4]
+            
+            # Set production for period j
+            if self.laststate[i][0] == 1:
+                if rdm.uniform(0,1) <= probabilities[0][0]:
+                    self.laststate[i][0] = 2    
+                
+                self.production[i][t] = rdm.randint(values[1][0],values[1][1])
+            
+            else:
+                if rdm.uniform(0,1) <= probabilities[0][1]:
+                    self.laststate[i][0] = 1  
+                
+                self.production[i][t] = rdm.randint(values[1][2],values[1][3])
+            
+            # Define situation for next period
+            if t < self.production.shape[1]-1 :
+                roll = rdm.uniform(0,1)
+                if roll < 1 - transitionprobabilities[1] :
+                    self.situation[i][t+1] = 1
+                
+                else :
+                    self.situation[i][t+1] = 2
+                
+        elif self.situation[i][t] == 3 :
+            
+            # Set consumption for period j
+            self.consumption[i][t] = values[1][4]
+            
+            # Set production for period j
+            if self.laststate[i][0] == 1:
+                if rdm.uniform(0,1) <= probabilities[0][0]:
+                    self.laststate[i][0] = 2  
+                    
+                self.production[i][t] = rdm.randint(values[1][0],values[1][1])
+            
+            else:
+                if rdm.uniform(0,1) <= probabilities[0][1]:
+                    self.laststate[i][0] = 1  
+                self.production[i][t] = rdm.randint(values[1][2],values[1][3])
+           
+            # Define situation for next period
+            if t < self.production.shape[1]-1 :
+                roll = rdm.uniform(0,1)
+                
+                if roll < 1 - transitionprobabilities[2]:
+                    self.situation[i][t+1] = 3
+                
+                else :
+                    self.situation[i][t+1] = 4
+                    self.laststate[i][1] = 1
+                    self.laststate[i][2] = 1
+        
+        else :
+            self.production[i][t] = rdm.randint(values[2][2],values[2][3])
+            self.consumption[i][t] = rdm.randint(values[2][4],values[2][5])
+                                                 
+            # Define situation for next period
+            if t < self.production.shape[1]-1 :
+                roll = rdm.uniform(0,1)
+                if roll < 1 - transitionprobabilities[3] :
+                    self.situation[i][t+1] = 3
+                    self.laststate[i][0] = 2
+                else :
+                    self.situation[i][t+1] = 4
+        pass
+    
+    def generate(self, transitionprobabilities, repartition, values, probabilities, scenario):
         """
         transitionprobabilities = probabilities of transition from A to B1, B1 to A, B2 to C, C to B2
         repartition = repartition between the two groups of situation {A,B1} and {B2,C}
@@ -76,93 +168,97 @@ class Instancegenaratorv2:
             
             for j in range(self.production.shape[1]):
                 
-                if self.situation[i][j] == 1 :
-                    
-                    # Set production and consumption for the period j
-                    self.production[i][j] = 0
-                    self.consumption[i][j] = rdm.randint(values[0][0],values[0][1])
-                    
-                    # Define situation for next period
-                    if j < self.production.shape[1]-1 :
-                        roll = rdm.uniform(0,1)
-                        if roll < 1 - transitionprobabilities[0] :
-                            self.situation[i][j+1] = 1
-                        
-                        else :
-                            self.situation[i][j+1] = 2
-                            self.laststate[i][0] = 1
-                    
-                elif self.situation[i][j] == 2 :
-                    
-                    # Set consumption for period j
-                    self.consumption[i][j] = values[1][4]
-                    
-                    # Set production for period j
-                    if self.laststate[i][0] == 1:
-                        if rdm.uniform(0,1) <= probabilities[0][0]:
-                            self.laststate[i][0] = 2    
-                        
-                        self.production[i][j] = rdm.randint(values[1][0],values[1][1])
-                    
-                    else:
-                        if rdm.uniform(0,1) <= probabilities[0][1]:
-                            self.laststate[i][0] = 1  
-                        
-                        self.production[i][j] = rdm.randint(values[1][2],values[1][3])
-                    
-                    # Define situation for next period
-                    if j < self.production.shape[1]-1 :
-                        roll = rdm.uniform(0,1)
-                        if roll < 1 - transitionprobabilities[1] :
-                            self.situation[i][j+1] = 1
-                        
-                        else :
-                            self.situation[i][j+1] = 2
-                        
-                elif self.situation[i][j] == 3 :
-                    
-                    # Set consumption for period j
-                    self.consumption[i][j] = values[1][4]
-                    
-                    # Set production for period j
-                    if self.laststate[i][0] == 1:
-                        if rdm.uniform(0,1) <= probabilities[0][0]:
-                            self.laststate[i][0] = 2  
-                            
-                        self.production[i][j] = rdm.randint(values[1][0],values[1][1])
-                    
-                    else:
-                        if rdm.uniform(0,1) <= probabilities[0][1]:
-                            self.laststate[i][0] = 1  
-                        self.production[i][j] = rdm.randint(values[1][2],values[1][3])
-                   
-                    # Define situation for next period
-                    if j < self.production.shape[1]-1 :
-                        roll = rdm.uniform(0,1)
-                        
-                        if roll < 1 - transitionprobabilities[2]:
-                            self.situation[i][j+1] = 3
-                        
-                        else :
-                            self.situation[i][j+1] = 4
-                            self.laststate[i][1] = 1
-                            self.laststate[i][2] = 1
+                self.storage_max[i][j] = scenario.get('instance').get('smax')
                 
-                else :
-                    self.production[i][j] = rdm.randint(values[2][2],values[2][3])
-                    self.consumption[i][j] = rdm.randint(values[2][4],values[2][5])
+                self.insert_random_PCvalues_4_prosumers( i, j, transitionprobabilities, 
+                                                        repartition, values, probabilities)
+                # if self.situation[i][j] == 1 :
+                    
+                #     # Set production and consumption for the period j
+                #     self.production[i][j] = 0
+                #     self.consumption[i][j] = rdm.randint(values[0][0],values[0][1])
+                    
+                #     # Define situation for next period
+                #     if j < self.production.shape[1]-1 :
+                #         roll = rdm.uniform(0,1)
+                #         if roll < 1 - transitionprobabilities[0] :
+                #             self.situation[i][j+1] = 1
+                        
+                #         else :
+                #             self.situation[i][j+1] = 2
+                #             self.laststate[i][0] = 1
+                    
+                # elif self.situation[i][j] == 2 :
+                    
+                #     # Set consumption for period j
+                #     self.consumption[i][j] = values[1][4]
+                    
+                #     # Set production for period j
+                #     if self.laststate[i][0] == 1:
+                #         if rdm.uniform(0,1) <= probabilities[0][0]:
+                #             self.laststate[i][0] = 2    
+                        
+                #         self.production[i][j] = rdm.randint(values[1][0],values[1][1])
+                    
+                #     else:
+                #         if rdm.uniform(0,1) <= probabilities[0][1]:
+                #             self.laststate[i][0] = 1  
+                        
+                #         self.production[i][j] = rdm.randint(values[1][2],values[1][3])
+                    
+                #     # Define situation for next period
+                #     if j < self.production.shape[1]-1 :
+                #         roll = rdm.uniform(0,1)
+                #         if roll < 1 - transitionprobabilities[1] :
+                #             self.situation[i][j+1] = 1
+                        
+                #         else :
+                #             self.situation[i][j+1] = 2
+                        
+                # elif self.situation[i][j] == 3 :
+                    
+                #     # Set consumption for period j
+                #     self.consumption[i][j] = values[1][4]
+                    
+                #     # Set production for period j
+                #     if self.laststate[i][0] == 1:
+                #         if rdm.uniform(0,1) <= probabilities[0][0]:
+                #             self.laststate[i][0] = 2  
+                            
+                #         self.production[i][j] = rdm.randint(values[1][0],values[1][1])
+                    
+                #     else:
+                #         if rdm.uniform(0,1) <= probabilities[0][1]:
+                #             self.laststate[i][0] = 1  
+                #         self.production[i][j] = rdm.randint(values[1][2],values[1][3])
+                   
+                #     # Define situation for next period
+                #     if j < self.production.shape[1]-1 :
+                #         roll = rdm.uniform(0,1)
+                        
+                #         if roll < 1 - transitionprobabilities[2]:
+                #             self.situation[i][j+1] = 3
+                        
+                #         else :
+                #             self.situation[i][j+1] = 4
+                #             self.laststate[i][1] = 1
+                #             self.laststate[i][2] = 1
+                
+                # else :
+                #     self.production[i][j] = rdm.randint(values[2][2],values[2][3])
+                #     self.consumption[i][j] = rdm.randint(values[2][4],values[2][5])
                                                          
-                    # Define situation for next period
-                    if j < self.production.shape[1]-1 :
-                        roll = rdm.uniform(0,1)
-                        if roll < 1 - transitionprobabilities[3] :
-                            self.situation[i][j+1] = 3
-                            self.laststate[i][0] = 2
-                        else :
-                            self.situation[i][j+1] = 4
+                #     # Define situation for next period
+                #     if j < self.production.shape[1]-1 :
+                #         roll = rdm.uniform(0,1)
+                #         if roll < 1 - transitionprobabilities[3] :
+                #             self.situation[i][j+1] = 3
+                #             self.laststate[i][0] = 2
+                #         else :
+                #             self.situation[i][j+1] = 4
                   
       
-    def generate_TESTDBG(self, transitionprobabilities, repartition, values, probabilities):
+    def generate_TESTDBG(self, transitionprobabilities, repartition, values, probabilities, scenario):
         """
         transitionprobabilities = probabilities of transition from A to B1, B1 to A, B2 to C, C to B2
         repartition = repartition between the two groups of situation {A,B1} and {B2,C}
@@ -187,6 +283,8 @@ class Instancegenaratorv2:
             
             for t in range(self.production.shape[1]):
                 
+                self.storage_max[i][t] = scenario.get('instance').get('smax')
+                
                 if i < 10 :
                     self.consumption[i][t] = 10
                     if t % 15 < 9 :
@@ -200,6 +298,44 @@ class Instancegenaratorv2:
                         self.production[i][t] = 3
                     else:
                         self.production[i][t] = 2
+                
+    
+    def generate_data(self, transitionprobabilities, repartition, values, probabilities, scenario):
+        """
+        generate data from random values and specific values of Smax
+        
+        N=8, T=20, rho=5
+        each player has data of T+rho periods
+        
+        we have 2 groups of actors : GA and PA
+        Ga have production = 10, consumption = 4 and storage_max = 6
+        PA have production = 0, consumption = 6 and storage_max = 2
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        # Initial random repartition between situation A(1), B1(2), B2(3) and C(4)
+        for i in range(repartition[0]):
+            self.situation[i][0] = rdm.randint(1,2)
+        for i in range(repartition[1]):
+            self.situation[repartition[0] + i][0] = rdm.randint(3,4)
+            
+        # generate consumption and production for T+rho periods
+        for i in range(self.production.shape[0]):
+            
+            for t in range(self.production.shape[1]):
+                
+                if i < 10:
+                    self.storage_max[i][t] = 5
+                else:
+                    self.storage_max[i][t] = 2
+                
+                self.insert_random_PCvalues_4_prosumers( i, t, transitionprobabilities, 
+                                                        repartition, values, probabilities)
+                
 
     def generate_dataset_version20092024(self, transitionprobabilities, repartition, values, probabilities):
         """
@@ -210,15 +346,9 @@ class Instancegenaratorv2:
         N=8, T=20, rho=5
         each player has data of T+rho periods
         
-        transitionprobabilities = probabilities of transition from A to B1, B1 to A, B2 to C, C to B2
-        repartition = repartition between the two groups of situation {A,B1} and {B2,C}
-        values : matrix containing the ranges of values used in each situation dedicated generator
-        values[0] = [m1a,M1a]
-        values[1] = [m1b,M1b,m2b,M2b,cb]
-        values[2] = [m1c,M1c,m2c,M2c,m3c,M3c,m4c,M4c]
-        probabilities : matrix containing probabilities for changing from one state to another inside the two state Markov chains B,C1,C2
-        probabilities[0] = [P1b,P2b]
-        probabilities[1] = [P1c,P2c,P3c,P4c]
+        we have 2 groups of actors : GA and PA
+        Ga have production = 10, consumption = 4 and storage_max = 6
+        PA have production = 0, consumption = 6 and storage_max = 2
 
         Returns
         -------
@@ -240,15 +370,19 @@ class Instancegenaratorv2:
                 if i<4 and t<10:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 10
+                    self.storage_max[i][t] = 6
                 elif i<4 and t>=10:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 1
+                    self.storage_max[i][t] = 6
                 elif i>=4 and t<5:
                     self.consumption[i][t] = 6
                     self.production[i][t] = 0
+                    self.storage_max[i][t] = 2
                 elif i>=4 and t>=5:
                     self.consumption[i][t] = 4
                     self.production[i][t] = 0
+                    self.storage_max[i][t] = 2
                     
           
     def generate_data_GivenStrategies(self, scenario):
