@@ -79,9 +79,14 @@ scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000
 # 3) rho=5
 # scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho5_StockZeroT0_NotSHAPLEY.json"
 # 4) rho=7
-scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho7_StockZeroT0_NotSHAPLEY.json"
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho7_StockZeroT0_NotSHAPLEY.json"
 # 5) rho=10
 # scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024_dataDonnee_N8_T20_K5000_B1_rho10_StockZeroT0_NotSHAPLEY.json"
+# 0 bis) rho=1
+# scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024BENSmax18_dataDonnee_N8_T20_K5000_B1_rho1_StockZeroT0_NotSHAPLEY.json"
+
+# DEBUG: GIVEN STRATEGIES 
+scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies.json"
 
 
 def redistribution_bwt_lri_nosmart(app_LRI, app_NoS):
@@ -141,17 +146,21 @@ app_LRI = None
 start = time.time()
 with open(scenarioFile) as file:
     scenario = json.load(file)
-    scenario["simul"]["is_storage_zero"] = True if scenario["simul"]["is_storage_zero"] == "True" else False
-    scenario["simul"]["is_generateData"] = True if scenario["simul"]["is_generateData"] == "True" else False
-    scenario["simul"]["is_generateData_version20092024"] = not scenario["simul"]["is_generateData"]
-    scenario["simul"]["is_shapleyValueCalculate"] = True if scenario["simul"]["is_shapleyValueCalculate"] == "True" else False
-    scenario["simul"]["is_plotDataVStockQTsock"] = True if scenario["simul"]["is_plotDataVStockQTsock"] == "True" else False
+    # scenario["simul"]["is_storage_zero"] = True if scenario["simul"]["is_storage_zero"] == "True" else False
+    # scenario["simul"]["is_generateData"] = True if scenario["simul"]["is_generateData"] == "True" else False
+    # scenario["simul"]["is_generateData_version20092024"] = not scenario["simul"]["is_generateData"]
+    # scenario["simul"]["is_shapleyValueCalculate"] = True if scenario["simul"]["is_shapleyValueCalculate"] == "True" else False
+    # scenario["simul"]["is_plotDataVStockQTsock"] = True if scenario["simul"]["is_plotDataVStockQTsock"] == "True" else False
     
     
     if "SyA" in scenario["algo"]:
         # ra.run_syA(scenario, logfiletxt)
         scenario["algo_name"] = "SyA"
         app_syA = ra.run_syA(scenario, logfiletxt)
+        pass
+    if "Bestie" in scenario["algo"]:
+        scenario["algo_name"] = "Bestie"
+        app_Bestie = ra.run_Bestie(scenario, logfiletxt)
         pass
     if "SSA" in scenario["algo"]:
         # ra.run_SSA(scenario, logfiletxt)
