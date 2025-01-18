@@ -31,8 +31,8 @@ class Smartgrid :
     strategy_profile = None 
     Cost = None
     
-    Nds = None
-    calG = None
+    GridNeeds = None
+    Free = None
     
     # TODELETE
     # DispSG = None
@@ -100,8 +100,8 @@ class Smartgrid :
         dt = np.dtype([('agent', int), ('strategy', ag.Mode)])
         self.strategy_profile = np.ndarray(shape=(N, nbperiod), dtype=dt)
         self.Cost = np.zeros(nbperiod)
-        self.Nds = np.zeros(shape=(nbperiod,rho+1))
-        self.calG = np.zeros(shape=(nbperiod,rho+1))
+        self.GridNeeds = np.zeros(shape=(nbperiod,rho+1))
+        self.Free = np.zeros(shape=(nbperiod,rho+1))
         # self.TauS = np.ndarray(shape=(N, rho+1))
         # self.DispSG = np.zeros(rho+1)
         # self.GNeeds = np.zeros(shape=(nbperiod,rho+1))
@@ -325,9 +325,9 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             self.prosumers[i].computeGamma(period=period)
     
-    def computeNds4Prosumers(self, period:int) -> float:
+    def computeGridNeeds4Prosumers(self, period:int) -> float:
         """
-        compute Nds for all prosumers
+        compute GridNeeds for all prosumers
 
         Parameters
         ----------
@@ -344,14 +344,14 @@ class Smartgrid :
             self.prosumers[i].computeNeeds4OneProsumer(period=period)
             
         for h in range(1, self.rho+1):
-            self.Nds[period, h] = 0
+            self.GridNeeds[period, h] = 0
             for i in range(self.prosumers.size):
-                self.Nds[period, h] += self.prosumers[i].Needs[period, h]
-            # print(f"h={h}, Nds={self.Nds[period, h]}")
+                self.GridNeeds[period, h] += self.prosumers[i].Needs[period, h]
+            # print(f"h={h}, GridNeeds={self.GridNeeds[period, h]}")
             
-    def computeCalG4Prosumers(self, period:int) -> float:
+    def computeFree4Prosumers(self, period:int) -> float:
         """
-        compute WHAT....
+        compute the amount of free energy injected in the grid
 
         Parameters
         ----------
@@ -371,7 +371,7 @@ class Smartgrid :
                 - self.prosumers[i].consumption[period+h] \
                 - (self.prosumers[i].smax - self.prosumers[i].SP[period,h]))
     
-            self.calG[period, h] = Gh
+            self.Free[period, h] = Gh
             
     def computeHelp4Prosumers(self, period:int) -> float:
         """
@@ -392,7 +392,7 @@ class Smartgrid :
             for h in range(1, self.rho+1):
                 self.prosumers[i].Help[period, h] \
                     = min(
-                        self.prosumers[i].Needs[period, h]*self.calG[period, h]/self.Nds[period, h],
+                        self.prosumers[i].Needs[period, h]*self.Free[period, h]/self.GridNeeds[period, h],
                         self.prosumers[i].Needs[period, h]
                         )
                     
@@ -437,12 +437,12 @@ class Smartgrid :
                 min_2 = self.prosumers[i].smax - self.prosumers[i].SP[period, h]
                 min_3 = np.inf
                 
-                for j in range(1, h):
+                for x in range(1, h):
                     smax = self.prosumers[i].smax
                     sp_h = self.prosumers[i].SP[period, h]
                     som_Val = 0
-                    for k in range(j, h):
-                        som_Val += self.prosumers[i].Val[period, k]
+                    for y in range(x, h):
+                        som_Val += self.prosumers[i].Val[period, y]
                     diff = aux.apv(smax - sp_h - som_Val)
                     
                     min_3 = diff if min_3 > diff else min_3
@@ -450,23 +450,23 @@ class Smartgrid :
                 self.prosumers[i].Val[period, h] \
                     = min(min_1, min_2, min_3)
     
-    def computeMu4Prosummers(self, period:int) -> float:
-        """
-        compute Mu for all prosumers
+    # def computeMu4Prosummers(self, period:int) -> float:
+    #     """
+    #     compute Mu for all prosumers
 
-        Parameters
-        ----------
-        period : int
-            an instance of time t.
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         an instance of time t.
 
-        Returns
-        -------
-        float
-            DESCRIPTION.
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
 
-        """
-        for i in range(self.prosumers.size):
-            self.prosumers[i].computeMu4OneProsumer(period=period)
+    #     """
+    #     for i in range(self.prosumers.size):
+    #         self.prosumers[i].computeMu4OneProsumer(period=period)
     
     def computeQTStock(self, period:int) -> float:
         """
@@ -520,13 +520,34 @@ class Smartgrid :
             Si_tplus1 = self.prosumers[i].storage[nextperiod]
             QTstock_i = self.prosumers[i].QTStock[period]
             
-            self.prosumers[i].valStock[period] \
-                = aux.phiepominus(min(aux.apv(Si_tplus1 - Si), 
-                                      aux.apv(QTstock_i - Si)), 
-                                  self.coef_phiepominus) \
-                    - aux.phiepominus(min( aux.apv(Si - Si_tplus1), 
-                                           aux.apv(QTstock_i - Si_tplus1)),
-                                      self.coef_phiepominus)
+            # -------------------  verion from 18/01/2025  -----------------
+            if Si < QTstock_i:
+                if Si_tplus1 < Si:
+                    self.prosumers[i].valStock[period] \
+                        = aux.phiepominus( Si - Si_tplus1)
+                else:
+                    self.prosumers[i].valStock[period] \
+                        = aux.phiepominus(min( QTstock_i, Si_tplus1) - Si)
+                pass
+            else:
+                if Si_tplus1 < Si:
+                    self.prosumers[i].valStock[period] \
+                        = - aux.phiepominus( aux.apv(QTstock_i - Si_tplus1) )
+                else:
+                    self.prosumers[i].valStock[period] = 0
+                pass
+            
+            # -------------------  verion from 18/01/2025  -----------------
+            
+            # ------------------- OLD verion from 18/09/2024  -----------------
+            # self.prosumers[i].valStock[period] \
+            #     = aux.phiepominus(min(aux.apv(Si_tplus1 - Si), 
+            #                           aux.apv(QTstock_i - Si)), 
+            #                       self.coef_phiepominus) \
+            #         - aux.phiepominus(min( aux.apv(Si - Si_tplus1), 
+            #                                aux.apv(QTstock_i - Si_tplus1)),
+            #                           self.coef_phiepominus)
+            # ------------------- OLD verion from 18/09/2024  -----------------
     
         
     
