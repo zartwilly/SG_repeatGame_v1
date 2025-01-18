@@ -283,15 +283,32 @@ class Prosumer:
             DESCRIPTION.
 
         """
+        # TODO # may be a side effect with h starts to 1 or 2
         self.SP[period, 0] = 0;
-        self.SP[period, 1] = 0;
+        h=1
+        self.SP[period, h] = 0
+        
+        # ##################   compute for h=1 : start  ##################
+        # h=1
+        # if self.tau_plus[period, h] > 0:
+        #     self.SP[period, h] \
+        #         = min(self.storage[period]+self.tau_plus[period, h], self.smax)
+        # elif self.tau_minus[period, h] > 0:
+        #     self.SP[period, h] \
+        #         = max(self.storage[period]-self.tau_minus[period, h], 0)
+        # else:
+        #     self.SP[period, h] = self.storage[period]
+        # ##################   compute for h=1 : end   ##################
+        
         for h in range(2, rho+1):
-            if self.tau_plus[period, h-1] >= 0:
+            if self.tau_plus[period, h-1] > 0:
                 self.SP[period, h] \
                     = min(self.SP[period, h-1]+self.tau_plus[period, h-1], self.smax)
-            if self.tau_minus[period, h-1] > 0:
+            elif self.tau_minus[period, h-1] > 0:
                 self.SP[period, h] \
                     = max(self.SP[period, h-1]-self.tau_minus[period, h-1], 0)
+            else:
+                self.SP[period, h] = self.SP[period, h-1] 
             
                 
     def computeGamma(self, period:int) -> float:
@@ -323,6 +340,7 @@ class Prosumer:
         
         if self.gamma[period] == self.rho-1 and self.SP[period, self.rho-1] < self.smax:
             self.gamma[period] = self.rho
+        # self.gamma[period] = self.rho
         
     def computeNeeds4OneProsumer(self, period:int) -> float:
         """
@@ -342,27 +360,27 @@ class Prosumer:
         for h in range(1, self.rho+1):
             self.Needs[period, h] = aux.apv(self.tau_minus[period, h] - self.SP[period, h])
      
-    def computeMu4OneProsumer(self, period:int) -> float:
-        """
-        compute mu for each actor
+    # def computeMu4OneProsumer(self, period:int) -> float:
+    #     """
+    #     compute mu for each actor
 
-        Parameters
-        ----------
-        period : int
-            DESCRIPTION.
+    #     Parameters
+    #     ----------
+    #     period : int
+    #         DESCRIPTION.
 
-        Returns
-        -------
-        float
-            DESCRIPTION.
+    #     Returns
+    #     -------
+    #     float
+    #         DESCRIPTION.
 
-        """
-        min_Smax_SP = np.inf
-        for h in range(1, int(self.gamma[period])+1 ):
-            if min_Smax_SP > self.smax - self.SP[period, h] :
-                min_Smax_SP = self.smax - self.SP[period, h]
+    #     """
+    #     min_Smax_SP = np.inf
+    #     for h in range(1, int(self.gamma[period])+1 ):
+    #         if min_Smax_SP > self.smax - self.SP[period, h] :
+    #             min_Smax_SP = self.smax - self.SP[period, h]
                 
-        self.mu[period] = min_Smax_SP
+    #     self.mu[period] = min_Smax_SP
         
     
     # def computePC_CP_th(self, period:int, nbperiod:int, rho:int):
