@@ -166,13 +166,13 @@ class App:
         # for i, elt in enumerate(self.SG.TauS):
         #     tauS["Prosum="+str(i)] = elt
             
-        Nds = dict()
-        for h, elt in enumerate(self.SG.Nds[period]):
-            Nds["Nds_h="+str(h)] = elt
+        GridNeeds = dict()
+        for h, elt in enumerate(self.SG.GridNeeds[period]):
+            GridNeeds["GridNeeds_h="+str(h)] = elt
             
-        calG = dict()
-        for h, elt in enumerate(self.SG.calG[period]):
-            calG["calG_h="+str(h)] = elt
+        Free = dict()
+        for h, elt in enumerate(self.SG.Free[period]):
+            Free["Free_h="+str(h)] = elt
             
         coef_phiepoplus = self.SG.coef_phiepoplus
         coef_phiepominus = self.SG.coef_phiepominus
@@ -286,8 +286,8 @@ class App:
                 "gamma": self.SG.prosumers[i].gamma[period],
                 
                 "Needs": str(Needs),
-                "Nds": str(Nds),
-                "calG": str(calG),
+                "GridNeeds": str(GridNeeds),
+                "Free": str(Free),
                 "Help": str(Help),
                 "Rq": str(Rq),
                 "Val": str(Val),
@@ -414,17 +414,17 @@ class App:
         # calculate Gamma
         self.SG.computeGamma4prosumers(period)
         
-        # calculate Needs and Nds
-        self.SG.computeNds4Prosumers(period)
+        # calculate Needs and GridNeeds
+        self.SG.computeGridNeeds4Prosumers(period)
         
-        # calculate CalG
-        self.SG.computeCalG4Prosumers(period)
+        # calculate Free
+        self.SG.computeFree4Prosumers(period)
         
         # calculate Help
         self.SG.computeHelp4Prosumers(period)
         
         # calculate Mu
-        self.SG.computeMu4Prosummers(period)
+        # self.SG.computeMu4Prosummers(period)
         
         # compute Rq
         self.SG.computeRq(period)
@@ -722,13 +722,13 @@ class App:
 
         """
         
-        Nds = dict()
-        for h, elt in enumerate(self.SG.Nds[period]):
-            Nds["Nds_h="+str(h)] = elt
+        GridNeeds = dict()
+        for h, elt in enumerate(self.SG.GridNeeds[period]):
+            GridNeeds["GridNeeds_h="+str(h)] = elt
             
-        calG = dict()
-        for h, elt in enumerate(self.SG.calG[period]):
-            calG["calG_h="+str(h)] = elt
+        Free = dict()
+        for h, elt in enumerate(self.SG.Free[period]):
+            Free["Free_h="+str(h)] = elt
         
         
         dico_onePeriod = dict()
@@ -796,8 +796,8 @@ class App:
                 "gamma": self.SG.prosumers[i].gamma[period],
                 
                 "Needs": str(Needs),
-                "Nds": str(Nds),
-                "calG": str(calG),
+                "GridNeeds": str(GridNeeds),
+                "Free": str(Free),
                 "Help": str(Help),
                 "Rq": str(Rq),
                 "Val": str(Val),
@@ -938,17 +938,17 @@ class App:
             # calculate Gamma
             self.SG.computeGamma4prosumers(period=t)
             
-            # calculate Needs and Nds
-            self.SG.computeNds4Prosumers(period=t)
+            # calculate Needs and GridNeeds
+            self.SG.computeGridNeeds4Prosumers(period=t)
             
-            # calculate CalG
-            self.SG.computeCalG4Prosumers(period=t)
+            # calculate Free
+            self.SG.computeFree4Prosumers(period=t)
             
             # calculate Help
             self.SG.computeHelp4Prosumers(period=t)
             
             # calculate Mu
-            self.SG.computeMu4Prosummers(period=t)
+            # self.SG.computeMu4Prosummers(period=t)
             
             # compute Rq
             self.SG.computeRq(period=t)
@@ -1248,17 +1248,17 @@ class App:
         # calculate Gamma
         sg1.computeGamma4prosumers(period)
         
-        # calculate Needs and Nds
-        sg1.computeNds4Prosumers(period)
+        # calculate Needs and GridNeeds
+        sg1.computeGridNeeds4Prosumers(period)
         
-        # calculate CalG
-        sg1.computeCalG4Prosumers(period)
+        # calculate Free
+        sg1.computeFree4Prosumers(period)
         
         # calculate Help
         sg1.computeHelp4Prosumers(period)
         
         # calculate Mu
-        sg1.computeMu4Prosummers(period)
+        # sg1.computeMu4Prosummers(period)
         ###################################################
         
         
