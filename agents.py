@@ -260,7 +260,7 @@ class Prosumer:
             DESCRIPTION.
 
         """
-        for h in range(1, rho+1):
+        for h in range(0, rho+1):
             self.tau_minus[period, h] = aux.apv(self.consumption[period+h] - self.production[period+h])
             self.tau_plus[period, h] = aux.apv(self.production[period+h] - self.consumption[period+h])
         
@@ -283,32 +283,54 @@ class Prosumer:
             DESCRIPTION.
 
         """
-        # TODO # may be a side effect with h starts to 1 or 2
-        self.SP[period, 0] = 0;
-        h=1
-        self.SP[period, h] = 0
         
-        # ##################   compute for h=1 : start  ##################
+        # ##########   compute for h in [0, rho] : start -> 20/01/2025   ######
+        h = 0
+        self.SP[period, h] = self.storage[period]
+       
+        for h in range(1, rho+1):
+            sp_ith = -10
+            if self.tau_plus[period, h] > 0:
+                sp_ith = min(self.SP[period, h-1] + self.tau_plus[period, h-1], self.smax)
+                pass
+            elif self.tau_minus[period, h] > 0:
+                sp_ith = max(self.SP[period, h-1] - self.tau_minus[period, h-1], 0)
+                pass
+            elif self.tau_plus[period, h] == 0 and self.tau_minus[period, h] == 0:
+                sp_ith = self.SP[period, h-1]
+                pass
+            pass
+           
+        self.SP[period, h] = sp_ith
+       
+        # ##########   compute for h in [0, rho] : end -> 20/01/2025     ######
+        
+        # # TODO # may be a side effect with h starts to 1 or 2
+        # self.SP[period, 0] = 0;
         # h=1
-        # if self.tau_plus[period, h] > 0:
-        #     self.SP[period, h] \
-        #         = min(self.storage[period]+self.tau_plus[period, h], self.smax)
-        # elif self.tau_minus[period, h] > 0:
-        #     self.SP[period, h] \
-        #         = max(self.storage[period]-self.tau_minus[period, h], 0)
-        # else:
-        #     self.SP[period, h] = self.storage[period]
-        # ##################   compute for h=1 : end   ##################
+        # self.SP[period, h] = 0
         
-        for h in range(2, rho+1):
-            if self.tau_plus[period, h-1] > 0:
-                self.SP[period, h] \
-                    = min(self.SP[period, h-1]+self.tau_plus[period, h-1], self.smax)
-            elif self.tau_minus[period, h-1] > 0:
-                self.SP[period, h] \
-                    = max(self.SP[period, h-1]-self.tau_minus[period, h-1], 0)
-            else:
-                self.SP[period, h] = self.SP[period, h-1] 
+        # # ##################   compute for h=1 : start  ##################
+        # # h=1
+        # # if self.tau_plus[period, h] > 0:
+        # #     self.SP[period, h] \
+        # #         = min(self.storage[period]+self.tau_plus[period, h], self.smax)
+        # # elif self.tau_minus[period, h] > 0:
+        # #     self.SP[period, h] \
+        # #         = max(self.storage[period]-self.tau_minus[period, h], 0)
+        # # else:
+        # #     self.SP[period, h] = self.storage[period]
+        # # ##################   compute for h=1 : end   ##################
+        
+        # for h in range(2, rho+1):
+        #     if self.tau_plus[period, h-1] > 0:
+        #         self.SP[period, h] \
+        #             = min(self.SP[period, h-1]+self.tau_plus[period, h-1], self.smax)
+        #     elif self.tau_minus[period, h-1] > 0:
+        #         self.SP[period, h] \
+        #             = max(self.SP[period, h-1]-self.tau_minus[period, h-1], 0)
+        #     else:
+        #         self.SP[period, h] = self.SP[period, h-1] 
             
                 
     def computeGamma(self, period:int) -> float:
