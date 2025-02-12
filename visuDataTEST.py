@@ -15,6 +15,8 @@ import pickle
 import pandas as pd
 import auxiliary_functions as aux
 
+import itertools as it
+
 
 import plotly.graph_objects as go
 
@@ -140,7 +142,7 @@ def create_df_SG(apps_pkls: list, index_GA_PA=0) -> pd.DataFrame:
 ###############################################################################
 #                   plot valSG and valNoSG : debut
 ###############################################################################
-def plot_curve_valSGNoSG(df_prosumers: pd.DataFrame):
+def plot_curve_valSGNoSG(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
     """
     curve plot of valSG and valNoSG
 
@@ -206,6 +208,10 @@ def plot_curve_valSGNoSG(df_prosumers: pd.DataFrame):
                              legend_title_text='left'
                             )
     
+    # save Image
+    fig_NoSG_col.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe0_ValNoSG.png" ) ) 
+    fig_SG_col.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe0_ValSG.png" ) ) 
+    
     htmlDivVal_SG = html.Div([html.H1(children="ValSG"), 
                         html.Div(children=f''' {nameScenario}: show ValSG KPI for all algorithms '''), 
                         dcc.Graph(id='graphValSG', figure=fig_SG_col),
@@ -225,7 +231,7 @@ def plot_curve_valSGNoSG(df_prosumers: pd.DataFrame):
 ###############################################################################
 #                   plot som(LCOST/Price) for LRI : debut
 ###############################################################################
-def plot_LcostPrice(df_prosumers: pd.DataFrame):
+def plot_LcostPrice(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
     """
     plot sum of LCOST/Price
 
@@ -269,6 +275,10 @@ def plot_LcostPrice(df_prosumers: pd.DataFrame):
                              legend_title_text='left'
                             )
     
+    # save image 
+    fig_ratio.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe1_LcostByPricebyPeriod4LRI.png" ) ) 
+    
+    
     htmlDivRatioLcost = html.Div([html.H1(children="sum(Lcost/Price)"), 
                         html.Div(children=''' ratio Lcost by time over time for LRI algorithms '''), 
                         dcc.Graph(id='graphRatio', figure=fig_ratio),
@@ -283,7 +293,7 @@ def plot_LcostPrice(df_prosumers: pd.DataFrame):
 ###############################################################################
 #                   plot QTStock all LRI, SSA, Bestie : debut
 ###############################################################################
-def plot_sumQTStock(df_prosumers: pd.DataFrame):
+def plot_sumQTStock(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
     """
         
     plot the sum of QTStock over time for algorithms SSA, LRI, et Bestie
@@ -325,6 +335,9 @@ def plot_sumQTStock(df_prosumers: pd.DataFrame):
                                legend_title_text='left'
                               )
     
+    # save image 
+    fig_qtstock.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe2_QTStockSumByProsumersbyPeriodByAlgo.png" ) ) 
+    
     htmlDivQTStock = html.Div([html.H1(children="QTStock"), 
                         html.Div(children=''' show QTStock KPI for all algorithms '''), 
                         dcc.Graph(id='graphQtstock', figure=fig_qtstock),
@@ -339,7 +352,7 @@ def plot_sumQTStock(df_prosumers: pd.DataFrame):
 ###############################################################################
 #                   plot sum storage all LRI, SSA, Bestie : debut
 ###############################################################################
-def plot_sumStorage(df_prosumers:pd.DataFrame):
+def plot_sumStorage(df_prosumers:pd.DataFrame, scenarioCorePathDataViz:str):
     """
     plot storage evolution over the time
 
@@ -380,6 +393,9 @@ def plot_sumStorage(df_prosumers:pd.DataFrame):
                              legend_title_text='left'
                         )
     
+    # save image 
+    fig_Si.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe3_storageByPeriod.png" ) ) 
+    
     htmlDivSis = html.Div([html.H1(children="Storage"), 
                         html.Div(children=''' show Storage KPI for all algorithms '''), 
                         dcc.Graph(id='graphSis', figure=fig_Si),
@@ -395,7 +411,7 @@ def plot_sumStorage(df_prosumers:pd.DataFrame):
 ###############################################################################
 #                   visu bar plot of actions(modes) : debut
 ###############################################################################
-def plot_barModes(df_prosumers: pd.DataFrame):
+def plot_barModes(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
     """
     
 
@@ -409,27 +425,65 @@ def plot_barModes(df_prosumers: pd.DataFrame):
     None.
 
     """
-    resultat = df_prosumers.groupby('algoName')[['period','mode']].value_counts().unstack(fill_value=0)
+    # resultat = df_prosumers.groupby('algoName')[['period','mode']].value_counts().unstack(fill_value=0)
 
-    # Transformation des comptages en valeurs stochastiques (probabilités)
-    resultat_stochastique = resultat.div(resultat.sum(axis=1), axis=0)
+    # # Transformation des comptages en valeurs stochastiques (probabilités)
+    # resultat_stochastique = resultat.div(resultat.sum(axis=1), axis=0)
 
-    # Affichage du résultat stochastique
-    resultat_stochastique.reset_index(inplace=True)
+    # # Affichage du résultat stochastique
+    # resultat_stochastique.reset_index(inplace=True)
     
-    #resultat_stochastique.set_index(['period', 'algoName']).plot(kind='bar', stacked=True, figsize=(10, 6))
+    # #resultat_stochastique.set_index(['period', 'algoName']).plot(kind='bar', stacked=True, figsize=(10, 6))
     
-    # Réorganiser les données en format long pour Plotly
-    resultat_long = resultat_stochastique.melt(
-                        id_vars=["period", "algoName"], 
-                        value_vars=resultat_stochastique.columns,
-                        var_name="mode", value_name="probabilite")
+    # # Réorganiser les données en format long pour Plotly
+    # resultat_long = resultat_stochastique.melt(
+    #                     id_vars=["period", "algoName"], 
+    #                     value_vars=resultat_stochastique.columns,
+    #                     var_name="mode", value_name="probabilite")
     
-    # Création du graphique avec Plotly
-    figMode = px.bar(resultat_long, x="period", y="probabilite", color="algoName", barmode="stack",
-                 title="Distribution stochastique des modes par Période et Algorithme",
-                 labels={"probabilite": "Probabilité", "period": "Période", "algoName": "Algorithme"},
-                 facet_col="mode", facet_col_wrap=2)
+    # # Création du graphique avec Plotly
+    # figMode = px.bar(resultat_long, x="period", y="probabilite", color="algoName", barmode="stack",
+    #              title="Distribution stochastique des modes par Période et Algorithme",
+    #              labels={"probabilite": "Probabilité", "period": "Période", "algoName": "Algorithme"},
+    #              facet_col="mode", facet_col_wrap=2)
+    
+    
+    
+    # htmlDivModes = html.Div([html.H1(children="Distribution des strategies Modes"), 
+    #                     html.Div(children=''' show distribution of strategies KPI for all algorithms '''), 
+    #                     dcc.Graph(id='graphModes', figure=figMode),
+    #                     ])
+
+    # return htmlDivModes
+    
+    # value_counts
+    df_res = df_prosumers.groupby('algoName')[['period','mode']].value_counts().unstack(fill_value=0)
+    
+    #Affichage du résultat stochastique
+    df_stoc = df_res.div(df_res.sum(axis=1), axis=0).reset_index()
+
+
+    modes = df_prosumers["mode"].unique().tolist()
+    algoNames = df_prosumers["algoName"].unique().tolist()
+    periods = df_prosumers["period"].unique().tolist()
+
+    liste_4uplets = []
+    for algoName, period, mode in it.product(algoNames, periods, modes):
+        df_tmp = df_stoc[(df_stoc['algoName']==algoName) & 
+                         (df_stoc['period']==period) ]
+        #print(f"{algoName}, {period}, {mode}")
+        value = df_tmp[mode].unique()[0]
+        
+        liste_4uplets.append((algoName, period, mode, value))
+        
+    df_alPeMoVal = pd.DataFrame(liste_4uplets, columns=["algoName", "period", "mode", "value"])
+    
+    # # Création du graphique avec Plotly
+    figMode = px.bar(df_alPeMoVal[df_alPeMoVal['period'].isin([i for i in range(1,max(df_alPeMoVal['period'])+1)])], 
+                 x="period", y="value", color="mode", facet_col="algoName")
+    
+    # save image
+    figMode.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe4_barplotOfStrategies.png" ) ) 
     
     htmlDivModes = html.Div([html.H1(children="Distribution des strategies Modes"), 
                         html.Div(children=''' show distribution of strategies KPI for all algorithms '''), 
@@ -444,9 +498,54 @@ def plot_barModes(df_prosumers: pd.DataFrame):
 ###############################################################################
 
 ###############################################################################
+#                 visu all prosumers with LCost(strat)==0 : debut
+###############################################################################
+def plot_numberProsumerLcostEqalZero(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
+    """
+    
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    algoName = [mot for mot in df_prosumers.algoName.unique() if 'LRI' in mot][0]
+    
+    df_lri = df_prosumers[df_prosumers.algoName == algoName]
+
+    cols_2_select = ['prosumers','period','Lcost']
+    
+    df_lcost = df_lri[cols_2_select].groupby('period')\
+                .apply(lambda x: (x['Lcost'] == 0).sum())\
+                    .reset_index(name='count')
+    
+    # # Création du graphique avec Plotly
+    figLcost = px.scatter( df_lcost, x="period", y="count")
+    
+    figLcost.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe5_LRI_#prosumersByPeriodWithLcost=0.png" ) ) 
+    
+    # visualisation
+    htmlDivLriLcost = html.Div([html.H1(children="LRI: #prosumers by period with Lcost=0"), 
+                        html.Div(children=''' LRI: #prosumers by period with Lcost=0 '''), 
+                        dcc.Graph(id='graphLriLcost', figure=figLcost),
+                        ])
+    
+    return htmlDivLriLcost
+    
+###############################################################################
+#                 visu all prosumers with LCost(strat)==0 : fin
+###############################################################################
+
+###############################################################################
 #                   visu all plots : debut
 ###############################################################################
-def plot_all_figures(df_prosumers: pd.DataFrame): 
+def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
     """
     plot all figures from requests of latex document
 
@@ -464,26 +563,31 @@ def plot_all_figures(df_prosumers: pd.DataFrame):
     htmlDivs = list()
     
     # Plot bar plot of valNoSG and valSG
-    htmlDivVal_SG, htmlDivVal_NoSG = plot_curve_valSGNoSG(df_prosumers)
+    htmlDivVal_SG, htmlDivVal_NoSG = plot_curve_valSGNoSG(df_prosumers, scenarioCorePathDataViz)
     
     htmlDivs.append(htmlDivVal_SG)
     htmlDivs.append(htmlDivVal_NoSG)
     
     # courbe 1 : plot curve over the time the part of Lcost by Price: 
-    htmlDivRatioLcost = plot_LcostPrice(df_prosumers)
+    htmlDivRatioLcost = plot_LcostPrice(df_prosumers, scenarioCorePathDataViz)
     htmlDivs.append(htmlDivRatioLcost)
     
     # courbe2 : plot QTSTock over the time
-    htmlDivQTStock = plot_sumQTStock(df_prosumers)
+    htmlDivQTStock = plot_sumQTStock(df_prosumers, scenarioCorePathDataViz)
     htmlDivs.append(htmlDivQTStock)
     
     # courbe3: plot Storage Si
-    htmlDivSis = plot_sumStorage(df_prosumers)
+    htmlDivSis = plot_sumStorage(df_prosumers, scenarioCorePathDataViz)
     htmlDivs.append(htmlDivSis)
     
     # courbe4: plot bar of actions
-    htmlDivModes = plot_barModes(df_prosumers)
+    htmlDivModes = plot_barModes(df_prosumers, scenarioCorePathDataViz)
     htmlDivs.append(htmlDivModes)
+    
+    # courbe5: Number of prosumer by period with lcost == 0
+    htmlDivLriLcost = plot_numberProsumerLcostEqalZero(df_prosumers, scenarioCorePathDataViz)
+    htmlDivs.append(htmlDivLriLcost)
+    
     
     # run app 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -506,6 +610,8 @@ def plot_all_figures(df_prosumers: pd.DataFrame):
 #                   visu all plots : fin
 ###############################################################################
 
+
+
 if __name__ == '__main__':
     
     scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
@@ -525,7 +631,7 @@ if __name__ == '__main__':
     df_prosumers = create_df_SG(apps_pkls=apps_pkls, index_GA_PA=0)
     
     
-    app_PerfMeas = plot_all_figures(df_prosumers)
+    app_PerfMeas = plot_all_figures(df_prosumers, scenarioCorePathDataViz)
     
     app_PerfMeas.run_server(debug=True)
     
