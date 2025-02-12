@@ -86,7 +86,15 @@ scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000
 # scenarioFile = "./data_scenario_JeuDominique/scenario_version20092024BENSmax18_dataDonnee_N8_T20_K5000_B1_rho1_StockZeroT0_NotSHAPLEY.json"
 
 # DEBUG: GIVEN STRATEGIES 
-scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho1.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho2.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho3.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho4.json"
+scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho08.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho10.json"
+
 
 
 def redistribution_bwt_lri_nosmart(app_LRI, app_NoS):
@@ -201,47 +209,81 @@ if is_shapleyValueCalculate:
 ### ------- END : redistribution with shapley values -------
 
 
-# -------- START : first run ---------------
+# # -------- START : first run ---------------
 
-print("# --- VISU --- ")
+# print("# --- VISU --- ")
 
+# scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
+# scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
+# #scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
+
+# scenarioVizFile = os.path.join(scenario["scenarioCorePathDataViz"], scenario["scenarioName"]+'_VIZ.json')
+# checkfile = os.path.isfile(scenarioVizFile)
+# scenarioViz = dict()
+# if checkfile:
+#     with open(scenarioVizFile) as file:
+#         scenarioViz = json.load(file)
+#     pass
+# else:
+#     scenarioViz = {"algoName": list(scenario["algo"].keys()), 
+#                  "graphs":[["ValSG_ts", "ValNoSG_ts", "Bar"], ["QttEPO", "line"], ["MaxPrMode", "line]"] ]
+#                  }
+#     pass
+
+# apps_pkls = visu.load_all_algos_V1(scenario, scenarioViz)
+
+
+# initial_period = 0
+
+# # df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
+# #     = visu.create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
+    
+# df_SG = None; df_APP = None; df_PROSUMERS = None, 
+# dfs_VStock = None; dfs_QTStock_R = None; dfs_QTStock_GA_PA = None
+    
+# split_GA_PA = eval(scenario["simul"]["split_GA_PA"])
+# if split_GA_PA:
+#     df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R, dfs_QTStock_GA_PA \
+#         = visu.create_df_SG_V2_SelectPeriod_4_GA_PA(apps_pkls_algos=apps_pkls, 
+#                                              initial_period=initial_period, 
+#                                              split_GA_PA=split_GA_PA)
+# else:
+#     df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
+#         = visu.create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
+
+# app_PerfMeas = visu.plot_ManyApp_perfMeasure_V2(df_APP, 
+#                                                 df_SG, 
+#                                                 df_PROSUMERS, 
+#                                                 dfs_VStock, 
+#                                                 dfs_QTStock_R, 
+#                                                 df_shapleys, 
+#                                                 dfs_QTStock_GA_PA,
+#                                                 scenario["scenarioCorePathDataViz"] )
+# app_PerfMeas.run_server(debug=True)
+
+# # -------- END : first run ---------------
+
+# --------------- visu Courbe 0-5 : First ---------------
+import visuDataTEST as visutest
+
+with open(scenarioFile) as file:
+    scenario = json.load(file)
+    
 scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
+scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas")
+
 scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
-#scenario["PlotDataVStockQTsock"] = PlotDataVStockQTsock
-
-scenarioVizFile = os.path.join(scenario["scenarioCorePathDataViz"], scenario["scenarioName"]+'_VIZ.json')
-checkfile = os.path.isfile(scenarioVizFile)
-scenarioViz = dict()
-if checkfile:
-    with open(scenarioVizFile) as file:
-        scenarioViz = json.load(file)
-    pass
-else:
-    scenarioViz = {"algoName": list(scenario["algo"].keys()), 
-                 "graphs":[["ValSG_ts", "ValNoSG_ts", "Bar"], ["QttEPO", "line"], ["MaxPrMode", "line]"] ]
-                 }
-    pass
-
-apps_pkls = visu.load_all_algos_V1(scenario, scenarioViz)
+scenario["scenarioCorePathData"] = scenarioCorePathData
 
 
-initial_period = 0
+apps_pkls = visutest.load_all_algos_apps(scenario)
+df_prosumers = visutest.create_df_SG(apps_pkls=apps_pkls, index_GA_PA=0)
 
-df_SG, df_APP, df_PROSUMERS, dfs_VStock, dfs_QTStock_R \
-    = visu.create_df_SG_V2_SelectPeriod(apps_pkls_algos=apps_pkls, initial_period=initial_period)
+ 
+app_PerfMeas = visutest.plot_all_figures(df_prosumers, scenarioCorePathDataViz)
 
-app_PerfMeas = visu.plot_ManyApp_perfMeasure_V2(df_APP, 
-                                                df_SG, 
-                                                df_PROSUMERS, 
-                                                dfs_VStock, 
-                                                dfs_QTStock_R, 
-                                                df_shapleys, 
-                                                scenario["scenarioCorePathDataViz"] )
 app_PerfMeas.run_server(debug=True)
-
-# -------- END : first run ---------------
-
-
+# --------------- --------------- visu Courbe 0-5 : First ---------------
 
 
 print(f"Running time = {time.time() - start}")
