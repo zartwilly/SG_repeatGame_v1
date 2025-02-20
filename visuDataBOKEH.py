@@ -635,7 +635,7 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
     
     # Création de la figure avec un regroupement par algorithme
     plot_Perf = figure(x_range=FactorRange(*[f"{cat}_{metric}" for cat, metric in x_labels]), 
-                title="Comparaison ValSG et valNoSG - Groupé par Algorithme",
+                title="Comparaison ValSG et valNoSG",
                 toolbar_location=None, tools="")
     
     # Ajout des barres côte à côte avec la bonne référence aux colonnes du source
