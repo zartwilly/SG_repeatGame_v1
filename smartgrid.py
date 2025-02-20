@@ -494,7 +494,7 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             somme = 0
             for h in range(1, int(self.prosumers[i].gamma[period])+1):
-                somme += self.prosumers[i].Val[period, h]
+                somme += self.prosumers[i].Val[period, h] / h
                 
             self.prosumers[i].QTStock[period] = somme
         
@@ -524,15 +524,15 @@ class Smartgrid :
             if Si < QTstock_i:
                 if Si_tplus1 < Si:
                     self.prosumers[i].valStock[period] \
-                        = aux.phiepominus( Si - Si_tplus1)
+                        = aux.phiepominus( Si - Si_tplus1, coef=self.coef_phiepominus)
                 else:
                     self.prosumers[i].valStock[period] \
-                        = aux.phiepominus(min( QTstock_i, Si_tplus1) - Si)
+                        = aux.phiepominus(min( QTstock_i, Si_tplus1) - Si, coef=self.coef_phiepominus)
                 pass
             else:
                 if Si_tplus1 < Si:
                     self.prosumers[i].valStock[period] \
-                        = - aux.phiepominus( aux.apv(QTstock_i - Si_tplus1) )
+                        = - aux.phiepominus( aux.apv(QTstock_i - Si_tplus1), coef=self.coef_phiepominus)
                 else:
                     self.prosumers[i].valStock[period] = 0
                 pass
