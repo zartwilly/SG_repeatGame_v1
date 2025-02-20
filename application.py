@@ -49,6 +49,8 @@ class App:
     valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
     valNoSGCost_A = None # 
     dicoLRI_onePeriod_oneStep = None # a dictionnary to save a running for one period and one step
+    Qttepo_plus = None     # compute quantity prosumers must give to EPO
+    Qttepo_minus = None     # compute quantity prosumers must receive to EPO
     
     def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init, threshold):
         self.maxstep = maxstep
@@ -64,6 +66,8 @@ class App:
         self.valNoSG_A = 0
         self.valSG_A = 0
         self.dicoLRI_onePeriod_oneStep = dict()
+        self.Qttepo_plus = 0
+        self.Qttepo_minus = 0
         
         
     def computeObjValai(self):
@@ -127,6 +131,18 @@ class App:
         """
         self.valNoSGCost_A = np.sum(self.SG.ValNoSGCost)
         
+    def computeQttepo(self):
+        """
+        compute Qttepoplus and Qttepominus 
+
+        Returns
+        -------
+        None.
+
+        """
+        self.Qttepo_minus = np.sum(self.SG.QttEpo_minus)
+        self.Qttepo_plus = np.sum(self.SG.QttEpo_plus)
+        
     ######### ----------------   LRI START ------------------------------------
     def save_LRI_2_json_onePeriod_oneStep(self, period, step, algoName, scenarioName):
         """
@@ -147,6 +163,8 @@ class App:
         N = self.N_actors
         insg = self.SG.insg[period]
         outsg = self.SG.outsg[period]
+        Qttepo_minus_t = self.SG.QttEpo_minus[period]
+        Qttepo_plus_t = self.SG.QttEpo_plus[period]
         ValEgoc = self.SG.ValEgoc[period]
         ValNoSG = self.SG.ValNoSG[period]
         ValSG = self.SG.ValSG[period]
@@ -267,6 +285,8 @@ class App:
                 "Lcost": Lcost,
                 "insg": insg,
                 "outsg": outsg,
+                "QttepoPlus_t": Qttepo_plus_t,
+                "QttepoMinus_t": Qttepo_minus_t,
                 "ValEgoc": ValEgoc,
                 "ValNoSG": ValNoSG,
                 "ValSG": ValSG,
@@ -344,6 +364,10 @@ class App:
         # Calculate inSG and outSG
         self.SG.computeSumInput(period)
         self.SG.computeSumOutput(period)
+        
+        # Calculate Qttepo_t^{plus,minus}
+        self.SG.computeQttepo_plus(period)
+        self.SG.computeQttepo_minus(period)
     
         ## compute what each actor has to paid/gain at period t 
         ## Calculate ValNoSGCost, ValEgo, ValNoSG, ValSG, Reduct, Repart
@@ -785,6 +809,8 @@ class App:
                 "Lcost": self.SG.prosumers[i].Lcost[period],
                 "insg": self.SG.insg[period],
                 "outsg": self.SG.outsg[period],
+                "QttepoPlus_t": self.SG.QttEpo_plus[period],
+                "QttepoMinus_t": self.SG.QttEpo_minus[period],
                 "ValEgoc": self.SG.ValEgoc[period],
                 "ValNoSG": self.SG.ValNoSG[period],
                 "ValSG": self.SG.ValSG[period],
@@ -849,6 +875,10 @@ class App:
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
             
+            # Calculate Qttepo_t^{plus,minus}
+            self.SG.computeQttepo_plus(period=t)
+            self.SG.computeQttepo_minus(period=t)
+            
             # calculate valNoSGCost_t
             self.SG.computeValNoSGCost(period=t)
             
@@ -885,6 +915,7 @@ class App:
         self.computeObjValai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
+        self.computeQttepo()
         
         
         # plot variables ValNoSG, ValSG
@@ -976,6 +1007,10 @@ class App:
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
             
+            # Calculate Qttepo_t^{plus,minus}
+            self.SG.computeQttepo_plus(period=t)
+            self.SG.computeQttepo_minus(period=t)
+            
             # calculate valNoSGCost_t
             self.SG.computeValNoSGCost(period=t)
             
@@ -1012,6 +1047,7 @@ class App:
         self.computeObjValai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
+        self.computeQttepo()
         
         # plot variables ValNoSG, ValSG
         
@@ -1059,6 +1095,10 @@ class App:
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
             
+            # Calculate Qttepo_t^{plus,minus}
+            self.SG.computeQttepo_plus(period=t)
+            self.SG.computeQttepo_minus(period=t)
+            
             # calculate valNoSGCost_t
             self.SG.computeValNoSGCost(period=t)
             
@@ -1095,6 +1135,7 @@ class App:
         self.computeObjValai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
+        self.computeQttepo()
         
         # plot variables ValNoSG, ValSG
     
@@ -1257,6 +1298,10 @@ class App:
             self.SG.computeSumInput(period=t)
             self.SG.computeSumOutput(period=t)
             
+            # Calculate Qttepo_t^{plus,minus}
+            self.SG.computeQttepo_plus(period=t)
+            self.SG.computeQttepo_minus(period=t)
+            
             # calculate valNoSGCost_t
             self.SG.computeValNoSGCost(period=t)
             
@@ -1293,6 +1338,7 @@ class App:
         self.computeObjValai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
+        self.computeQttepo()
         
         # plot variables ValNoSG, ValSG
     
