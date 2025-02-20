@@ -447,6 +447,81 @@ def plotQTTepo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
 ###############################################################################
 
 ###############################################################################
+#                   plot QTTepo_t_{plus,minus} all LRI, SSA, Bestie : DEBUT
+###############################################################################
+def plotQTTepo_t_minus_plus(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
+    """
+    plot QttEpo_t_{minus, plus}
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+    scenarioCorePathDataViz : str
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    ALGOS = ["LRI_REPART", "SSA", "Bestie"]
+    df_pros_algos = df_prosumers[df_prosumers['algoName'].isin(ALGOS)]
+    
+    df_Qttepo = df_pros_algos[['period', 'algoName','prodit', 'consit', 'scenarioName']]\
+                    .groupby(["algoName","period"]).sum().reset_index()
+    df_Qttepo.rename(columns={"prodit":"insg", "consit":"outsg"}, inplace=True)
+    
+    df_Qttepo["Qttepo_t_minus"] = df_Qttepo["outsg"] - df_Qttepo["insg"]
+    df_Qttepo['Qttepo_t_minus'] = df_Qttepo['Qttepo_t_minus'].apply(lambda x: x if x>=0 else 0)
+    
+    df_Qttepo["Qttepo_t_plus"] = df_Qttepo["insg"] - df_Qttepo["outsg"]
+    df_Qttepo['Qttepo_t_plus'] = df_Qttepo['Qttepo_t_plus'].apply(lambda x: x if x>=0 else 0)
+    
+    plots_list = []
+    for algoName in df_pros_algos.algoName.unique().tolist():
+        df_Qttepo_t_algo = df_Qttepo[df_Qttepo.algoName == algoName]
+        
+        plotQttepo_t_algo = figure(
+            title=f"{algoName} show QttEpo_t^[+,-] KPI for all algorithms ",
+            height=300,
+            sizing_mode="stretch_width",  # use the full width of the parent element
+            tooltips=TOOLTIPS_LCOST,
+            output_backend="webgl",  # use webgl to speed up rendering (https://docs.bokeh.org/en/latest/docs/user_guide/output/webgl.html)
+            tools="pan,box_zoom,reset,save",
+            active_drag="box_zoom",  # enable box zoom by default
+        )
+        
+        plotQttepo_t_algo.line(x=df_Qttepo_t_algo["period"], 
+                               y=df_Qttepo_t_algo["Qttepo_t_minus"], 
+                               line_width=2, color="#00a933", alpha=0.8, 
+                               legend_label="Qttepo_t_minus")
+        plotQttepo_t_algo.scatter(x=df_Qttepo_t_algo["period"], 
+                                  y=df_Qttepo_t_algo["Qttepo_t_minus"],
+                                  size=5, color="#00a933", alpha=0.5)
+        
+        plotQttepo_t_algo.line(x=df_Qttepo_t_algo["period"], 
+                               y=df_Qttepo_t_algo["Qttepo_t_plus"], 
+                               line_width=2, color="#800080", alpha=0.8, 
+                               legend_label="Qttepo_t_plus")
+        plotQttepo_t_algo.scatter(x=df_Qttepo_t_algo["period"], 
+                                  y=df_Qttepo_t_algo["Qttepo_t_plus"],
+                                  size=5, color="#800080", alpha=0.5)
+        
+        
+        
+        plotQttepo_t_algo.legend.location = "top_left"
+        plotQttepo_t_algo.legend.click_policy = "hide"
+        
+        plots_list.append(plotQttepo_t_algo)
+        
+    return plots_list
+    
+###############################################################################
+#                   plot QTTepo_t_{plus,minus} all LRI, SSA, Bestie : FIN
+###############################################################################
+
+###############################################################################
 #                   visu bar plot of actions(modes) : debut
 ###############################################################################
 def plot_barModes(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
@@ -706,6 +781,8 @@ def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
     
     plot_Perf = plot_performanceAlgo(df_prosumers, scenarioCorePathDataViz)
     
+    plots_list = plotQTTepo_t_minus_plus(df_prosumers, scenarioCorePathDataViz)
+    
     # create a layout
     lyt = layout(
         [
@@ -717,7 +794,8 @@ def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
             # [plotBarMode], 
             [plotBarModeBis], 
             [plotQttepo], 
-            [plot_Perf]
+            [plot_Perf], 
+            plots_list
             # [p1, p2],  # the first row contains two plots, spaced evenly across the width of notebook
             # [p3],  # the second row contains only one plot, spanning the width of notebook
         ],
