@@ -31,6 +31,9 @@ class Smartgrid :
     strategy_profile = None 
     Cost = None
     
+    QttEpo_plus = None      # quantity to give to EPO
+    QttEpo_minus = None     # quantity to take to EPO
+    
     GridNeeds = None
     Free = None
     
@@ -91,6 +94,9 @@ class Smartgrid :
         
         self.insg = np.zeros(nbperiod)       
         self.outsg = np.zeros(nbperiod)
+        
+        self.QttEpo_plus = np.zeros(nbperiod)
+        self.QttEpo_minus = np.zeros(nbperiod)
         
         self.ValEgoc = np.zeros(nbperiod)
         self.ValNoSG = np.zeros(nbperiod)
@@ -217,6 +223,40 @@ class Smartgrid :
         phiPlusInsg = aux.phiepoplus(x=self.insg[period], coef=self.coef_phiepoplus)
         phiMinusOutsg = aux.phiepominus(x=self.outsg[period], coef=self.coef_phiepominus)
         self.ValNoSGCost[period] = phiPlusInsg - phiMinusOutsg
+        
+    def computeQttepo_plus(self, period:int) -> float:
+        """
+        compute quantity prosumers must give to EPO
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        self.QttEpo_plus[period] = aux.apv( self.insg[period] - self.outsg[period] )
+        
+    def computeQttepo_minus(self, period:int) -> float:
+        """
+        compute quantity prosumers must receive to EPO
+
+        Parameters
+        ----------
+        period : int
+            an instance of time t
+
+        Returns
+        -------
+        float
+            DESCRIPTION.
+
+        """
+        self.QttEpo_minus[period] = aux.apv( self.outsg[period] - self.insg[period] )
         
     def computeReduct(self, period:int) -> float:
         """
