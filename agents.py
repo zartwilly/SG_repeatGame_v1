@@ -290,18 +290,18 @@ class Prosumer:
        
         for h in range(1, rho+1):
             sp_ith = -10
-            if self.tau_plus[period, h] > 0:
+            if self.tau_plus[period, h-1] > 0:
                 sp_ith = min(self.SP[period, h-1] + self.tau_plus[period, h-1], self.smax)
                 pass
-            elif self.tau_minus[period, h] > 0:
+            elif self.tau_minus[period, h-1] > 0:
                 sp_ith = max(self.SP[period, h-1] - self.tau_minus[period, h-1], 0)
                 pass
-            elif self.tau_plus[period, h] == 0 and self.tau_minus[period, h] == 0:
+            elif self.tau_plus[period, h-1] == 0 and self.tau_minus[period, h-1] == 0:
                 sp_ith = self.SP[period, h-1]
                 pass
             pass
            
-        self.SP[period, h] = sp_ith
+            self.SP[period, h] = sp_ith
        
         # ##########   compute for h in [0, rho] : end -> 20/01/2025     ######
         
