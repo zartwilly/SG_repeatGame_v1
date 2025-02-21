@@ -44,13 +44,15 @@ class App:
     h = None # value to indicate how many periods we use to predict futures values of P or C
     rho = None # the next periods to add at Nb_periods
     ObjSG = None # Objective value for a SG over all periods for LRI
-    ObjValai = None # Objective value for each actor over all periods for LRI
+    Obj_ai = None # Objective value for each actor over all periods for LRI
+    ObjValNoSG_ai = None
     valNoSG_A = None # sum of prices payed by all actors during all periods by running algo A without SG
     valSG_A = None # sum of prices payed by all actors during all periods by running algo A with SG
     valNoSGCost_A = None # 
     dicoLRI_onePeriod_oneStep = None # a dictionnary to save a running for one period and one step
     Qttepo_plus = None     # compute quantity prosumers must give to EPO
     Qttepo_minus = None     # compute quantity prosumers must receive to EPO
+    X_ai = None             # percent of reduction each actor must pay or receive money
     
     def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init, threshold):
         self.maxstep = maxstep
@@ -62,15 +64,17 @@ class App:
         self.maxstep_init = maxstep_init
         self.threshold = threshold
         self.ObjSG = 0
-        self.ObjValai = np.zeros(N_actors)
+        self.Obj_ai = np.zeros(N_actors)
+        self.ObjValNoSG_ai = np.zeros(N_actors)
         self.valNoSG_A = 0
         self.valSG_A = 0
         self.dicoLRI_onePeriod_oneStep = dict()
         self.Qttepo_plus = 0
         self.Qttepo_minus = 0
+        self.X_ai = np.zeros(N_actors)
         
         
-    def computeObjValai(self):
+    def computeObj_ai(self):
         """
         Compute the fitness value of actors at the end of game
         
@@ -83,7 +87,35 @@ class App:
         for i in range(self.SG.prosumers.size):
             sumObjai = 0
             sumObjai = np.sum(self.SG.prosumers[i].price)
-            self.ObjValai[i] = sumObjai
+            self.Obj_ai[i] = sumObjai
+            
+    def computeObjValNoSG_ai(self):
+        """
+        compute ValNoSG for each prosumer ai over the periods 
+
+        Returns
+        -------
+        None.
+
+        """
+        for i in range(self.SG.prosumers.size):
+            sumObjValNoSG_ai = 0
+            sumObjValNoSG_ai = np.sum(self.SG.prosumers[i].valNoSG)
+            self.ObjValNoSG_ai[i] = sumObjValNoSG_ai
+        
+    def computeX_ai(self):
+        """
+        percent of reduction each actor must pay or receive money
+
+        Returns
+        -------
+        None.
+
+        """
+        for i in range(self.SG.prosumers.size):
+            sumX_ai = 0
+            sumX_ai = round(1 - self.Obj_ai[i]/self.ObjValNoSG_ai[i], 2)
+            self.X_ai[i] = sumX_ai
             
     def computeObjSG(self):
         """
@@ -142,6 +174,8 @@ class App:
         """
         self.Qttepo_minus = np.sum(self.SG.QttEpo_minus)
         self.Qttepo_plus = np.sum(self.SG.QttEpo_plus)
+        
+        
         
     ######### ----------------   LRI START ------------------------------------
     def save_LRI_2_json_onePeriod_oneStep(self, period, step, algoName, scenarioName):
@@ -216,7 +250,7 @@ class App:
             Lcost = self.SG.prosumers[i].Lcost[period]
             LCostmax = self.SG.prosumers[i].LCostmax["Lcost"]
             LCostmin = self.SG.prosumers[i].LCostmin["Lcost"]
-            
+                        
             
             #tau = self.SG.prosumers[i].tau
             
@@ -549,7 +583,7 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         
@@ -695,9 +729,14 @@ class App:
         ## Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
+        
+        #self.saveMetricsOfGame()
+        # save all metrics to dataframe with columns obj_ai, objNoSG_ai, X_ai, valNoSG_ai
         
         file.write("___Threshold___ \n")
 
@@ -912,7 +951,9 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1044,7 +1085,9 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1132,7 +1175,9 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1216,7 +1261,9 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         
@@ -1335,7 +1382,9 @@ class App:
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
-        self.computeObjValai()
+        self.computeObj_ai()
+        self.computeObjValNoSG_ai()
+        self.computeX_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
