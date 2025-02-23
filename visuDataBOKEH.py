@@ -35,11 +35,13 @@ from pathlib import Path
 from bokeh.layouts import layout
 from bokeh.plotting import figure, show, output_file, save
 from bokeh.transform import factor_cmap
+from bokeh.transform import dodge
 from bokeh.palettes import Spectral5
 from bokeh.models import ColumnDataSource
 from bokeh.models import FactorRange
 from bokeh.models import Legend
 from bokeh.models import HoverTool
+
 
 ###############################################################################
 #                   CONSTANTES: debut
@@ -748,6 +750,81 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
 ###############################################################################
 
 ###############################################################################
+#                visu bar plot ValSG and ValNoSG with meanLRI: debut
+###############################################################################
+def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
+    """
+    
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+    scenarioCorePathDataViz : str
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    df_exec = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_exec.csv") )
+    
+    df_Perf = df_exec[["algoName","ValSG","ValNoSG"]].groupby("algoName").mean().reset_index()
+    
+    
+    # Définition des couleurs spécifiques pour chaque algo
+    colors = {
+        "Bestie": "yellow",
+        "CSA": "green",
+        "LRI": "blue",
+        "SSA": "red",
+        "SyA": "purple"
+    }
+    
+    data = { 
+        'algoName': list(df_Perf['algoName']),
+        'ValSG': list(df_Perf['ValSG']),
+        'ValNoSG': list(df_Perf['ValNoSG'])
+        }
+    
+    source = ColumnDataSource(data=data)
+
+    plot_Perf_MeanLri = figure(x_range=data["algoName"], title="Performance Measures",
+                height=450, toolbar_location=None, tools="hover", 
+                tooltips="$name @algoName: @$name")
+
+    plot_Perf_MeanLri.vbar(x=dodge('algoName', -0.25, 
+                                   range=plot_Perf_MeanLri.x_range), 
+                           top='ValSG', source=source,
+                           width=0.2, color="green", legend_label="ValSG")
+
+    plot_Perf_MeanLri.vbar(x=dodge('algoName',  0.0,  
+                                   range=plot_Perf_MeanLri.x_range), 
+                           top='ValNoSG', source=source,
+                           width=0.2, color="blue", legend_label="ValNoSG")
+
+
+    plot_Perf_MeanLri.x_range.range_padding = 0.1
+    plot_Perf_MeanLri.xgrid.grid_line_color = None
+    plot_Perf_MeanLri.legend.location = "top_left"
+    plot_Perf_MeanLri.legend.orientation = "horizontal"
+    plot_Perf_MeanLri.legend.click_policy="mute"
+
+    hover = HoverTool()
+    hover.tooltips = [("Algorithm", "@algoName"), ("ValSG", "@ValSG"), 
+                      ("ValNoSG", "@ValNoSG")]
+    plot_Perf_MeanLri.add_tools(hover)
+    plot_Perf_MeanLri.add_layout(plot_Perf_MeanLri.legend[0], 'right')
+    
+    
+    return plot_Perf_MeanLri
+    
+###############################################################################
+#               visu bar plot ValSG and ValNoSG with meanLRI : FIN
+###############################################################################
+
+###############################################################################
 #                   visu all plots : debut
 ###############################################################################
 def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
@@ -812,6 +889,75 @@ def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
 #                   visu all plots : FIN
 ###############################################################################
 
+
+###############################################################################
+#                   visu all plots with mean LRI : debut
+###############################################################################
+def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
+    """
+    plot all figures from requests of latex document
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    plotValSG, plotValNoSG = plot_curve_valSGNoSG(df_prosumers, scenarioCorePathDataViz)
+    
+    plotLcost = plot_LcostPrice(df_prosumers, scenarioCorePathDataViz)
+    
+    plotQTstock = plot_sumQTStock(df_prosumers, scenarioCorePathDataViz)
+    
+    plotSis = plot_sumStorage(df_prosumers, scenarioCorePathDataViz)
+    
+    #plotBarMode = plot_barModes(df_prosumers, scenarioCorePathDataViz)
+    
+    plotBarModeBis = plot_barModesBis(df_prosumers, scenarioCorePathDataViz)
+    
+    plotQttepo = plotQTTepo(df_prosumers, scenarioCorePathDataViz)
+    
+    plot_Perf = plot_performanceAlgo(df_prosumers, scenarioCorePathDataViz)
+    
+    plots_list = plotQTTepo_t_minus_plus(df_prosumers, scenarioCorePathDataViz)
+    
+    plot_Perf_MeanLri = plot_performanceAlgo_meanLRI(scenarioCorePathDataViz)
+    
+    # create a layout
+    lyt = layout(
+        [
+            [plotValSG], 
+            [plotValNoSG], 
+            [plotLcost],
+            [plotQTstock],
+            [plotSis], 
+            # [plotBarMode], 
+            [plotBarModeBis], 
+            [plotQttepo], 
+            [plot_Perf], 
+            [plot_Perf_MeanLri],
+            plots_list
+            # [p1, p2],  # the first row contains two plots, spaced evenly across the width of notebook
+            # [p3],  # the second row contains only one plot, spanning the width of notebook
+        ],
+        sizing_mode="stretch_width",  # the layout itself stretches to the width of notebook
+    )
+    
+    # set output to static HTML file
+    filename = os.path.join(scenarioCorePathDataViz, "plotCourbes.html")
+    output_file(filename=filename, title="Static HTML file")
+    
+    save(lyt)
+    
+###############################################################################
+#                   visu all plots with mean LRI : FIN
+###############################################################################
+
 if __name__ == '__main__':
     
     scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
@@ -830,5 +976,8 @@ if __name__ == '__main__':
     apps_pkls = load_all_algos_apps(scenario)
     df_prosumers = create_df_SG(apps_pkls=apps_pkls, index_GA_PA=0)
     
-    plot_all_figures(df_prosumers=df_prosumers, 
-                     scenarioCorePathDataViz=scenarioCorePathDataViz)
+    # plot_all_figures(df_prosumers=df_prosumers, 
+    #                  scenarioCorePathDataViz=scenarioCorePathDataViz)
+    
+    plot_all_figures_withMeanLRI(df_prosumers=df_prosumers, 
+                                 scenarioCorePathDataViz=scenarioCorePathDataViz)
