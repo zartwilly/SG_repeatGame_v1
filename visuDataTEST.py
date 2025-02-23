@@ -165,7 +165,6 @@ def plot_curve_valSGNoSG(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str
                     
     df_valSGNoSG = df_valSG.merge(df_valNoSG, on=["period", "algoName"])
     
-    
     # plot a curbe plot 
     fig_SG_col = go.Figure()
     fig_NoSG_col = go.Figure()
@@ -543,6 +542,74 @@ def plot_numberProsumerLcostEqalZero(df_prosumers: pd.DataFrame, scenarioCorePat
 ###############################################################################
 
 ###############################################################################
+#                 visu performance algorithmns valNoSG_i, ValSG : debut
+###############################################################################
+def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
+    """
+    
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    # create dataframe valnosg et valsg
+    df_valNoSG = df_prosumers[["period", "algoName", "valNoSG_i"]] \
+                    .groupby(["algoName","period"]).sum().reset_index()
+    df_valSG = df_prosumers[["period", "algoName", "ValSG"]]\
+                    .groupby(["algoName","period"]).mean().reset_index()
+                    
+    df_valSGNoSG = df_valSG.merge(df_valNoSG, on=["period", "algoName"])
+    
+    df_Perf = df_valSGNoSG[['algoName', 'period', 'ValSG', 'valNoSG_i']].groupby(['algoName']).sum().reset_index()
+                    
+    df_Perf = df_Perf.drop('period', axis=1)
+                    
+    # # plot  histogrammm : start 
+    figAPPerf = go.Figure()
+    
+    df_Perf_T = df_Perf.T
+    new_header = df_Perf_T.iloc[0]; 
+    df_Perf_T = df_Perf_T[1:]; 
+    df_Perf_T.columns = new_header
+    index = df_Perf_T.index.tolist();
+    for num_app, algoName in enumerate(df_Perf_T.columns):
+        figAPPerf.add_trace(go.Bar(x=index, 
+                              y=df_Perf_T.iloc[:,num_app].tolist(), name=df_Perf_T.columns.tolist()[num_app],
+                              base = 0.0, width = 0.2, offset = 0.2*num_app,
+                              marker = dict(color = COLORS[algoName])
+                              )
+                      )
+    
+    figAPPerf.update_layout(barmode='stack', # "stack" | "group" | "overlay" | "relative"
+                      #boxmode='group', 
+                      xaxis={'categoryorder':'array', 'categoryarray':df_Perf.algoName.tolist()},  
+                      xaxis_title="algorithms", yaxis_title="values", 
+                      title_text="Performance Measures")
+    # # plot histogrammm : End
+    
+
+    figAPPerf.write_image( os.path.join(scenarioCorePathDataViz, f"Courbe6_performances.png" ) ) 
+    
+    # visualisation
+    htmlAPPerf = html.Div([html.H1(children="Performance Measures"), 
+                        html.Div(children=''' plot measures for all algorithms '''), 
+                        dcc.Graph(id='graphAPPerf', figure=figAPPerf),
+                        ])
+    
+    return htmlAPPerf
+
+###############################################################################
+#                 visu performance algorithmns valNoSG_i, ValSG : fin
+###############################################################################
+
+###############################################################################
 #                   visu all plots : debut
 ###############################################################################
 def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
@@ -588,6 +655,9 @@ def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
     htmlDivLriLcost = plot_numberProsumerLcostEqalZero(df_prosumers, scenarioCorePathDataViz)
     htmlDivs.append(htmlDivLriLcost)
     
+    # courbe6: performance histogram
+    htmlAPPerf = plot_performanceAlgo(df_prosumers, scenarioCorePathDataViz)
+    htmlDivs.append(htmlAPPerf)
     
     # run app 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
