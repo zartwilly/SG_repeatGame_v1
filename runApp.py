@@ -69,7 +69,7 @@ def monitoring_after_algorithm(algoName, file, application):
     file.write("valNoSGCost_A    : "+ str(application.valNoSGCost_A)+ "\n")
     file.write("ValObjAi    : "+"\n")
     for i in range(application.SG.prosumers.size):
-        file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.ObjValai[i], 2)) + "\n")
+        file.write("__Prosumer " + str(i + 1) + "___ :" +str(round(application.Obj_ai[i], 2)) + "\n")
         
     file.write(f"________RUN END {algoName} " + str(1) +"_________" + "\n\n")
     
