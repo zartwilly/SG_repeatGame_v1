@@ -61,6 +61,7 @@ TOOLTIPS_Val_SG_NoSG = [
 ]
 TOOLTIPS_LCOST = [("value", "$y{(0,0)}")]
 TOOLTIPS_MODES = [("value", "$y{.5,3}")]
+TOOLTIPS_XY_ai = [("value", "$y{(0.1,1)}")]
 
 ###############################################################################
 #                   CONSTANTES: fin
@@ -825,6 +826,229 @@ def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
 ###############################################################################
 
 ###############################################################################
+#                visu bar plot ValSG and ValNoSG with meanLRI: debut
+###############################################################################
+def plot_X_Y_ai(scenarioCorePathDataViz: str):
+    """
+    
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+    scenarioCorePathDataViz : str
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    df_X_Y_ai = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_X_Y_ai.csv"), index_col=0)
+    data_X_Y_ai = df_X_Y_ai.to_dict()
+    
+    # Définition des couleurs spécifiques pour chaque algo
+    colors = {
+        "Bestie": "yellow",
+        "CSA": "green",
+        "LRI": "blue",
+        "SSA": "red",
+        "SyA": "purple"
+    }
+    
+    ps = []
+    algoNames = ['CSA','SSA','LRI', 'SyA', 'Bestie']
+    for algoName in algoNames:
+        data_algo = dict()
+        for k, v in data_X_Y_ai.items():
+            if algoName in k:
+               data_algo[k] = v
+               
+        #data_algo["prosumers"]=[f"prosumer_{i}" for i in range(df_X_Y_ai.shape[0])]
+        dico_prosumers = dict()
+        for i in range(df_X_Y_ai.shape[0]):
+            dico_prosumers[i] = f"prosumer_{i}"
+        data_algo["prosumers"] = dico_prosumers
+        df = pd.DataFrame(data_algo)
+        df_sort = df.sort_values(by=f'{algoName}_X_ai', ascending=True)
+        
+        # Créer un index numérique pour les prosumers
+        df_sort['prosumer_index'] = range(len(df_sort))
+        
+        # Création du graphique
+        p = figure(title=f"Nuage de points {algoName}_X_ai et {algoName}_Y_ai par prosumer",
+                   x_axis_label='Prosumer Index', y_axis_label=f'Valeurs {algoName}', 
+                   x_range=df_sort['prosumers'], tooltips=TOOLTIPS_XY_ai)
+        
+        # Rotation des étiquettes de l'axe des x
+        p.xaxis.major_label_orientation = 3.14159 / 4  # Rotation à 90 degrés (π/2 radians)
+        
+        # Ajouter les points pour SyA_X_ai
+        name_col = f'{algoName}_X_ai'
+        p.circle(x=df_sort['prosumers'], y=df_sort[name_col], 
+                 size=10, color="blue", legend_label=name_col)
+        
+        # Ajouter les points pour SyA_Y_ai
+        name_col = f'{algoName}_Y_ai'
+        p.circle(x=df_sort['prosumers'], y=df_sort[name_col], 
+                 size=10, color="red", legend_label=name_col)
+        
+        p.legend.click_policy="mute"
+        # hover = HoverTool()
+        # list_hover = []
+        # for k in data_algo.keys():
+        #     col = k
+        #     list_hover.append( (k, '@k'))
+        # hover.tooltips = list_hover
+        # hover.tooltips = [("Algorithm", "@algoName"), ("ValSG", "@ValSG"), 
+        #                   ("ValNoSG", "@ValNoSG")]
+        #p.add_tools(hover)
+        
+        ps.append([p])
+    
+    
+    
+    
+    return ps
+    
+###############################################################################
+#               visu bar plot ValSG and ValNoSG with meanLRI : FIN
+###############################################################################
+
+###############################################################################
+#               visu bar plot array nash equilibrium : DEBUT
+###############################################################################
+import numpy as np
+def plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz):
+    """
+    
+
+    Parameters
+    ----------
+    scenarioCorePathDataViz : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    plot_NE_brute : TYPE
+        DESCRIPTION.
+
+    """
+    df_X_Y_ai = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_X_Y_ai.csv"), index_col=0)
+    N = df_X_Y_ai.shape[0]
+    
+    arr_NE_brute = np.load(os.path.join(scenario["scenarioCorePathDataViz"], "arr_NE_brute.npy"))
+    
+    prosumers = [f'prosumer{i}' for i in range(N)]
+    prosumers.insert(0, "period")
+    arr_NE_brute_N = np.array_split(arr_NE_brute, N, axis=1)
+    
+    counts_N = list()
+    for arr_NE_brute_n in arr_NE_brute_N:
+        count_1_per_period = np.sum(arr_NE_brute_n == 1, axis=1)
+        count_1_per_period = count_1_per_period / N
+        counts_N.append(count_1_per_period)
+        
+    arr_N8 = np.vstack(counts_N)
+    
+    arr_T = np.sum(arr_N8, axis=0) / N
+    
+    df_T = pd.DataFrame(arr_T).reset_index()
+    df_T.columns = ["periods", "Percent_NE_pure"]
+    
+    source = ColumnDataSource(df_T)
+    
+    
+    plot_NE_brute = figure(title=f"LRI: Percent of Pure Nash Equilibrium per period",
+                           x_axis_label='periods', y_axis_label=f'Percent', 
+                           tooltips=TOOLTIPS_XY_ai)
+    
+    plot_NE_brute.vbar(x="periods", top="Percent_NE_pure", source=source, width=0.70)
+    
+    
+    return plot_NE_brute
+###############################################################################
+#               visu bar plot array nash equilibrium : FIN
+###############################################################################
+
+###############################################################################
+#               visu bar plot disribution proba min : DEBUT
+###############################################################################
+def plot_min_proba_distribution(df_prosumers: pd.DataFrame, scenarioCorePathDataViz:str):
+    """
+    for each period, get the min proba like that :
+        prosumer_1 : 0.7 0.3  => 0.7
+        prosumer_2 : 0.1 0.9  => 0.9     ---> z_i = 0.6
+        ........
+        prosumer_n : 0.6 0.4  => 0.6
+
+    Parameters
+    ----------
+    scenarioCorePathDataViz : str
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    algoName = "LRI_REPART"
+    cols_2_select = ["prosumers","period", "prmode0", "prmode1"]
+    df_lri = df_prosumers[df_prosumers.algoName == algoName][cols_2_select]
+    
+    
+    df_lri['pr_max'] = df_lri[['prmode0', 'prmode1']].max(axis=1)
+    df_t_z = df_lri[["period",'pr_max']].groupby('period')['pr_max'].min().reset_index()
+    
+    df_t_z['pr_max'] = df_t_z['pr_max'].round(2)
+    df_t_z['pr_max_deci'] = np.floor(df_t_z['pr_max'] * 10) / 10
+    
+    bins = np.linspace(0,1, num=21)
+    
+    # Générer des bins avec np.linspace
+    bins = np.linspace(0, 1, num=21)
+    
+    # Calculer l'histogramme
+    hist, edges = np.histogram(df_t_z['pr_max_deci'], bins=bins)
+    
+    # Créer un plot Bokeh
+    p_distr = figure(width=800, height=400, title="Distribution de pr_max_deci", 
+               x_axis_label='Valeurs', y_axis_label='Fréquence')
+    
+    # Créer un ColumnDataSource
+    source = ColumnDataSource(data=dict(
+        left=edges[:-1],
+        right=edges[1:],
+        top=hist,
+    ))
+    
+    # Ajouter des rectangles pour représenter l'histogramme
+    p_distr.quad(top='top', bottom=0, left='left', right='right', 
+                 fill_color="skyblue", line_color="white", source=source)
+    
+    # Personnaliser les étiquettes de l'axe des x
+    ticks = [(edges[i] + edges[i+1]) / 2 for i in range(len(edges) - 1)]
+    tick_labels = [f"{edges[i]:.2f} - {edges[i+1]:.2f}" for i in range(len(edges) - 1)]
+    
+    p_distr.xaxis.ticker = ticks
+    p_distr.xaxis.major_label_overrides = {tick: label for tick, label in zip(ticks, tick_labels)}
+    
+    # Ajouter un outil de survol (HoverTool)
+    hover = HoverTool(tooltips=[
+        ("Valeur", "@left{0.2f} - @right{0.2f}"),
+        ("Fréquence", "@top"),
+    ])
+    
+    # Ajouter l'outil de survol au plot
+    p_distr.add_tools(hover)
+    
+    return p_distr
+
+###############################################################################
+#               visu bar plot disribution proba min : FIN
+###############################################################################
+
+###############################################################################
 #                   visu all plots : debut
 ###############################################################################
 def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
@@ -928,6 +1152,12 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
     
     plot_Perf_MeanLri = plot_performanceAlgo_meanLRI(scenarioCorePathDataViz)
     
+    ps_X_Y_ai = plot_X_Y_ai(scenarioCorePathDataViz)
+    
+    plot_NE_brute = plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz)
+    
+    p_distr = plot_min_proba_distribution(df_prosumers, scenarioCorePathDataViz)
+    
     # create a layout
     lyt = layout(
         [
@@ -941,7 +1171,10 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
             [plotQttepo], 
             [plot_Perf], 
             [plot_Perf_MeanLri],
-            plots_list
+            plots_list, 
+            ps_X_Y_ai, 
+            plot_NE_brute, 
+            p_distr
             # [p1, p2],  # the first row contains two plots, spaced evenly across the width of notebook
             # [p3],  # the second row contains only one plot, spanning the width of notebook
         ],
