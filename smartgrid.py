@@ -37,6 +37,8 @@ class Smartgrid :
     GridNeeds = None
     Free = None
     
+    NE_brute_t = None       # save brute Nash Equilibrium at each period
+    
     # TODELETE
     # DispSG = None
     # TauS = None # contains the tau array for all players at period t 
@@ -108,6 +110,8 @@ class Smartgrid :
         self.Cost = np.zeros(nbperiod)
         self.GridNeeds = np.zeros(shape=(nbperiod,rho+1))
         self.Free = np.zeros(shape=(nbperiod,rho+1))
+        
+        self.NE_brute_t = np.full_like(np.zeros(shape=(nbperiod,N)), [-1 for i in range(N)]) #np.zeros(nbperiod)
         # self.TauS = np.ndarray(shape=(N, rho+1))
         # self.DispSG = np.zeros(rho+1)
         # self.GNeeds = np.zeros(shape=(nbperiod,rho+1))
