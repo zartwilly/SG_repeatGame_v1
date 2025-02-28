@@ -53,6 +53,9 @@ class App:
     Qttepo_plus = None     # compute quantity prosumers must give to EPO
     Qttepo_minus = None     # compute quantity prosumers must receive to EPO
     X_ai = None             # percent of reduction each actor must pay or receive money
+    Y_ai = None             # Sum over periods of quantity of production prosumer a_i give to SG
+    NE_ai = None            # Nash equilibrium for each prosumer
+    # NE_brute_t = None       # Nash equilibrium Brute : all prosumers have NE_ai = 1 for all prosumers
     
     def __init__(self, N_actors, maxstep, mu, b, rho, h, maxstep_init, threshold):
         self.maxstep = maxstep
@@ -72,6 +75,9 @@ class App:
         self.Qttepo_plus = 0
         self.Qttepo_minus = 0
         self.X_ai = np.zeros(N_actors)
+        self.Y_ai = np.zeros(N_actors)
+        self.NE_ai = np.zeros(N_actors)
+        # self.NE_brute_t = 0
         
         
     def computeObj_ai(self):
@@ -116,6 +122,20 @@ class App:
             sumX_ai = 0
             sumX_ai = round(1 - self.Obj_ai[i]/self.ObjValNoSG_ai[i], 2)
             self.X_ai[i] = sumX_ai
+            
+    def computeY_ai(self):
+        """
+        Sum over periods of production quantity that prosumer a_i gives to SG
+
+        Returns
+        -------
+        None.
+
+        """
+        for i in range(self.SG.prosumers.size):
+            sumY_ai = 0
+            sumY_ai = np.sum(self.SG.prosumers[i].prodit)
+            self.Y_ai[i] = sumY_ai
             
     def computeObjSG(self):
         """
@@ -724,7 +744,17 @@ class App:
         runLRI_sumUp_K_txt = f"run_{algoName}_DF_T_Kmax.csv"
         df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_sumUp_K_txt))
         ## ---> end : save execution to CSV file Over periods with the k max steps
-            
+        
+        # df_NE_brute = pd.DataFrame(self.SG.NE_brute_t).reset_index()
+        # df_NE_brute.columns = ["period","NE_brute"]
+        # df_NE_brute.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], "NE_brute.csv"))
+        
+        df_NE_brute = pd.DataFrame(self.SG.NE_brute_t).reset_index()
+        prosumers = [f'prosumer{i}' for i in range(self.SG.prosumers.size)]
+        prosumers.insert(0, "period")
+        df_NE_brute.columns = prosumers
+        df_NE_brute.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], "NE_brute.csv"))
+        
          
         ## Compute metrics
         self.computeValSG()
@@ -732,6 +762,7 @@ class App:
         self.computeObj_ai()
         self.computeObjValNoSG_ai()
         self.computeX_ai()
+        self.computeY_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         
@@ -954,6 +985,7 @@ class App:
         self.computeObj_ai()
         self.computeObjValNoSG_ai()
         self.computeX_ai()
+        self.computeY_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1088,6 +1120,7 @@ class App:
         self.computeObj_ai()
         self.computeObjValNoSG_ai()
         self.computeX_ai()
+        self.computeY_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1178,6 +1211,7 @@ class App:
         self.computeObj_ai()
         self.computeObjValNoSG_ai()
         self.computeX_ai()
+        self.computeY_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1379,12 +1413,16 @@ class App:
             df_t = pd.DataFrame.from_dict(dico_onePeriod, orient="index")
             df_ts.append(df_t)
             
+            # nash equilibrium at one period 
+            
+            
         # Compute metrics
         self.computeValSG()
         self.computeValNoSG()
         self.computeObj_ai()
         self.computeObjValNoSG_ai()
         self.computeX_ai()
+        self.computeY_ai()
         self.computeObjSG()
         self.computeValNoSGCost_A()
         self.computeQttepo()
@@ -1598,7 +1636,10 @@ class App:
         ValNoSG_old = self.SG.ValNoSG[period]
         
         for i in range(N):
+            print(f"NE: prosumer_{i} - start")
+            
             #Create a deepcopy of the smartgrid
+            sg1 = None
             sg1 = copy.deepcopy(self.SG)
             
             #Change prosumer i mode for the other mode possible for his state
@@ -1618,23 +1659,33 @@ class App:
                 else:
                     sg1.prosumers[i].mode[period] = ag.Mode.DIS
         
-        ### ---- Execute the copy sg1 with new parameters  ----
-        sg1 = self.execute_SG_for_NashEquilibrium(period=period, sg1=sg1)
+            ### ---- Execute the copy sg1 with new parameters  ----
+            sg1 = self.execute_SG_for_NashEquilibrium(period=period, sg1=sg1)
+            
+            
+            # Test if the new benefit is higher than the one of the first smartgrid
+            ValSG_tmp = sg1.ValSG[period]
+            ValNoSG_tmp = sg1.ValNoSG[period]
+            
+            fail = 1 if ValSG_old < ValSG_tmp  else 0
+            
+            # Test if a Nash equilibrium exist for this period
+            if fail == 1 : 
+                file.write("SG is in a Nash equilibrium for period " + str(period) + "\n")
+                self.NE_ai[i] = 1
+                print(f"NE: prosumer_{i} - NASH EQUILIBRIUM t={period} END")
+            else :
+                file.write("SG is not in Nash equilibrium on period " + str(period) + "\n")
+                print(f"NE: prosumer_{i} - NO NASH EQUILIBRIUM t={period} END")
+                #self.admitNashequilibrium(period=period, file=file)
+                
+                # create a numpy array to save information of Nash equilibrium 
+                self.NE_ai[i] = 0
+            pass
         
-        
-        # Test if the new benefit is higher than the one of the first smartgrid
-        ValSG_tmp = sg1.ValSG[period]
-        ValNoSG_tmp = sg1.ValNoSG[period]
-        
-        fail = 1 if ValSG_old < ValSG_tmp  else 0
-        
-        # Test if a Nash equilibrium exist for this period
-        if fail == 0 : 
-            file.write("SG is in a Nash equilibrium for period " + str(period) + "\n")
-        else :
-            file.write("SG is not in Nash equilibrium on period " + str(period) + "\n")
-            self.admitNashequilibrium(period=period, file=file)
-        pass
+        # Nash Equilibrium Brute : all prosumers have a NE ie 1
+        self.SG.NE_brute_t[period] = self.NE_ai
+        # self.SG.NE_brute_t[period] = 1 if self.NE_ai.all()  else 0
     
     ###########################################################################
     #                       identify nash equilibruim at one period:: end
