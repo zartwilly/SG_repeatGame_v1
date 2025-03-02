@@ -1664,6 +1664,8 @@ class App:
             
             
             # Test if the new benefit is higher than the one of the first smartgrid
+            # if ValSG_old < ValSG_tmp then NO Nash Equilibrium (fail = 1)
+            # if ValSG_old > ValSG_tmp then Nash Equilibrium (fail = 0)
             ValSG_tmp = sg1.ValSG[period]
             ValNoSG_tmp = sg1.ValNoSG[period]
             
@@ -1671,12 +1673,12 @@ class App:
             
             # Test if a Nash equilibrium exist for this period
             if fail == 1 : 
-                file.write("SG is in a Nash equilibrium for period " + str(period) + "\n")
+                file.write("SG is NOT in a Nash equilibrium for period " + str(period) + "\n")
                 self.NE_ai[i] = 1
-                print(f"NE: prosumer_{i} - NASH EQUILIBRIUM t={period} END")
-            else :
-                file.write("SG is not in Nash equilibrium on period " + str(period) + "\n")
                 print(f"NE: prosumer_{i} - NO NASH EQUILIBRIUM t={period} END")
+            else :
+                file.write("SG is  in Nash equilibrium on period " + str(period) + "\n")
+                print(f"NE: prosumer_{i} - NASH EQUILIBRIUM t={period} END")
                 #self.admitNashequilibrium(period=period, file=file)
                 
                 # create a numpy array to save information of Nash equilibrium 
