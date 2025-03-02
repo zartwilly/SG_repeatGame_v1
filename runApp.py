@@ -412,7 +412,7 @@ def generer_data_from_scenario(scenario:dict,
             
         else :
             # scenario.get("simul").get("data") == "generate"
-            g.generate(transitionprobabilities, repartition, values, probabilities)
+            g.generate(transitionprobabilities, repartition, values, probabilities, scenario)
             
         
         
@@ -539,7 +539,6 @@ def Initialization_game(scenario):
             else:
                 # put initial storage variable 
                 application.SG.prosumers[i].smax = smax
-                print(f"** 5 **")
  
     return application
 
