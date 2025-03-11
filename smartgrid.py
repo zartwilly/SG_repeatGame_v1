@@ -538,6 +538,7 @@ class Smartgrid :
         for i in range(self.prosumers.size):
             somme = 0
             for h in range(1, int(self.prosumers[i].gamma[period])+1):
+                #TODO
                 somme += self.prosumers[i].Val[period, h] / h
                 
             self.prosumers[i].QTStock[period] = somme
@@ -574,12 +575,26 @@ class Smartgrid :
                         = aux.phiepominus(min( QTstock_i, Si_tplus1) - Si, coef=self.coef_phiepominus)
                 pass
             else:
-                if Si_tplus1 < Si:
+                # ------------------- version of 03/03/2025 ------------------
+                if QTstock_i <= Si_tplus1 and Si_tplus1 <= Si:
                     self.prosumers[i].valStock[period] \
-                        = - aux.phiepominus( aux.apv(QTstock_i - Si_tplus1), coef=self.coef_phiepominus)
-                else:
-                    self.prosumers[i].valStock[period] = 0
-                pass
+                        = aux.phiepoplus( Si - Si_tplus1, coef=self.coef_phiepoplus )
+                elif QTstock_i >= Si_tplus1:
+                    self.prosumers[i].valStock[period] \
+                        = - aux.phiepominus( QTstock_i - Si_tplus1 ,coef=self.coef_phiepominus)
+                elif Si_tplus1 > Si:
+                    self.prosumers[i].valStock[period] \
+                        = - aux.phiepoplus( Si_tplus1 - Si, coef=self.coef_phiepoplus )
+                else: 
+                    self.prosumers[i].valStock[period] \
+                        = 5000
+                # ------------------- version of 03/03/2025 ------------------
+                # if Si_tplus1 < Si:
+                #     self.prosumers[i].valStock[period] \
+                #         = - aux.phiepominus( aux.apv(QTstock_i - Si_tplus1), coef=self.coef_phiepominus)
+                # else:
+                #     self.prosumers[i].valStock[period] = 0
+                # pass
             
             # -------------------  verion from 18/01/2025  -----------------
             
