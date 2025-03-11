@@ -417,13 +417,15 @@ def plotQTTepo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
                     .groupby(["algoName","period"]).sum().reset_index()
     df_Qttepo.rename(columns={"prodit":"insg", "consit":"outsg"}, inplace=True)
     
-    df_Qttepo["Qttepo"] = df_Qttepo["outsg"] - df_Qttepo["insg"]
+    # df_Qttepo["Qttepo"] = df_Qttepo["outsg"] - df_Qttepo["insg"]
+    # df_Qttepo['Qttepo'] = df_Qttepo['Qttepo'].apply(lambda x: x if x>=0 else 0)
     
-    df_Qttepo['Qttepo'] = df_Qttepo['Qttepo'].apply(lambda x: x if x>=0 else 0)
+    df_Qttepo["Qttepo"] = df_Qttepo["insg"] - df_Qttepo["outsg"]
+    # df_Qttepo['Qttepo'] = df_Qttepo['Qttepo'].apply(lambda x: x if x>=0 else 0)
     
     # set up the figure
     plotQttepo = figure(
-        title=" show QttEpo KPI for all algorithms ",
+        title=" show QttEpo = sum_{i in N}(prod_i^t - cons_i^t) KPI for all algorithms ",
         height=300,
         sizing_mode="stretch_width",  # use the full width of the parent element
         tooltips=TOOLTIPS_LCOST,
@@ -666,6 +668,8 @@ def plot_barModesBis(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
 ###############################################################################
 #                   visu bar plot ValSG and ValNoSG : debut
 ###############################################################################
+from bokeh.palettes import Category10
+
 def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
     """
     
@@ -682,6 +686,69 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
     None.
 
     """
+    # df_valNoSG = df_prosumers[["period", "algoName", "valNoSG_i"]] \
+    #                 .groupby(["algoName","period"]).sum().reset_index()
+    # df_valSG = df_prosumers[["period", "algoName", "ValSG"]]\
+    #                 .groupby(["algoName","period"]).mean().reset_index()
+                    
+    # df_valSGNoSG = df_valSG.merge(df_valNoSG, on=["period", "algoName"])
+    
+    # df_Perf = df_valSGNoSG[['algoName', 'period', 'ValSG', 'valNoSG_i']]\
+    #                 .groupby(['algoName']).sum().reset_index()
+                    
+    # df_Perf = df_Perf.drop('period', axis=1)
+    
+    # df_Perf.rename(columns={"valNoSG_i":"valNoSG"}, inplace=True)
+    
+    
+    # # Transformation des données pour affichage côte à côte en groupant par algorithme
+    # categories = df_Perf['algoName'].tolist()
+    # metrics = ['ValSG', 'valNoSG']
+    # x_labels = [(cat, metric) for cat in categories for metric in metrics]
+    # y_values = [df_Perf.loc[df_Perf['algoName'] == cat, metric].values[0] for cat, metric in x_labels]
+    
+    # # Création du ColumnDataSource avec des valeurs associées aux barres
+    # source = ColumnDataSource(data=dict(
+    #             x=[f"{cat}_{metric}" for cat, metric in x_labels],
+    #             y=y_values,
+    #             algo=[cat for cat, metric in x_labels],
+    #             metric=[metric for cat, metric in x_labels]
+    # ))
+    
+    # # Création de la figure avec un regroupement par algorithme
+    # plot_Perf = figure(x_range=FactorRange(*[f"{cat}_{metric}" for cat, metric in x_labels]), 
+    #             title="Comparaison ValSG et valNoSG",
+    #             toolbar_location=None, tools="")
+    
+    # # Ajout des barres côte à côte avec la bonne référence aux colonnes du source
+    # types = ['ValSG', 'valNoSG']
+    # colors = ["blue", "red"]
+    # plot_Perf.vbar(x='x', top='y', width=0.4, source=source, fill_color=factor_cmap('x', palette=colors, factors=metrics, start=1))
+
+    # # for metric, color in zip(types, colors):
+    # #     plot_Perf.vbar(x='x', top='y', width=0.4, source=source, legend_label=metric, color=color)
+    
+    # # Ajout du HoverTool pour afficher les valeurs
+    # hover = HoverTool()
+    # hover.tooltips = [
+    #     ("Algorithme", "@algo"),
+    #     ("Type", "@metric"),
+    #     ("Valeur", "@y")
+    # ]
+    # plot_Perf.add_tools(hover)
+    
+    # # Personnalisation du graphique
+    # plot_Perf.xgrid.grid_line_color = None
+    # plot_Perf.y_range.start = 0
+    # plot_Perf.xaxis.major_label_orientation = 1.2
+    # plot_Perf.xaxis.axis_label = "AlgoName et Type"
+    # plot_Perf.yaxis.axis_label = "Valeurs"
+    # plot_Perf.title.align = "center"
+    # #plot_Perf.legend.click_policy = "hide"
+    
+    ###########################################################################
+    #           new version of various colors
+    ###########################################################################
     df_valNoSG = df_prosumers[["period", "algoName", "valNoSG_i"]] \
                     .groupby(["algoName","period"]).sum().reset_index()
     df_valSG = df_prosumers[["period", "algoName", "ValSG"]]\
@@ -696,7 +763,6 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
     
     df_Perf.rename(columns={"valNoSG_i":"valNoSG"}, inplace=True)
     
-    
     # Transformation des données pour affichage côte à côte en groupant par algorithme
     categories = df_Perf['algoName'].tolist()
     metrics = ['ValSG', 'valNoSG']
@@ -705,24 +771,25 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
     
     # Création du ColumnDataSource avec des valeurs associées aux barres
     source = ColumnDataSource(data=dict(
-                x=[f"{cat}_{metric}" for cat, metric in x_labels],
-                y=y_values,
-                algo=[cat for cat, metric in x_labels],
-                metric=[metric for cat, metric in x_labels]
-    ))
+                    x=[f"{cat}_{metric}" for cat, metric in x_labels],
+                    y=y_values,
+                    algo=[cat for cat, metric in x_labels],
+                    metric=[metric for cat, metric in x_labels]
+        ))
+    
+    # Palette de couleurs pour chaque algorithme
+    palette = Category10[len(categories)]
+    colors = {cat: color for cat, color in zip(categories, palette)}
     
     # Création de la figure avec un regroupement par algorithme
     plot_Perf = figure(x_range=FactorRange(*[f"{cat}_{metric}" for cat, metric in x_labels]), 
-                title="Comparaison ValSG et valNoSG",
-                toolbar_location=None, tools="")
+                    title="Comparaison ValSG et valNoSG",
+                    toolbar_location=None, tools="")
     
     # Ajout des barres côte à côte avec la bonne référence aux colonnes du source
     types = ['ValSG', 'valNoSG']
-    colors = ["blue", "red"]
-    plot_Perf.vbar(x='x', top='y', width=0.4, source=source, fill_color=factor_cmap('x', palette=colors, factors=metrics, start=1))
-
-    # for metric, color in zip(types, colors):
-    #     plot_Perf.vbar(x='x', top='y', width=0.4, source=source, legend_label=metric, color=color)
+    plot_Perf.vbar(x='x', top='y', width=0.4, source=source, 
+                   fill_color=factor_cmap('algo', palette=list(colors.values()), factors=categories, start=1))
     
     # Ajout du HoverTool pour afficher les valeurs
     hover = HoverTool()
@@ -740,9 +807,10 @@ def plot_performanceAlgo(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: st
     plot_Perf.xaxis.axis_label = "AlgoName et Type"
     plot_Perf.yaxis.axis_label = "Valeurs"
     plot_Perf.title.align = "center"
-    #plot_Perf.legend.click_policy = "hide"
-    
-    
+
+    ###########################################################################
+    #           new version of various colors
+    ###########################################################################
     
     return plot_Perf
     
@@ -769,8 +837,8 @@ def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
     None.
 
     """
-    df_exec = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_exec.csv") )
     
+    df_exec = pd.read_csv( os.path.join(scenarioCorePathDataViz, "df_exec.csv") )
     df_Perf = df_exec[["algoName","ValSG","ValNoSG"]].groupby("algoName").mean().reset_index()
     
     
@@ -788,22 +856,24 @@ def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
         'ValSG': list(df_Perf['ValSG']),
         'ValNoSG': list(df_Perf['ValNoSG'])
         }
+    data['ValSG_Rounded'] = [round(val, 0) for val in data['ValSG']]
+    data['ValNoSG_Rounded'] = [round(val, 0) for val in data['ValNoSG']]
     
     source = ColumnDataSource(data=data)
 
     plot_Perf_MeanLri = figure(x_range=data["algoName"], title="Performance Measures",
-                height=450, toolbar_location=None, tools="hover", 
+                height=450, toolbar_location=None, tools="hover",
                 tooltips="$name @algoName: @$name")
 
     plot_Perf_MeanLri.vbar(x=dodge('algoName', -0.25, 
-                                   range=plot_Perf_MeanLri.x_range), 
-                           top='ValSG', source=source,
-                           width=0.2, color="green", legend_label="ValSG")
+                                    range=plot_Perf_MeanLri.x_range), 
+                            top='ValSG', source=source,
+                            width=0.2, color="green", legend_label="ValSG")
 
     plot_Perf_MeanLri.vbar(x=dodge('algoName',  0.0,  
-                                   range=plot_Perf_MeanLri.x_range), 
-                           top='ValNoSG', source=source,
-                           width=0.2, color="blue", legend_label="ValNoSG")
+                                    range=plot_Perf_MeanLri.x_range), 
+                            top='ValNoSG', source=source,
+                            width=0.2, color="blue", legend_label="ValNoSG")
 
 
     plot_Perf_MeanLri.x_range.range_padding = 0.1
@@ -813,12 +883,64 @@ def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
     plot_Perf_MeanLri.legend.click_policy="mute"
 
     hover = HoverTool()
-    hover.tooltips = [("Algorithm", "@algoName"), ("ValSG", "@ValSG"), 
-                      ("ValNoSG", "@ValNoSG")]
+    hover.tooltips = [("Algorithm", "@algoName"), 
+                      # ("ValSG", "@ValSG"), ("ValNoSG", "@ValNoSG"), 
+                      ('ValSG_round', "@ValSG_Rounded"), ("ValNoSG_round", "@ValNoSG_Rounded")
+                      ]
     plot_Perf_MeanLri.add_tools(hover)
     plot_Perf_MeanLri.add_layout(plot_Perf_MeanLri.legend[0], 'right')
     
     
+    # ###########################################################################
+    # #           new version of various colors
+    # ###########################################################################
+    
+    # df_exec = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_exec.csv") )
+    
+    # df_exec = pd.read_csv( os.path.join(scenarioCorePathDataViz, "df_exec.csv") )
+    # df_Perf = df_exec[["algoName","ValSG","ValNoSG"]].groupby("algoName").mean().reset_index()
+    
+    # colors = {
+    # "Bestie": "yellow",
+    # "CSA": "green",
+    # "LRI": "blue",
+    # "SSA": "red",
+    # "SyA": "purple"
+    # }
+    
+    # # Transformation des données pour affichage côte à côte
+    # x_labels = [(cat, metric) for cat in df_Perf['algoName'].tolist() for metric in ['ValSG', 'ValNoSG']]
+    # y_values = [df_Perf.loc[df_Perf['algoName'] == cat, metric].values[0] for cat, metric in x_labels]
+    
+    # source = ColumnDataSource(data=dict(
+    #     x=[f"{cat}_{metric}" for cat, metric in x_labels],
+    #     y=y_values,
+    #     algo=[cat for cat, metric in x_labels],
+    #     metric=[metric for cat, metric in x_labels]
+    # ))
+    
+    # # Création de la figure avec un regroupement par algorithme
+    # plot_Perf_MeanLri = figure(x_range=[f"{cat}_{metric}" for cat, metric in x_labels], 
+    #                   title="Comparaison ValSG et ValNoSG",
+    #                   height=450, toolbar_location=None, tools="hover")
+    
+    # # Ajout des barres côte à côte avec des couleurs par algorithme
+    # plot_Perf_MeanLri.vbar(x='x', top='y', width=0.4, source=source, 
+    #                fill_color=factor_cmap('algo', palette=list(colors.values()), factors=df_Perf['algoName'].tolist()))
+    
+    # # Personnalisation du graphique
+    # plot_Perf_MeanLri.xgrid.grid_line_color = None
+    # plot_Perf_MeanLri.xaxis.major_label_orientation = 1.2
+    
+    # # Ajout du HoverTool pour afficher les valeurs
+    # hover = HoverTool()
+    # hover.tooltips = [("Algorithm", "@algo"), ("Type", "@metric"), ("Value", "@y")]
+    # plot_Perf_MeanLri.add_tools(hover)
+        
+    # ###########################################################################
+    # #           new version of various colors
+    # ###########################################################################
+
     return plot_Perf_MeanLri
     
 ###############################################################################
@@ -828,7 +950,7 @@ def plot_performanceAlgo_meanLRI(scenarioCorePathDataViz: str):
 ###############################################################################
 #                visu bar plot ValSG and ValNoSG with meanLRI: debut
 ###############################################################################
-def plot_X_Y_ai(scenarioCorePathDataViz: str):
+def plot_X_Y_ai_OLD(scenarioCorePathDataViz: str):
     """
     
 
@@ -911,6 +1033,126 @@ def plot_X_Y_ai(scenarioCorePathDataViz: str):
     
     return ps
     
+
+from bokeh.models import (CustomJS, LinearAxis, Range1d, Select,
+                          WheelZoomTool, ZoomInTool, ZoomOutTool)
+def plot_X_Y_ai(scenarioCorePathDataViz: str):
+    """
+    
+
+    Parameters
+    ----------
+    df_prosumers : pd.DataFrame
+        DESCRIPTION.
+    scenarioCorePathDataViz : str
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    # df_X_Y_ai = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_X_Y_ai.csv"), index_col=0)
+    df_X_Y_ai = pd.read_csv( os.path.join(scenarioCorePathDataViz, "df_X_Y_ai.csv"), index_col=0)
+    
+    data_X_Y_ai = df_X_Y_ai.to_dict()
+    
+    # Définition des couleurs spécifiques pour chaque algo
+    colors = {
+        "Bestie": "yellow",
+        "CSA": "green",
+        "LRI": "blue",
+        "SSA": "red",
+        "SyA": "purple"
+    }
+    
+    ps = []
+    algoNames = ['CSA','SSA','LRI', 'SyA', 'Bestie']
+    for algoName in algoNames:
+        data_algo = dict()
+        for k, v in data_X_Y_ai.items():
+            if algoName in k:
+               data_algo[k] = v
+               
+        #data_algo["prosumers"]=[f"prosumer_{i}" for i in range(df_X_Y_ai.shape[0])]
+        dico_prosumers = dict()
+        for i in range(df_X_Y_ai.shape[0]):
+            dico_prosumers[i] = f"prosumer_{i}"
+        data_algo["prosumers"] = dico_prosumers
+        df = pd.DataFrame(data_algo)
+        df_sort = df.sort_values(by=f'{algoName}_X_ai', ascending=True)
+        
+        # Créer un index numérique pour les prosumers
+        df_sort['prosumer_index'] = range(len(df_sort))
+        
+        # Création du graphique
+        p = figure(title=f"Nuage de points {algoName}_X_ai et {algoName}_Y_ai par prosumer",
+                   x_axis_label='Prosumer Index', y_axis_label=f'Valeurs Xi {algoName}', 
+                   x_range=df_sort['prosumers'],  y_range=(0, df_sort[f'{algoName}_X_ai'].max()),
+                   tooltips=TOOLTIPS_XY_ai, tools="pan,box_zoom,save,reset")
+        
+        # Rotation des étiquettes de l'axe des x
+        p.xaxis.major_label_orientation = 3.14159 / 4  # Rotation à 90 degrés (π/2 radians)
+        
+        # Ajouter les points pour SyA_X_ai
+        name_col = f'{algoName}_X_ai'
+        blue_X_ai = p.circle(x=df_sort['prosumers'], y=df_sort[name_col], 
+                             size=10, color="blue", legend_label=name_col)
+        p.axis.axis_label_text_color = 'blue'
+        
+        # Ajouter les points pour SyA_Y_ai
+        name_col = f'{algoName}_Y_ai'
+        p.extra_y_ranges['foo'] = Range1d(df_sort[name_col].min()-3, df_sort[name_col].max())
+        blue_Y_ai = p.circle(x=df_sort['prosumers'], y=df_sort[name_col], 
+                             size=10, color="red", legend_label=name_col, 
+                             y_range_name="foo")
+        
+        # second xy-axis
+        ax2 = LinearAxis(
+            axis_label=f'Valeurs Y_ai {algoName}',
+            y_range_name="foo",
+        )
+        ax2.axis_label_text_color = 'red'
+        p.add_layout(ax2, 'left')
+        # ax3 = LinearAxis(
+        #     axis_label="red circles",
+        #     y_range_name="foo",
+        # )
+        # ax3.axis_label_text_color = 'red'
+        # p.add_layout(ax3, 'below')
+        
+        
+        wheel_zoom = WheelZoomTool()
+        p.add_tools(wheel_zoom)
+        
+        p.legend.click_policy="mute"
+        # hover = HoverTool()
+        # list_hover = []
+        # for k in data_algo.keys():
+        #     col = k
+        #     list_hover.append( (k, '@k'))
+        # hover.tooltips = list_hover
+        # hover.tooltips = [("Algorithm", "@algoName"), ("ValSG", "@ValSG"), 
+        #                   ("ValNoSG", "@ValNoSG")]
+        #p.add_tools(hover)
+        
+        zoom_in_blue = ZoomInTool(renderers=[blue_X_ai], description="Zoom in blue circles")
+        zoom_out_blue = ZoomOutTool(renderers=[blue_X_ai], description="Zoom out blue circles")
+        p.add_tools(zoom_in_blue, zoom_out_blue)
+        
+        zoom_in_red = ZoomInTool(renderers=[blue_X_ai], description="Zoom in red circles")
+        zoom_out_red = ZoomOutTool(renderers=[blue_Y_ai], description="Zoom out red circles")
+        p.add_tools(zoom_in_red, zoom_out_red)
+        
+        ps.append([p])
+    
+    
+    
+    
+    return ps
+    
+
+
 ###############################################################################
 #               visu bar plot ValSG and ValNoSG with meanLRI : FIN
 ###############################################################################
@@ -919,7 +1161,7 @@ def plot_X_Y_ai(scenarioCorePathDataViz: str):
 #               visu bar plot array nash equilibrium : DEBUT
 ###############################################################################
 import numpy as np
-def plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz):
+def plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz, M_execution_LRI):
     """
     
 
@@ -934,10 +1176,13 @@ def plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz):
         DESCRIPTION.
 
     """
-    df_X_Y_ai = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_X_Y_ai.csv"), index_col=0)
+    # df_X_Y_ai = pd.read_csv( os.path.join(scenario["scenarioCorePathDataViz"], "df_X_Y_ai.csv"), index_col=0)
+    df_X_Y_ai = pd.read_csv( os.path.join(scenarioCorePathDataViz, "df_X_Y_ai.csv"), index_col=0)
     N = df_X_Y_ai.shape[0]
     
-    arr_NE_brute = np.load(os.path.join(scenario["scenarioCorePathDataViz"], "arr_NE_brute.npy"))
+    # arr_NE_brute = np.load(os.path.join(scenario["scenarioCorePathDataViz"], "arr_NE_brute.npy"))
+    arr_NE_brute = np.load(os.path.join(scenarioCorePathDataViz, "arr_NE_brute.npy"))
+
     
     prosumers = [f'prosumer{i}' for i in range(N)]
     prosumers.insert(0, "period")
@@ -946,7 +1191,7 @@ def plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz):
     counts_N = list()
     for arr_NE_brute_n in arr_NE_brute_N:
         count_1_per_period = np.sum(arr_NE_brute_n == 1, axis=1)
-        count_1_per_period = count_1_per_period / N
+        count_1_per_period = count_1_per_period / M_execution_LRI
         counts_N.append(count_1_per_period)
         
     arr_N8 = np.vstack(counts_N)
@@ -1117,7 +1362,9 @@ def plot_all_figures(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str):
 ###############################################################################
 #                   visu all plots with mean LRI : debut
 ###############################################################################
-def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDataViz: str): 
+def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, 
+                                 scenarioCorePathDataViz: str, 
+                                 M_execution_LRI: int, rho: int): 
     """
     plot all figures from requests of latex document
 
@@ -1154,7 +1401,7 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
     
     ps_X_Y_ai = plot_X_Y_ai(scenarioCorePathDataViz)
     
-    plot_NE_brute = plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz)
+    plot_NE_brute = plot_nashEquilibrium_byPeriod(scenarioCorePathDataViz, M_execution_LRI)
     
     p_distr = plot_min_proba_distribution(df_prosumers, scenarioCorePathDataViz)
     
@@ -1169,7 +1416,7 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
             # [plotBarMode], 
             [plotBarModeBis], 
             [plotQttepo], 
-            [plot_Perf], 
+            # [plot_Perf], 
             [plot_Perf_MeanLri],
             plots_list, 
             ps_X_Y_ai, 
@@ -1182,7 +1429,7 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
     )
     
     # set output to static HTML file
-    filename = os.path.join(scenarioCorePathDataViz, "plotCourbes.html")
+    filename = os.path.join(scenarioCorePathDataViz, f"plotCourbes_rho{rho}.html")
     output_file(filename=filename, title="Static HTML file")
     
     save(lyt)
@@ -1194,6 +1441,11 @@ def plot_all_figures_withMeanLRI(df_prosumers: pd.DataFrame, scenarioCorePathDat
 if __name__ == '__main__':
     
     scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
+    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax18_bestieT6.json"
+    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax18_bestieT7.json"
+    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax24_bestieT6.json"
+    scenarioFile = "./data_scenario_JeuDominique/dataFromQuentinAutomate_rho5_b01.json"
+
     
     
     with open(scenarioFile) as file:
@@ -1204,6 +1456,7 @@ if __name__ == '__main__':
     
     scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
     scenario["scenarioCorePathData"] = scenarioCorePathData
+    M_execution_LRI = scenario["simul"]["M_execution_LRI"]
     
     
     apps_pkls = load_all_algos_apps(scenario)
@@ -1213,4 +1466,6 @@ if __name__ == '__main__':
     #                  scenarioCorePathDataViz=scenarioCorePathDataViz)
     
     plot_all_figures_withMeanLRI(df_prosumers=df_prosumers, 
-                                 scenarioCorePathDataViz=scenarioCorePathDataViz)
+                                 scenarioCorePathDataViz=scenarioCorePathDataViz, 
+                                 M_execution_LRI=M_execution_LRI, 
+                                 rho=scenario['simul']['rho'])
