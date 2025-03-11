@@ -91,9 +91,16 @@ scenarioFile = "./data_scenario/scenario_version20092024_dataDonnee_N8_T20_K5000
 # scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho2.json"
 # scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho3.json"
 # scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho4.json"
-scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
+#scenarioFile = "./data_scenario_JeuDominique/dataFromQuentinAutomate_rho5.json"
 # scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho08.json"
 # scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho10.json"
+
+scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax18_bestieT6.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax18_bestieT7.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax24_bestieT6.json"
+# scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho05_Smax30_bestieT5.json"
+
 
 
 
@@ -186,6 +193,49 @@ with open(scenarioFile) as file:
         app_LRI = ra.run_LRI_REPART(scenario, logfiletxt)
         pass
     pass
+
+scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
+scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas")
+
+
+# data = {"SyA_X_ai": list(app_syA.X_ai), "SyA_Y_ai": list(app_syA.Y_ai),
+#         "CSA_X_ai": list(app_CSA.X_ai), "CSA_Y_ai": list(app_CSA.Y_ai),
+#         "SSA_X_ai": list(app_SSA.X_ai), "SSA_Y_ai": list(app_SSA.Y_ai),
+#         "LRI_X_ai": list(app_LRI.X_ai), "LRI_Y_ai": list(app_LRI.Y_ai),
+#         "Bestie_X_ai": list(app_Bestie.X_ai), "Bestie_Y_ai": list(app_Bestie.Y_ai)
+#         }
+# pd.DataFrame(data).to_csv( os.path.join(scenarioCorePathDataViz, "df_X_Y_ai.csv") )
+
+# ps = []
+# algoNames = ['CSA','SSA','LRI', 'SyA', 'Bestie']
+# for algoName in algoNames:
+#     data_algo = dict()
+#     for k, v in data.items():
+#         if algoName in k:
+#            data_algo[k] = v
+           
+#     data_algo["prosumers"]=[f"prosumer_{i}" for i in range(app_LRI.Y_ai.shape[0])]
+#     df = pd.DataFrame(data_algo)
+#     df_sort = df.sort_values(by='SyA_X_ai', ascending=True)
+    
+#     # Créer un index numérique pour les prosumers
+#     df_sort['prosumer_index'] = range(len(df_sort))
+    
+#     # Création du graphique
+#     p = figure(title=f"Nuage de points {algoName}_X_ai et {algoName}_Y_ai par prosumer",
+#                x_axis_label='Prosumer Index', y_axis_label=f'Valeurs {algoName}')
+    
+#     # Ajouter les points pour SyA_X_ai
+#     p.circle(x=df_sort['prosumer_index'], y=df_sort[f'{algoName}_X_ai'], 
+#              size=10, color="blue", legend_label=f'{algoName}_X_ai')
+    
+#     # Ajouter les points pour SyA_Y_ai
+#     p.circle(x=df_sort['prosumer_index'], y=df_sort[f'{algoName}_Y_ai'], 
+#              size=10, color="red", legend_label='f{algoName}_Y_ai')
+    
+#     ps.append([p])
+    
+
 
 ### ------- START : redistribution with shapley values between LRI and sysA -------
 is_shapleyValueCalculate = scenario["simul"]["is_shapleyValueCalculate"]
