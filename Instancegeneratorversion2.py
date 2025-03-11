@@ -11,6 +11,8 @@ import numpy as np
 import random as rdm
 import json
 
+NUM = 3
+
 class Instancegenaratorv2:
     
     # This is the second version of the instance generator used to generate production and consumption values for prosumers
@@ -44,11 +46,11 @@ class Instancegenaratorv2:
 
         """
         
-        self.production = np.zeros((N, T+rho))
-        self.consumption = np.zeros((N,T+rho))
-        self.storage = np.zeros((N,T+rho))
-        self.storage_max = np.zeros((N,T+rho))
-        self.situation = np.zeros((N, T+rho))
+        self.production = np.zeros((N, T+NUM*rho))
+        self.consumption = np.zeros((N,T+NUM*rho))
+        self.storage = np.zeros((N,T+NUM*rho))
+        self.storage_max = np.zeros((N,T+NUM*rho))
+        self.situation = np.zeros((N, T+NUM*rho))
         self.laststate = np.ones((N,3))
         
         
@@ -440,7 +442,7 @@ if __name__ == "__main__":
     N_actors = 10
     T_periods = 10
     rho = 5 # the next periods to add at T_periods. In finish, we generate (T_periods + rho) periods
-    g = Instancegenaratorv2(N=N_actors,T=T_periods, rho=rho)
+    # g = Instancegenaratorv2(N=N_actors,T=T_periods, rho=rho)
     
     repartition = [5,5]
     #values = [m1a,M1a,m1b,M1b,m2b,M2b,cb,m1c,M1c,m2c,M2c,m3c,M3c,m4c,M4c]
@@ -449,7 +451,7 @@ if __name__ == "__main__":
     #probabilities = [P1b,P2b,P1c,P2c,P3c,P4c]
     probabilities = [[0.5,0.5],[0.5,0.5,0.6,0.5]]
     
-    g.generate(transitionprobabilities, repartition, values, probabilities)            
+    # g.generate(transitionprobabilities, repartition, values, probabilities)            
     
     # print(g.production)
                             
@@ -457,7 +459,7 @@ if __name__ == "__main__":
     
     
     # test with scenariofile
-    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies.json"
+    scenarioFile = "./data_scenario_JeuDominique/data_debug_GivenStrategies_rho5.json"
     scenario = None
     with open(scenarioFile) as file:
         scenario = json.load(file)
