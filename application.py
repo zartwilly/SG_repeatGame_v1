@@ -725,7 +725,7 @@ class App:
             # merge list of dataframes of K steps to one dataframe 
             df_t_K = pd.concat(df_t_K, axis=0)
             runLRI_sumUp_K_txt = f"runLRI_df_t_{t}.csv"
-            df_t_K.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_sumUp_K_txt))
+            df_t_K.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoNameLr"], runLRI_sumUp_K_txt))
             
             df_t_kmax = df_t_K[df_t_K['step']==df_t_K['step'].max()].copy(deep=True)
             df_T_Kmax.append(df_t_kmax)
@@ -742,7 +742,7 @@ class App:
         ## ---> start : save execution to CSV file Over periods with the k max steps
         df_T_Kmax = pd.concat(df_T_Kmax, axis=0)
         runLRI_sumUp_K_txt = f"run_{algoName}_DF_T_Kmax.csv"
-        df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], runLRI_sumUp_K_txt))
+        df_T_Kmax.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoNameLr"], runLRI_sumUp_K_txt))
         ## ---> end : save execution to CSV file Over periods with the k max steps
         
         # df_NE_brute = pd.DataFrame(self.SG.NE_brute_t).reset_index()
@@ -753,7 +753,7 @@ class App:
         prosumers = [f'prosumer{i}' for i in range(self.SG.prosumers.size)]
         prosumers.insert(0, "period")
         df_NE_brute.columns = prosumers
-        df_NE_brute.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoName"], "NE_brute.csv"))
+        df_NE_brute.to_csv(os.path.join(scenario["scenarioCorePathDataAlgoNameLr"], "NE_brute.csv"))
         
          
         ## Compute metrics
