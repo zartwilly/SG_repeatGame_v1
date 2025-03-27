@@ -446,7 +446,8 @@ def Initialization_game(scenario):
     maxstep_init = scenario["algo"]["LRI_REPART"]["maxstep_init"]
     mu = scenario["algo"]["LRI_REPART"]["mu"]
     threshold = scenario["algo"]["LRI_REPART"]["threshold"]
-    slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
+    # slowdownfactor = scenario["algo"]["LRI_REPART"]["slowdownfactor"]
+    learning_rate = scenario["learning_rate"] # scenario["algo"]["LRI_REPART"]["learning_rate"]
     rho = scenario["simul"]["rho"]
     smax = scenario["instance"]["smax"]
     h = scenario["algo"]["LRI_REPART"]["h"]
@@ -466,7 +467,7 @@ def Initialization_game(scenario):
     
     # Initialisation of the apps
     application = apps.App(N_actors=N_actors, maxstep=maxstep, mu=mu, 
-                           b=slowdownfactor, rho=rho, h=h, 
+                           b=learning_rate, rho=rho, h=h, 
                            maxstep_init=maxstep_init, threshold=threshold)
     application.SG = sg.Smartgrid(N=N_actors, nbperiod=nbPeriod, 
                                   initialprob=initialprob, rho=rho, 
@@ -550,16 +551,19 @@ def create_repo_for_save_jobs(scenario:dict):
     scenarioCorePath = os.path.join(scenario["scenarioPath"], scenario["scenarioName"])
     scenarioCorePathData = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas")
     scenarioCorePathDataAlgoName = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", scenario["algoName"])
+    scenarioCorePathDataAlgoNameLr = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", scenario["algoName"], "lr_"+str(scenario["learning_rate"]))
     scenarioCorePathDataViz = os.path.join(scenario["scenarioPath"], scenario["scenarioName"], "datas", "dataViz")
     scenario["scenarioCorePath"] = scenarioCorePath
     scenario["scenarioCorePathData"] = scenarioCorePathData
     scenario["scenarioCorePathDataAlgoName"] = scenarioCorePathDataAlgoName
+    scenario["scenarioCorePathDataAlgoNameLr"] = scenarioCorePathDataAlgoNameLr
     scenario["scenarioCorePathDataViz"] = scenarioCorePathDataViz
     
     
     # create a scenarioPath if not exists
     Path(scenarioCorePathData).mkdir(parents=True, exist_ok=True)
     Path(scenarioCorePathDataAlgoName).mkdir(parents=True, exist_ok=True)
+    Path(scenarioCorePathDataAlgoNameLr).mkdir(parents=True, exist_ok=True)
     Path(scenarioCorePathDataViz).mkdir(parents=True, exist_ok=True)
     
     
@@ -587,6 +591,7 @@ def run_Bestie(scenario, logfiletxt):
     """
     algoName = "Bestie"
     scenario["algoName"] = algoName
+    scenario["learning_rate"] = 0
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
@@ -638,6 +643,7 @@ def run_CSA(scenario, logfiletxt):
     """
     algoName = "CSA"
     scenario["algoName"] = algoName
+    scenario["learning_rate"] = 0
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
@@ -689,6 +695,7 @@ def run_SSA(scenario, logfiletxt):
     """
     algoName = "SSA"
     scenario["algoName"] = algoName
+    scenario["learning_rate"] = 0
     scenario = create_repo_for_save_jobs(scenario)
     
     # Initialisation of the apps
@@ -745,6 +752,7 @@ def run_syA(scenario, logfiletxt):
     """
     algoName = "SyA"
     scenario["algoName"] = algoName
+    scenario["learning_rate"] = 0
     scenario = create_repo_for_save_jobs(scenario)
     
 
@@ -803,6 +811,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     """
     algoName = "LRI_REPART"
     scenario["algoName"] = algoName
+    scenario["learning_rate"] = scenario["algo"]["LRI_REPART"]["learning_rate"]
     scenario = create_repo_for_save_jobs(scenario)
     
     
@@ -811,7 +820,8 @@ def run_LRI_REPART(scenario, logfiletxt):
     application = Initialization_game(scenario)
 
     # Display for the run beginning
-    logfile = os.path.join(scenario["scenarioCorePathDataAlgoName"], algoName+"_"+logfiletxt)
+    rho = scenario["algo"]["LRI_REPART"]["rho"]
+    logfile = os.path.join(scenario["scenarioCorePathDataAlgoNameLr"], algoName+"_"+logfiletxt+"_rho"+str(rho))
     file = io.open(logfile,"w")                                                # Logs file
     
     monitoring_before_algorithm(file, application)
@@ -830,7 +840,7 @@ def run_LRI_REPART(scenario, logfiletxt):
     print("________RUN END LRI_REPART ",1,"_________ \n")
     
     # Save application to Pickle format
-    with open(os.path.join(scenario["scenarioCorePathDataAlgoName"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
+    with open(os.path.join(scenario["scenarioCorePathDataAlgoNameLr"], scenario["scenarioName"]+"_"+algoName+"_APP"+'.pkl'), 'wb') as f:  # open a text file
         pickle.dump(application, f)
     f.close()
     
