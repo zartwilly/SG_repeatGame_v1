@@ -483,11 +483,11 @@ class Smartgrid :
                 
                 for x in range(1, h):
                     smax = self.prosumers[i].smax
-                    sp_h = self.prosumers[i].SP[period, h]
+                    sp_x = self.prosumers[i].SP[period, x]
                     som_Val = 0
                     for y in range(x, h):
                         som_Val += self.prosumers[i].Val[period, y]
-                    diff = aux.apv(smax - sp_h - som_Val)
+                    diff = aux.apv(smax - sp_x - som_Val)
                     
                     min_3 = diff if min_3 > diff else min_3
                 
